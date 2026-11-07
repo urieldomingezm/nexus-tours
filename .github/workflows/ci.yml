@@ -22,6 +22,12 @@ jobs:
           cache: npm
       - run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Formato
+        run: npm run format:check
+
       - name: Tipos
         run: npm run typecheck
 

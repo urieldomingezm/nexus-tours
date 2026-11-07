@@ -509,20 +509,33 @@ Puntos de entrada: `nexus-tours`, `nexus-tours/all` (todo junto), `/fixtures`, `
 
 `role="dialog"` con etiqueta, foco que entra y se restaura al salir, Tab atrapado dentro del tour, anuncios con `aria-live`, navegación completa con teclado (←/→/Enter/Esc), soporte RTL y `prefers-reduced-motion` (sin animaciones ni confeti).
 
+Cada cambio pasa una auditoría automática con [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.2 A/AA) del popover en escritorio y celular, la tarjeta de bienvenida, el aviso de modo práctica, los 7 temas (contraste), el checklist y el constructor visual (`test/e2e/accesibilidad.spec.mjs`). La auditoría automática no sustituye una prueba con lector de pantalla (NVDA, VoiceOver).
+
 ## 7. Tamaños y compatibilidad
 
-Tamaños aproximados (gzip), verificados por las pruebas en cada compilación:
+Tamaños aproximados (gzip); `npm run size` los verifica en cada PR:
 
 | Pieza | Tamaño |
 |---|---|
-| Núcleo (`nexus-tours`) | ~12.6 KB |
-| Todo junto (`nexus-tours.all`, CDN) | ~21.5 KB |
-| Constructor visual | ~8 KB |
-| Adaptador Supabase | ~3.6 KB |
-| Checklist | ~4.2 KB |
-| Datos de ejemplo / Temas / Vue / React | ~1.9 / 0.6 / 1.1 / 0.9 KB |
+| Núcleo (`nexus-tours`) | ~13 KB |
+| Todo junto (`nexus-tours.all`, CDN) | ~21.7 KB |
+| Constructor visual | ~8.2 KB |
+| Adaptador Supabase | ~3.8 KB |
+| Checklist | ~4.3 KB |
+| Datos de ejemplo / Temas / Vue / React | ~2 / 0.6 / 1.1 / 0.9 KB |
 
-Navegadores modernos con Shadow DOM y Popover API. Cero dependencias en tiempo de ejecución; `vue` y `react` son dependencias par **opcionales**.
+Cero dependencias en tiempo de ejecución; `vue` y `react` son dependencias par **opcionales**.
+
+**Navegadores.** Las pruebas corren en cada cambio en las versiones actuales de los tres motores: Chromium (Chrome, Edge), Firefox y WebKit (Safari). Objetivo de soporte: Chrome / Edge 92+, Firefox 90+ y Safari 15.4+ (iOS 15.4+), con alternativas para lo más reciente:
+
+| Si el navegador no tiene… | nexus-tours usa… |
+|---|---|
+| Popover API (Chrome 114, Firefox 125, Safari 17) | `z-index` alto y, si hay un `<dialog>` modal abierto, se monta dentro de él |
+| Hojas de estilo construibles (`adoptedStyleSheets`) | un `<style>` dentro del shadow root (respeta la opción `nonce` de tu CSP) |
+| `color-mix()` | colores rgba equivalentes |
+| `crypto.randomUUID` (también falta en HTTP sin TLS) | un generador de UUID v4 propio (adaptador Supabase) |
+
+Las alternativas también se prueban (`test/e2e/compatibilidad.spec.mjs` quita esas APIs antes de cargar la página). Las versiones anteriores al objetivo no se prueban.
 
 ## 8. Demos
 
@@ -552,13 +565,26 @@ Navegadores modernos con Shadow DOM y Popover API. Cero dependencias en tiempo d
 
 ```bash
 npm i
-npm run dev      # demo con un <dialog> animado en http://localhost:5173
-npm run build    # núcleo, todo, fixtures, temas, checklist, supabase, builder, vue, react + tipos
-npx playwright install chromium
-npm test         # requiere haber compilado antes: npm run build
+npm run dev            # demo con un <dialog> animado en http://localhost:5173
+npm run build          # núcleo, todo, fixtures, temas, checklist, supabase, builder, vue, react + tipos
+npx playwright install chromium firefox webkit
+npm test               # unitarias + punta a punta (requiere npm run build y npm run build:demo)
 ```
 
-La suite (Playwright) cubre el núcleo, el adaptador Supabase contra `supabase-js` real, la interceptación de XHR con axios real, los pasos interactivos / móvil / páginas, el constructor visual y la demo de punta a punta. El CI (GitHub Actions) ejecuta tipos, compilación, sitio, demo y pruebas en cada push.
+| Comando | Qué hace |
+|---|---|
+| `npm run test:unit` | Pruebas unitarias (Vitest + happy-dom) de la lógica pura: datos de ejemplo, rutas, almacenamiento, temas, espera de elementos, posición del popover, progreso guardado, modo práctica y adaptador Supabase |
+| `npm run test:coverage` | Lo mismo con cobertura (`coverage/`); el CI falla si baja del piso definido en `vitest.config.mjs` |
+| `npm run test:e2e` | Pruebas de punta a punta (Playwright Test) en Chromium, Firefox y WebKit |
+| `npm run test:e2e:chromium` | Solo Chromium (más rápido mientras desarrollas); también `npx playwright test ux --project=webkit`, etc. |
+| `npm run lint` · `npm run format` | ESLint y Prettier (`format:check` solo verifica) |
+| `npm run typecheck` · `npm run size` | Tipos de TypeScript y límites de tamaño gzip de cada archivo (`scripts/tamano.mjs`) |
+
+Las pruebas de punta a punta (`test/e2e/`) cubren el núcleo, el adaptador Supabase contra `supabase-js` real, la interceptación de XHR con axios real, los pasos interactivos / móvil / páginas, el constructor visual, la demo, la accesibilidad (axe-core) y los navegadores sin APIs recientes. Si una falla, `npx playwright show-trace test-results/…/trace.zip` muestra la grabación paso a paso.
+
+El CI (GitHub Actions) corre en cada PR: lint, formato, tipos, unitarias con cobertura, compilación, tamaño, sitio y demo, y las pruebas de punta a punta en los tres navegadores (un job por navegador; si falla, sube el reporte y las grabaciones).
+
+**Código fuente.** `src/tour.ts` es el ciclo de vida del tour; `src/core/` tiene las piezas: `dom` (objetivos, modales, top layer), `layout` (posición del popover y la flecha, funciones puras), `render` (DOM del popover), `keyboard` y `progress` (progreso guardado).
 
 **Convenciones:** la rama de trabajo es `main`; los mensajes de commit se escriben en español.
 
