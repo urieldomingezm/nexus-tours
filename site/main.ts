@@ -1,6 +1,7 @@
 import { Tour } from 'nexus-tours'
 import { createFixtures, fake } from 'nexus-tours/fixtures'
 import { themes, autoTheme } from 'nexus-tours/themes'
+import { Checklist } from 'nexus-tours/checklist'
 
 type Lang = 'es' | 'en'
 const T: Record<string, [string, string]> = {
@@ -27,6 +28,11 @@ const T: Record<string, [string, string]> = {
   s2t: ['Ponle nombre', 'Name it'], s2d: ['El formulario cargó después de abrir el modal; el tour esperó por él.', 'The form loaded after the modal opened; the tour waited for it.'],
   s3t: ['Guarda', 'Save'], s3d: ['En modo práctica esto no se guarda de verdad.', 'In practice mode this is not really saved.'],
   s4t: ['Tu lista', 'Your list'], s4d: ['Aquí aparecen los clientes.', 'Clients show up here.'],
+  c_check: ['Checklist', 'Checklist'], ck_title: ['Primeros pasos', 'Getting started'],
+  ck_a: ['Crea tu primer cliente', 'Create your first client'], ck_ad: ['Recorrido de 4 pasos', '4-step walkthrough'],
+  ck_b: ['Conoce tu lista', 'Meet your list'], ck_c: ['Prueba el modo práctica', 'Try practice mode'], ck_cd: ['Actívalo en el panel', 'Turn it on in the panel'],
+  ck_complete: ['¡Listo! Ya viste todo.', 'All done! You have seen everything.'], ck_start: ['Empezar', 'Start'], ck_review: ['Repetir', 'Replay'], ck_reset: ['Reiniciar', 'Reset'], ck_hide: ['Ocultar', 'Hide'],
+  ck_open: ['Abrir checklist', 'Open checklist'], ck_close: ['Cerrar', 'Close'], ck_completed: ['completado', 'completed'], ck_pending: ['pendiente', 'pending'],
   next: ['Siguiente', 'Next'], previous: ['Atrás', 'Back'], done: ['Listo', 'Done'], close: ['Cerrar tour', 'Close tour'], practiceLbl: ['Modo práctica · nada se guarda', 'Practice mode · nothing is saved'],
 }
 let lang: Lang = (localStorage.getItem('nt-lang') as Lang) || (navigator.language.startsWith('es') ? 'es' : 'en')
@@ -78,22 +84,21 @@ $('form').addEventListener('submit', async (e) => {
 
 // ---- tour
 let tour: Tour | null = null
-function startTour() {
-  tour?.destroy()
+const stepsAll = () => [
+  { element: '#new', title: tr('s1t'), description: tr('s1d') },
+  { before: openModal, element: '#name', title: tr('s2t'), description: tr('s2d') },
+  { element: '#save', title: tr('s3t'), description: tr('s3d'), after: () => modal.close() },
+  { element: '#table', title: tr('s4t'), description: tr('s4d'), side: 'top' as const },
+]
+function common() {
   const themeName = $<HTMLSelectElement>('theme').value
   const theme = themeName === 'auto' ? autoTheme() : themes[themeName as keyof typeof themes]
   const font = $<HTMLSelectElement>('font').value
-  tour = new Tour({
-    steps: [
-      { element: '#new', title: tr('s1t'), description: tr('s1d') },
-      { before: openModal, element: '#name', title: tr('s2t'), description: tr('s2d') },
-      { element: '#save', title: tr('s3t'), description: tr('s3d'), after: () => modal.close() },
-      { element: '#table', title: tr('s4t'), description: tr('s4d'), side: 'top' },
-    ],
+  return {
     theme,
     font: font || undefined,
     arrow: $<HTMLInputElement>('arrow').checked,
-    dir: $<HTMLInputElement>('rtl').checked ? 'rtl' : 'auto',
+    dir: ($<HTMLInputElement>('rtl').checked ? 'rtl' : 'auto') as 'rtl' | 'auto',
     labels: { next: tr('next'), previous: tr('previous'), done: tr('done'), close: tr('close'), practice: tr('practiceLbl') },
     practice: $<HTMLInputElement>('practice').checked
       ? {
@@ -104,9 +109,38 @@ function startTour() {
           onEnd: () => ((practiceOn = false), void load()),
         }
       : undefined,
-  })
+  }
+}
+function startTour() {
+  tour?.destroy()
+  tour = new Tour({ steps: stepsAll(), ...common() })
   void tour.start()
 }
+
+// ---- onboarding checklist (remembers what each visitor has seen)
+let checklist: Checklist | null = null
+function mountChecklist() {
+  checklist?.unmount()
+  checklist = null
+  if (!$<HTMLInputElement>('checklist').checked) return
+  const { theme, font, dir, ...tourOptions } = common()
+  checklist = new Checklist({
+    id: 'site-demo',
+    theme,
+    font,
+    dir,
+    tourOptions,
+    labels: { title: tr('ck_title'), complete: tr('ck_complete'), start: tr('ck_start'), review: tr('ck_review'), reset: tr('ck_reset'), hide: tr('ck_hide'), open: tr('ck_open'), close: tr('ck_close'), completed: tr('ck_completed'), pending: tr('ck_pending') },
+    items: [
+      { id: 'client', title: tr('ck_a'), description: tr('ck_ad'), tour: stepsAll() },
+      { id: 'list', title: tr('ck_b'), tour: [{ element: '#table', title: tr('s4t'), description: tr('s4d'), side: 'top' }] },
+      { id: 'practice', title: tr('ck_c'), description: tr('ck_cd'), onSelect: () => $('practice').focus() },
+    ],
+  }).mount()
+  void checklist.ready.then(() => checklist!.open())
+}
+$('checklist').addEventListener('change', mountChecklist)
+for (const id of ['theme', 'font', 'arrow', 'rtl', 'practice']) $(id).addEventListener('change', () => checklist && mountChecklist())
 $('start').addEventListener('click', startTour)
 $('hero-start').addEventListener('click', () => {
   $('demo').scrollIntoView({ behavior: 'smooth' })
@@ -157,6 +191,20 @@ export function Help() {
     <NexusTour open={open} onOpenChange={setOpen} steps={steps} theme={theme} />
   </>)
 }`,
+  checklist: `import { Checklist } from 'nexus-tours/checklist'
+
+const checklist = new Checklist({
+  id: 'onboarding',                       // new id = show it again to everyone
+  items: [
+    { id: 'client', title: 'Create your first client', tour: clientSteps },
+    { id: 'invoice', title: 'Send an invoice', tour: invoiceSteps },
+    { id: 'docs', title: 'Read the docs', onSelect: () => open('/docs') },
+  ],
+  onComplete: () => confetti(),
+}).mount()
+
+// finishing a tour checks its item off; progress is remembered per user
+// storage: localStorage by default, or your own (async) { get, set }`,
   theme: `import { themes } from 'nexus-tours/themes'
 
 new Tour({
@@ -186,6 +234,7 @@ function applyLang() {
   })
   $('lang').textContent = lang === 'es' ? 'EN' : 'ES'
   void load()
+  if (checklist) mountChecklist()
 }
 $('lang').addEventListener('click', () => {
   lang = lang === 'es' ? 'en' : 'es'

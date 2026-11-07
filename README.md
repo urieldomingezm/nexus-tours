@@ -141,7 +141,7 @@ const [open, setOpen] = useState(false)
 const { start, stop, active, index } = useTour({ steps })
 ```
 
-Both are ~0.8 KB, import the core as a peer (`nexus-tours`), and clean up on unmount. The React one is StrictMode-safe.
+Both are ~1 KB, import the core as a peer (`nexus-tours`), and clean up on unmount. The React one is StrictMode-safe.
 Events: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) or `@start @step @missing @end @stop` (Vue).
 
 ## Demo / docs site
@@ -152,6 +152,36 @@ Events: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) or `@start
 npm run dev          # then open /site/index.html
 npm run build:site   # → site-dist/ (deploy to Vercel/Netlify/GitHub Pages)
 ```
+
+## Onboarding checklist
+
+A floating "Getting started" widget that remembers **what each user has already seen**. Finishing an item's tour checks it off.
+
+```ts
+import { Checklist } from 'nexus-tours/checklist'     // ~4 KB
+
+const checklist = new Checklist({
+  id: 'onboarding',                                    // use a new id to show it again to everyone
+  items: [
+    { id: 'client', title: 'Create your first client', description: '4-step walkthrough', tour: clientSteps },
+    { id: 'invoice', title: 'Send an invoice', tour: invoiceSteps },
+    { id: 'docs', title: 'Read the docs', onSelect: () => open('/docs') },   // action without a tour: checked when picked
+  ],
+  tourOptions: { theme, practice },                    // shared by every item's tour
+  theme, font, dir: 'auto', position: 'bottom-end',    // same theming as tours (isolated in a shadow root)
+  autoOpen: true,                                      // open the panel the first time
+  onComplete: () => celebrate(),
+}).mount()
+
+checklist.progress()      // { done: 1, total: 3, complete: false }
+checklist.isDone('client'); checklist.markDone('docs'); checklist.reset(); checklist.hide(); checklist.show()
+checklist.on('change', render); checklist.on('complete', celebrate)
+```
+
+- **A tour closed halfway doesn't count**; only reaching the end does. The widget hides while a tour runs.
+- **Storage:** `localStorage` by default (falls back to memory when blocked). Pass `storage: { get, set }` (sync or async) to keep progress per account, e.g. in your database, so it follows users across devices. `await checklist.ready` resolves when saved progress has loaded.
+- **Accessible:** real buttons with "completed / pending" names, `aria-expanded`, progress bar, `Esc` closes and returns focus.
+- Vue / React: `useChecklist(options)` returns reactive `{ items, done, total, complete, start, markDone, reset, open, close, show, hide }` and mounts the widget with the component.
 
 ## Practice mode
 

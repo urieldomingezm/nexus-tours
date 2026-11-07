@@ -1,5 +1,7 @@
 import { createElement, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Tour } from 'nexus-tours'
+import { Checklist } from 'nexus-tours/checklist'
+import type { ChecklistOptions } from 'nexus-tours/checklist'
 import type { Step, StepContext, TourEvent, TourOptions } from 'nexus-tours'
 
 export type UseTourOptions = Omit<TourOptions, 'steps'> & { steps: Step[] }
@@ -96,4 +98,38 @@ export function NexusTour(props: NexusTourProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
   return createElement('span', { hidden: true, 'data-nexus-tour-anchor': '' })
+}
+
+/**
+ * Onboarding checklist hook. Mounts the floating widget (`mount: false` to skip) and re-renders on progress:
+ * `const { items, done, total, complete, start } = useChecklist({ id, items })`.
+ * Options are read once; use a new `id` to reset for everyone.
+ */
+export function useChecklist(options: ChecklistOptions, { mount = true }: { mount?: boolean } = {}) {
+  const ref = useRef<Checklist | null>(null)
+  if (!ref.current) ref.current = new Checklist(options)
+  const checklist = ref.current
+  const [, force] = useState(0)
+  useEffect(() => {
+    const off = checklist.on('change', () => force((n) => n + 1))
+    if (mount) checklist.mount()
+    return () => {
+      off()
+      checklist.unmount()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const progress = checklist.progress()
+  return {
+    checklist,
+    items: checklist.items,
+    ...progress,
+    start: useCallback((id: string) => checklist.start(id), [checklist]),
+    markDone: useCallback((id: string) => checklist.markDone(id), [checklist]),
+    reset: useCallback(() => checklist.reset(), [checklist]),
+    open: useCallback(() => checklist.open(), [checklist]),
+    close: useCallback(() => checklist.close(), [checklist]),
+    show: useCallback(() => checklist.show(), [checklist]),
+    hide: useCallback(() => checklist.hide(), [checklist]),
+  }
 }

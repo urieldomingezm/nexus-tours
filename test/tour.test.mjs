@@ -154,7 +154,7 @@ try {
   await esperaTitulo(p, 'Create a client')
   await p.addStyleTag({ content: "button{all:unset !important;background:red !important;color:red !important;display:none !important} *{font-family:'Comic Sans MS' !important} p{color:lime !important;text-transform:uppercase !important}" })
   const hostil = await p.evaluate(() => { const b = S('.gm-primary'); const cs = getComputedStyle(b); const ti = getComputedStyle(S('.gm-title')); return { bg: cs.backgroundColor, display: cs.display, font: ti.fontFamily, color: ti.color, tt: ti.textTransform } })
-  ok(hostil.bg === 'rgb(109, 94, 252)' && hostil.display !== 'none', 'CSS hostil de la página (button/*/p con !important) no afecta al tour: ' + hostil.bg)
+  ok(hostil.bg === 'rgb(66, 99, 235)' && hostil.display !== 'none', 'CSS hostil de la página (button/*/p con !important) no afecta al tour: ' + hostil.bg)
   ok(!hostil.font.includes('Comic') && hostil.tt === 'none', 'la tipografía y estilos globales de la página no se filtran al tour')
   await p.evaluate(() => t.stop())
   ok((await p.evaluate(() => document.head.querySelectorAll('style').length)) === estilosAntes + 1, 'el tour no deja <style> en el documento (solo el de la prueba)')
@@ -320,7 +320,7 @@ try {
   // ---------- temas listos
   await p.evaluate(() => { makeTour('full', { theme: Guiame.themes.dark }); t.start() })
   await esperaTitulo(p, 'Create a client')
-  ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-pop')); return c.backgroundColor === 'rgb(23, 22, 31)' && getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(139, 125, 255)' }), 'tema dark aplicado')
+  ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-pop')); return c.backgroundColor === 'rgb(23, 22, 31)' && getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(124, 147, 255)' }), 'tema dark aplicado')
   await p.evaluate(() => t.stop())
   await p.evaluate(() => { makeTour('full', { theme: { ...Guiame.themes.ocean, accent: 'rgb(1, 2, 3)' } }); t.start() })
   await esperaTitulo(p, 'Create a client')
@@ -332,7 +332,7 @@ try {
     await esperaTitulo(pc, 'Create a client')
     ok(await pc.evaluate((bg) => getComputedStyle(S('.gm-pop')).backgroundColor === bg, bg), `autoTheme() sigue prefers-color-scheme (${scheme})`)
   }
-  ok(await p.evaluate(() => Object.keys(Guiame.themes).join() === 'light,dark,ocean,sunset,mono'), 'temas disponibles: light, dark, ocean, sunset, mono')
+  ok(await p.evaluate(() => Object.keys(Guiame.themes).join() === 'light,dark,ocean,sunset,mint,rose,mono'), 'temas disponibles: light, dark, ocean, sunset, mint, rose, mono')
 
   // ---------- wrappers de Vue y React
   {
@@ -377,6 +377,96 @@ try {
     ok((await w.locator('#rustate').textContent()) === 'idle', 'React: useTour vuelve a idle')
   }
 
+  // ---------- checklist de primeros pasos
+  {
+    const k = await nueva()
+    const cs = (q) => `document.querySelector('[data-nexus-checklist]').shadowRoot.querySelector(${JSON.stringify(q)})`
+    const lanzador = () => k.evaluate(`${cs('.launch')}.textContent`)
+    const visible = () => k.evaluate(() => !document.querySelector('[data-nexus-checklist]').hidden)
+    const abrir = async () => { if ((await k.evaluate(`${cs('.launch')}.getAttribute('aria-expanded')`)) !== 'true') await k.evaluate(`${cs('.launch')}.click()`) }
+    await k.goto(base + 'checklist.html'); await k.waitForFunction(() => window.make)
+    await k.evaluate(() => make()); await k.evaluate(() => cl.ready)
+    ok((await lanzador()).includes('0 / 3'), 'checklist: el lanzador muestra 0 / 3')
+    ok((await k.evaluate(`${cs('.launch')}.getAttribute('aria-expanded')`)) === 'false', 'checklist: el panel empieza cerrado')
+    await abrir()
+    ok((await k.locator('.item').count()) === 3 && (await k.locator('.item').first().getAttribute('aria-label')).includes('pending'), 'checklist: 3 items pendientes con nombre accesible')
+    ok((await k.locator('[role=progressbar]').getAttribute('aria-valuenow')) === '0', 'checklist: barra de progreso accesible')
+
+    // completar el tour de un item lo marca como visto
+    await k.locator('.item').first().click()
+    await esperaTitulo(k, 'T-A1')
+    ok(!(await visible()), 'checklist: se oculta mientras corre el tour')
+    await k.getByRole('button', { name: 'Next' }).click(); await esperaTitulo(k, 'T-A2')
+    await k.getByRole('button', { name: 'Done' }).click(); await k.waitForTimeout(150)
+    ok((await visible()) && (await lanzador()).includes('1 / 3'), 'checklist: al terminar el tour reaparece con 1 / 3')
+    ok(await k.evaluate(() => JSON.parse(localStorage.getItem('nexus-tours:checklist:onb')).done.join() === 'a'), 'checklist: el progreso se guarda en localStorage')
+    await abrir()
+    ok((await k.locator('.item').first().getAttribute('aria-label')).includes('completed'), 'checklist: el item visto queda marcado como completado')
+    ok((await k.locator('.item').first().textContent()).includes('Review'), 'checklist: el item visto ofrece "Review"')
+
+    // detener el tour a la mitad NO lo marca
+    await k.locator('.item').nth(1).click(); await esperaTitulo(k, 'T-B1')
+    await k.keyboard.press('Escape'); await k.waitForTimeout(150)
+    ok((await visible()) && (await lanzador()).includes('1 / 3'), 'checklist: si el usuario cierra el tour a medias, no cuenta como visto')
+
+    // persiste al recargar
+    await k.reload(); await k.waitForFunction(() => window.make); await k.evaluate(() => make()); await k.evaluate(() => cl.ready)
+    ok((await lanzador()).includes('1 / 3'), 'checklist: el progreso sobrevive a recargar la página')
+
+    // item de solo acción (onSelect) se marca al elegirlo; completar todo dispara onComplete una vez
+    await abrir(); await k.locator('.item').nth(2).click(); await k.waitForTimeout(100)
+    ok(await k.evaluate(() => window.sel === 1 && cl.isDone('c')), 'checklist: item con onSelect se marca al elegirlo')
+    await k.evaluate(() => { cl.markDone('b'); cl.markDone('b') }); await k.waitForTimeout(100)
+    ok(await k.evaluate(() => cl.progress().complete && window.completed === 1), 'checklist: al completar todo, onComplete/evento "complete" una sola vez')
+    ok((await lanzador()).includes('3 / 3') && (await k.evaluate(`${cs('.ring')}.className`)).includes('full'), 'checklist: el lanzador muestra el estado completo')
+    await abrir()
+    ok((await k.evaluate(`${cs('.cheer')}.textContent`)).includes('All done'), 'checklist: mensaje al completar')
+
+    // reiniciar
+    await k.evaluate(`${cs('.link:last-child')}.click()`); await k.waitForTimeout(100)
+    ok((await lanzador()).includes('0 / 3') && await k.evaluate(() => JSON.parse(localStorage.getItem('nexus-tours:checklist:onb')).done.length === 0), 'checklist: reiniciar vuelve a 0 y lo guarda')
+
+    // ocultar persistente y show()
+    await abrir(); await k.evaluate(`${cs('.link:first-child')}.click()`); await k.waitForTimeout(100)
+    ok(!(await visible()), 'checklist: "Hide" oculta el widget')
+    await k.reload(); await k.waitForFunction(() => window.make); await k.evaluate(() => make()); await k.evaluate(() => cl.ready)
+    ok(!(await visible()), 'checklist: oculto se recuerda tras recargar')
+    await k.evaluate(() => cl.show()); ok(await visible(), 'checklist: show() lo vuelve a mostrar')
+
+    // Esc cierra el panel y devuelve el foco al lanzador
+    await abrir(); await k.evaluate(`${cs('.item')}.focus()`); await k.keyboard.press('Escape')
+    ok((await k.evaluate(`${cs('.launch')}.getAttribute('aria-expanded')`)) === 'false' && await k.evaluate(`document.querySelector('[data-nexus-checklist]').shadowRoot.activeElement?.classList.contains('launch')`), 'checklist: Esc cierra el panel y devuelve el foco al lanzador')
+
+    // almacenamiento asíncrono propio + tema/posición/RTL
+    const k2 = await nueva()
+    await k2.goto(base + 'checklist.html'); await k2.waitForFunction(() => window.make)
+    await k2.evaluate(() => { const saved = JSON.stringify({ done: ['b'], dismissed: false }); window.writes = []; make({ storage: { get: async () => { await new Promise((r) => setTimeout(r, 80)); return saved }, set: async (key, v) => { window.writes.push(v) } }, theme: { accent: 'rgb(255, 0, 0)' }, position: 'bottom-start', dir: 'rtl' }) })
+    ok(await k2.evaluate(() => document.querySelector('[data-nexus-checklist]').shadowRoot.textContent.includes('0 / 3')), 'checklist: antes de cargar el almacenamiento asíncrono muestra 0')
+    await k2.evaluate(() => cl.ready)
+    ok(await k2.evaluate(() => cl.isDone('b') && cl.progress().done === 1), 'checklist: carga el progreso desde un almacenamiento asíncrono propio')
+    await k2.evaluate(() => cl.markDone('a')); await k2.waitForTimeout(100)
+    ok(await k2.evaluate(() => JSON.parse(window.writes.at(-1)).done.sort().join() === 'a,b'), 'checklist: guarda con el almacenamiento propio')
+    await k2.evaluate(() => cl.open())
+    const est = await k2.evaluate(() => { const h = document.querySelector('[data-nexus-checklist]'); const r = h.shadowRoot; return { pos: h.dataset.pos, dir: h.dir, bar: getComputedStyle(r.querySelector('.bar i')).backgroundColor, left: h.getBoundingClientRect().left } })
+    ok(est.bar === 'rgb(255, 0, 0)' && est.pos === 'start' && est.dir === 'rtl' && est.left > 500, 'checklist: tema aplicado; en RTL "inicio" es el lado derecho')
+
+    // sin romper la página: estilos globales hostiles no lo afectan
+    await k2.addStyleTag({ content: 'button{display:none !important;background:red !important} *{font-family:Comic Sans MS !important}' })
+    ok(await k2.evaluate(() => { const b = document.querySelector('[data-nexus-checklist]').shadowRoot.querySelector('.launch'); const c = getComputedStyle(b); return c.display !== 'none' && c.backgroundColor !== 'rgb(255, 0, 0)' }), 'checklist: aislado del CSS de la página')
+  }
+
+  // ---------- useChecklist en Vue y React
+  {
+    const w = await nueva()
+    await w.goto(base + 'wrappers.html'); await w.waitForFunction(() => window.ready)
+    ok((await w.locator('#vcl').textContent()) === '0/2', 'Vue useChecklist: estado inicial 0/2')
+    await w.click('#vcmark'); await w.waitForFunction(() => document.getElementById('vcl').textContent === '1/2')
+    ok(true, 'Vue useChecklist: markDone actualiza el estado reactivo')
+    ok((await w.locator('[data-nexus-checklist]').count()) === 1, 'React useChecklist (StrictMode): un solo widget montado')
+    await w.click('#rcmark'); await w.waitForFunction(() => document.getElementById('rcl').textContent === '1/2')
+    ok(true, 'React useChecklist: markDone re-renderiza')
+  }
+
   // ---------- sitio de demo/docs
   {
     const s = await nueva()
@@ -387,6 +477,9 @@ try {
     await s.evaluate(() => localStorage.setItem('nt-lang', 'en')); await s.reload(); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
     ok((await s.locator('h1').textContent()).includes("don't break"), 'sitio: selector de idioma (EN)')
     await s.click('#lang'); ok((await s.locator('h1').textContent()).includes('Tours que no se rompen'), 'sitio: cambia a ES')
+    await s.check('#checklist'); await s.waitForFunction(() => document.querySelector('[data-nexus-checklist]'))
+    ok((await s.evaluate(() => document.querySelector('[data-nexus-checklist]').shadowRoot.textContent)).includes('0 / 3'), 'sitio: el checklist aparece con 0 / 3')
+    await s.uncheck('#checklist'); ok(await s.evaluate(() => !document.querySelector('[data-nexus-checklist]')), 'sitio: el checklist se quita al desmarcarlo')
     await s.selectOption('#theme', 'dark'); await s.check('#practice')
     await s.click('#start'); await esperaTitulo(s, 'Crea un cliente')
     ok(await s.evaluate(() => getComputedStyle(S('.gm-pop')).backgroundColor === 'rgb(23, 22, 31)'), 'sitio: el selector de tema se aplica al tour')
@@ -404,7 +497,7 @@ try {
   // ---------- tamaño
   const { gzipSync } = await import('node:zlib')
   const { readFileSync } = await import('node:fs')
-  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 9, `núcleo ${kb.toFixed(2)} KB gzip (< 9 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
+  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 9, `núcleo ${kb.toFixed(2)} KB gzip (< 9 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2], ['checklist', 5]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
 } finally {
   await browser.close()
   try { process.kill(-server.pid) } catch {}

@@ -31,6 +31,11 @@
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js",
       "require": "./dist/react.cjs"
+    },
+    "./checklist": {
+      "types": "./dist/checklist.d.ts",
+      "import": "./dist/checklist.js",
+      "require": "./dist/checklist.cjs"
     }
   },
   "files": [
@@ -39,7 +44,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode core && vite build --mode fixtures && vite build --mode themes && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
+    "build": "vite build --mode core && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
     "test": "node test/tour.test.mjs",
     "build:site": "vite build --mode site",
     "dev:site": "vite --mode site-dev site"
