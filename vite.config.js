@@ -32,7 +32,7 @@ export default defineConfig(({ mode, command }) => {
   if (mode === 'demo') {
     return {
       root: 'demo',
-      base: './',
+      base: process.env.DEMO_BASE || './',   // p. ej. DEMO_BASE=/demos/nexus-tours/ si va dentro de otro sitio
       resolve: { alias: ALIAS },
       build: { outDir: '../demo-dist', emptyOutDir: true, target: 'es2020' },
     }

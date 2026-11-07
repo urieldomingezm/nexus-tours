@@ -537,6 +537,12 @@ Navegadores modernos con Shadow DOM y Popover API. Cero dependencias en tiempo d
   ```
   `?embed=1` oculta la barra lateral. El CI publica la carpeta como artefacto (`demo-portafolio`) en cada push.
 
+  **En vivo:** <https://devmedina.is-a.dev/demos/nexus-tours/>. Para actualizarla en el portafolio (compila con la base `/demos/nexus-tours/` y copia a su carpeta pública):
+  ```bash
+  npm run demo:publicar -- ../portafolio-social/public/demos/nexus-tours
+  ```
+  Luego haz commit y PR en `portafolio-social`. Usa `DEMO_BASE=/otra/ruta/` (o el segundo argumento del script) si la alojas en otra ruta.
+
 ## 9. Desarrollo y pruebas
 
 ```bash
