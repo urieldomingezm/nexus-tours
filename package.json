@@ -65,6 +65,7 @@
     "build:site": "vite build --mode site",
     "build:demo": "vite build --mode demo",
     "prepublishOnly": "npm run build",
+    "demo:publicar": "node scripts/publicar-demo.mjs",
     "dev:site": "vite --mode site-dev site"
   },
   "keywords": [
