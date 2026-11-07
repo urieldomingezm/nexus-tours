@@ -29,7 +29,62 @@ export interface Step {
   allowTargetClick?: boolean
   /** Extra space around the highlighted element, in px. */
   padding?: number
+  /**
+   * Go to the next step by itself when the user does the thing: `'click'`, `'input'`, `'change'`, `'submit'`…
+   * (on the highlighted element), or an object for full control. The element becomes clickable.
+   */
+  advanceOn?: AdvanceEvent | AdvanceOn
+  /** Small call to action under the description, e.g. "Click the button to continue". */
+  hint?: string
+  /** With `advanceOn`: hide "Next" so the user has to do the action. Esc / × still close the tour. */
+  hideNext?: boolean
+  /** Route this step lives on (needs the tour's `router`): the tour navigates there first. E.g. "/clients". */
+  route?: string
 }
+
+export type AdvanceEvent = 'click' | 'dblclick' | 'input' | 'change' | 'submit' | 'focus' | 'blur' | (string & {})
+
+export interface AdvanceOn {
+  /** DOM event to listen for. */
+  event?: AdvanceEvent
+  /** Where the event must happen. Default: the step's element. */
+  target?: TargetRef
+  /** Extra condition, e.g. `(e) => e.target.value.length >= 3`. */
+  when?: (e: Event, ctx: StepContext) => boolean
+  /** Polled every frame: advance as soon as it returns true (e.g. "the modal opened"). */
+  until?: (ctx: StepContext) => boolean
+  /** Wait this many ms before advancing, so the user sees the result of their action. */
+  delay?: number
+}
+
+/** Lets a tour move between pages. See `routers` for ready-made ones. */
+export interface Router {
+  /** Current path (+ query), e.g. "/clients?tab=1". */
+  current(): string
+  /** Navigate to a path. */
+  go(path: string): unknown | Promise<unknown>
+  /** True when `go` reloads the page (multi-page sites): progress is saved and `startIfNeeded()` resumes it. Needs `persist`. */
+  reloads?: boolean
+}
+
+export interface PersistStorage {
+  get(key: string): string | null | undefined | Promise<string | null | undefined>
+  set(key: string, value: string): void | Promise<void>
+  remove?(key: string): void | Promise<void>
+}
+
+export interface PersistOptions {
+  /** Identifies this tour in storage, e.g. "welcome". */
+  id: string
+  /** Default: localStorage (memory if blocked). `null` = memory only. */
+  storage?: PersistStorage | null
+  /** Change it when you rewrite the tour: everyone sees it again. */
+  version?: string | number
+  /** Show a "Don't show again" link. */
+  dontShowAgain?: boolean
+}
+
+export type TourStatus = 'new' | 'in-progress' | 'completed' | 'dismissed'
 
 import type { PracticeOptions } from './practice'
 
@@ -42,6 +97,8 @@ export interface Labels {
   progress: string
   /** Text of the practice-mode pill. */
   practice: string
+  /** "Don't show again" link (needs `persist.dontShowAgain`). */
+  never: string
 }
 
 export interface Theme {
@@ -106,6 +163,14 @@ export interface TourOptions {
   arrow?: boolean
   /** Text direction. 'auto' follows the page. Default 'auto'. */
   dir?: 'ltr' | 'rtl' | 'auto'
+  /** Phone layout: a bottom sheet with big buttons, swipe to move, safe-area aware. 'auto' = narrow screens. Default 'auto'. */
+  mobile?: 'auto' | 'always' | 'never'
+  /** Width (px) up to which 'auto' uses the bottom sheet. Default 600. */
+  mobileBreakpoint?: number
+  /** Lets steps with `route` move between pages: `'history'` (SPA), `'location'` (multi-page), or your own router. */
+  router?: Router | 'history' | 'location'
+  /** Remember progress: resume where the user left off, finished tours, "don't show again". */
+  persist?: PersistOptions
   /** Class added to the host element, handy to scope `::part()` rules from your own stylesheet. */
   className?: string
 }
@@ -124,4 +189,10 @@ export interface TourApi {
   /** The practice-mode data while the tour runs (undefined otherwise). */
   readonly practiceData: Record<string, Record<string, unknown>[]> | undefined
   on(event: TourEvent, fn: (ctx: StepContext) => void): () => void
+  /** Saved state (needs `persist`): 'new' | 'in-progress' | 'completed' | 'dismissed'. */
+  status(): Promise<TourStatus>
+  /** Starts (or resumes) unless the user already finished or dismissed it. Returns whether it started. */
+  startIfNeeded(): Promise<boolean>
+  /** Forgets saved progress. */
+  reset(): Promise<void>
 }
