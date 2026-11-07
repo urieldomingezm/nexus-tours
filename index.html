@@ -44,6 +44,7 @@
   <script type="module">
     import { Tour } from '/src/index.ts'
     import { createFixtures, fake } from '/src/fixtures.ts'
+    import { themes, autoTheme } from '/src/themes.ts'
     const modal = document.getElementById('modal')
     const form = document.getElementById('form')
     function abrir() {
@@ -83,7 +84,7 @@
     })
     window.practiceEv = []
 
-    window.Guiame = { Tour, createFixtures, fake }
+    window.Guiame = { Tour, createFixtures, fake, themes, autoTheme }
     window.makeTour = (kind = 'full', extra = {}) => {
       const steps = {
         full: [

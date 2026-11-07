@@ -2,7 +2,7 @@
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright')
+const { chromium } = require(process.env.PW_PATH || 'playwright')
 
 const PORT = 5199
 const server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true })
@@ -108,6 +108,7 @@ try {
   await p.evaluate(() => makeTour('centered'))
   await p.evaluate(() => t.start())
   await esperaTitulo(p, 'Welcome')
+  await p.waitForTimeout(350) // fin de la animación de entrada
   const c = await p.evaluate(() => { const r = S('.gm-pop').getBoundingClientRect(); return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, ring: getComputedStyle(S('.gm-ring')).display } })
   ok(Math.abs(c.cx - 500) < 2 && Math.abs(c.cy - 350) < 2 && c.ring === 'none', 'sin elemento: popover centrado y sin anillo')
   await p.getByRole('button', { name: 'Next' }).click()
@@ -286,10 +287,124 @@ try {
     await ctx.close()
   }
 
+  // ---------- detalles visuales: flecha, RTL, tamaños
+  p = await nueva()
+  await p.evaluate(() => { makeTour('full'); t.start() })
+  await esperaTitulo(p, 'Create a client')
+  const fl = await p.evaluate(() => { const a = S('.gm-arrow'); const pop = S('.gm-pop'); return { side: pop.dataset.side, disp: getComputedStyle(a).display, top: a.style.top } })
+  ok(fl.side === 'bottom' && fl.disp !== 'none' && fl.top === '-6px', 'flecha apunta al objetivo (popover debajo, flecha arriba)')
+  await p.evaluate(() => t.stop())
+  await p.evaluate(() => { makeTour('centered'); t.start() })
+  await esperaTitulo(p, 'Welcome')
+  ok(await p.evaluate(() => S('.gm-pop').dataset.side === 'center' && getComputedStyle(S('.gm-arrow')).display === 'none'), 'paso centrado: sin flecha')
+  await p.evaluate(() => t.stop())
+  await p.evaluate(() => { makeTour('full', { arrow: false }); t.start() })
+  await esperaTitulo(p, 'Create a client')
+  ok(await p.evaluate(() => !S('.gm-arrow')), 'arrow:false quita la flecha')
+  await p.evaluate(() => t.stop())
+
+  await p.evaluate(() => { makeTour('full', { dir: 'rtl' }); t.start() })
+  await esperaTitulo(p, 'Create a client')
+  ok(await p.evaluate(() => { const pop = S('.gm-pop').getBoundingClientRect(); const x = S('.gm-x').getBoundingClientRect(); return document.querySelector('[data-nexus-tours]').dir === 'rtl' && x.left < pop.left + pop.width / 2 }), 'dir:rtl → botón cerrar a la izquierda')
+  await p.keyboard.press('ArrowLeft')
+  await esperaTitulo(p, 'Name it')
+  ok(true, 'en RTL la flecha izquierda avanza')
+  await p.evaluate(() => t.stop())
+
+  await p.evaluate(() => { makeTour('full', { theme: { fontSize: '18px', width: '420px' } }); t.start() })
+  await esperaTitulo(p, 'Create a client')
+  await p.waitForTimeout(350)
+  ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-pop')); return c.fontSize === '18px' && S('.gm-pop').getBoundingClientRect().width === 420 }), 'theme.fontSize y theme.width')
+  await p.evaluate(() => t.stop())
+
+  // ---------- temas listos
+  await p.evaluate(() => { makeTour('full', { theme: Guiame.themes.dark }); t.start() })
+  await esperaTitulo(p, 'Create a client')
+  ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-pop')); return c.backgroundColor === 'rgb(23, 22, 31)' && getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(139, 125, 255)' }), 'tema dark aplicado')
+  await p.evaluate(() => t.stop())
+  await p.evaluate(() => { makeTour('full', { theme: { ...Guiame.themes.ocean, accent: 'rgb(1, 2, 3)' } }); t.start() })
+  await esperaTitulo(p, 'Create a client')
+  ok(await p.evaluate(() => getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(1, 2, 3)' && getComputedStyle(S('.gm-pop')).borderRadius === '14px'), 'se puede extender un tema ({ ...themes.ocean, accent })')
+  await p.evaluate(() => t.stop())
+  for (const [scheme, bg] of [['dark', 'rgb(23, 22, 31)'], ['light', 'rgb(255, 255, 255)']]) {
+    const pc = await nueva({ colorScheme: scheme })
+    await pc.evaluate(() => { makeTour('full', { theme: Guiame.autoTheme() }); t.start() })
+    await esperaTitulo(pc, 'Create a client')
+    ok(await pc.evaluate((bg) => getComputedStyle(S('.gm-pop')).backgroundColor === bg, bg), `autoTheme() sigue prefers-color-scheme (${scheme})`)
+  }
+  ok(await p.evaluate(() => Object.keys(Guiame.themes).join() === 'light,dark,ocean,sunset,mono'), 'temas disponibles: light, dark, ocean, sunset, mono')
+
+  // ---------- wrappers de Vue y React
+  {
+    const w = await nueva()
+    await w.goto(base + 'wrappers.html'); await w.waitForFunction(() => window.ready)
+    const hay = () => w.evaluate(() => document.querySelectorAll('[data-nexus-tours]').length)
+    // Vue: v-model
+    await w.click('#vbtn'); await esperaTitulo(w, 'V1')
+    ok((await hay()) === 1, 'Vue: <NexusTour v-model> arranca el tour')
+    ok(await w.evaluate(() => getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(255, 0, 0)'), 'Vue: :options (tema) se aplica')
+    await w.getByRole('button', { name: 'Next' }).click(); await esperaTitulo(w, 'V2')
+    await w.getByRole('button', { name: 'Done' }).click(); await w.waitForTimeout(150)
+    ok(await w.evaluate(() => window.vOpen.value === false && window.log.includes('vend') && window.log.includes('vstep1') ), 'Vue: al terminar se emite update:modelValue=false, step y end')
+    await w.click('#vbtn'); await esperaTitulo(w, 'V1'); await w.keyboard.press('Escape'); await w.waitForTimeout(150)
+    ok(await w.evaluate(() => window.vOpen.value === false) && (await hay()) === 0, 'Vue: Esc cierra y devuelve false al v-model')
+    await w.evaluate(() => (window.vOpen.value = true)); await esperaTitulo(w, 'V1')
+    await w.evaluate(() => (window.vOpen.value = false)); await w.waitForTimeout(150)
+    ok((await hay()) === 0, 'Vue: poner v-model en false detiene el tour')
+    // Vue: composable
+    await w.click('#ubtn'); await esperaTitulo(w, 'U1')
+    ok((await w.locator('#ustate').textContent()) === 'active:0', 'Vue: useTour expone active e index reactivos')
+    await w.keyboard.press('ArrowRight'); await esperaTitulo(w, 'U2')
+    ok((await w.locator('#ustate').textContent()) === 'active:1', 'Vue: useTour sigue el paso')
+    await w.keyboard.press('Escape'); await w.waitForTimeout(150)
+    ok((await w.locator('#ustate').textContent()) === 'idle', 'Vue: useTour vuelve a idle')
+
+    // React (en StrictMode)
+    await w.click('#rbtn'); await esperaTitulo(w, 'R1'); await w.waitForTimeout(300)
+    ok((await hay()) === 1 && await w.evaluate(() => window.rOpen === true), 'React (StrictMode): un solo tour y no se cierra solo')
+    ok(await w.evaluate(() => getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(0, 0, 255)'), 'React: props de opciones (theme) se aplican')
+    await w.getByRole('button', { name: 'Next' }).click(); await esperaTitulo(w, 'R2')
+    await w.getByRole('button', { name: 'Done' }).click(); await w.waitForTimeout(200)
+    ok(await w.evaluate(() => window.rOpen === false && window.log.includes('rend') && window.log.includes('rstep1')), 'React: onOpenChange(false), onStep y onEnd')
+    await w.click('#rbtn'); await esperaTitulo(w, 'R1'); await w.keyboard.press('Escape'); await w.waitForTimeout(200)
+    ok(await w.evaluate(() => window.rOpen === false) && (await hay()) === 0, 'React: Esc cierra y avisa con onOpenChange(false)')
+    await w.evaluate(() => window.rSet(true)); await esperaTitulo(w, 'R1')
+    await w.evaluate(() => window.rSet(false)); await w.waitForTimeout(200)
+    ok((await hay()) === 0, 'React: open=false detiene el tour')
+    await w.click('#rubtn'); await esperaTitulo(w, 'RU1')
+    ok((await w.locator('#rustate').textContent()) === 'active:0', 'React: useTour expone active e index')
+    await w.keyboard.press('Escape'); await w.waitForTimeout(150)
+    ok((await w.locator('#rustate').textContent()) === 'idle', 'React: useTour vuelve a idle')
+  }
+
+  // ---------- sitio de demo/docs
+  {
+    const s = await nueva()
+    const errs = []
+    s.on('console', (m) => m.type() === 'error' && errs.push(m.text()))
+    await s.goto(base + 'site/index.html'); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
+    ok(true, 'sitio: carga y muestra los datos "reales" simulados (2 filas)')
+    await s.evaluate(() => localStorage.setItem('nt-lang', 'en')); await s.reload(); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
+    ok((await s.locator('h1').textContent()).includes("don't break"), 'sitio: selector de idioma (EN)')
+    await s.click('#lang'); ok((await s.locator('h1').textContent()).includes('Tours que no se rompen'), 'sitio: cambia a ES')
+    await s.selectOption('#theme', 'dark'); await s.check('#practice')
+    await s.click('#start'); await esperaTitulo(s, 'Crea un cliente')
+    ok(await s.evaluate(() => getComputedStyle(S('.gm-pop')).backgroundColor === 'rgb(23, 22, 31)'), 'sitio: el selector de tema se aplica al tour')
+    await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 5)
+    ok((await s.locator('#source').textContent()).includes('práctica'), 'sitio: modo práctica muestra datos de ejemplo (5 filas)')
+    await s.getByRole('button', { name: 'Siguiente' }).click(); await esperaTitulo(s, 'Ponle nombre')
+    await s.waitForTimeout(500)
+    await s.evaluate(() => { document.getElementById('name').value = 'Zed'; document.getElementById('form').requestSubmit() })
+    await s.waitForFunction(() => document.getElementById('rows').textContent.includes('Zed'))
+    await s.keyboard.press('Escape'); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
+    ok(!(await s.locator('#rows').textContent()).includes('Zed'), 'sitio: al terminar vuelven los datos reales y "Zed" no se guardó')
+    ok(errs.length === 0, 'sitio: sin errores en consola ' + errs.join('|'))
+  }
+
   // ---------- tamaño
   const { gzipSync } = await import('node:zlib')
   const { readFileSync } = await import('node:fs')
-  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 8.5, `núcleo ${kb.toFixed(2)} KB gzip (< 8.5 KB)`); const kf = gzipSync(readFileSync('dist/fixtures.js')).length / 1024; ok(kf < 4, `fixtures ${kf.toFixed(2)} KB gzip (< 4 KB)`) } catch { console.log('(sin dist: omito tamaño)') }
+  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 9, `núcleo ${kb.toFixed(2)} KB gzip (< 9 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
 } finally {
   await browser.close()
   try { process.kill(-server.pid) } catch {}

@@ -58,6 +58,10 @@ export interface Theme {
   /** CSS font-family, or "inherit" to use the page's body font. */
   font?: string
   zIndex?: number
+  /** Popover text size, default "15px". */
+  fontSize?: string
+  /** Popover max width, default "340px". */
+  width?: string
 }
 
 export interface FontFace {
@@ -98,6 +102,10 @@ export interface TourOptions {
   css?: string
   /** Practice mode: answer `fetch` with example data while the tour runs (and block real writes). */
   practice?: PracticeOptions
+  /** Little arrow pointing at the target. Default true. */
+  arrow?: boolean
+  /** Text direction. 'auto' follows the page. Default 'auto'. */
+  dir?: 'ltr' | 'rtl' | 'auto'
   /** Class added to the host element, handy to scope `::part()` rules from your own stylesheet. */
   className?: string
 }
