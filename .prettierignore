@@ -1,0 +1,11 @@
+dist/
+site-dist/
+demo-dist/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
+*.html
+site/
+demo/
+CHANGELOG.md

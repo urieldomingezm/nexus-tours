@@ -196,6 +196,7 @@ export class PracticeSession {
         }
       }
       m.pending = true
+      // eslint-disable-next-line @typescript-eslint/no-this-alias -- la XHR del usuario, usada en callbacks asíncronos
       const x = this
       void self.decide(m.method, url, parsed, m.headers).then(
         async (res) => {
