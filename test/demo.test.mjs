@@ -20,11 +20,11 @@ async function recorrido(p, etiqueta) {
   const T = (q) => host().locator(q)
   const title = async () => (await T('.gm-title').textContent())?.trim()
   await p.goto(base); await p.waitForSelector('#filas tr')
-  ok((await p.locator('#filas tr').count()) === 3 && (await p.textContent('#origen')) === 'Datos reales', `${etiqueta}: carga con 3 empleados reales`)
+  ok((await p.locator('#filas tr').count()) === 3 && (await p.textContent('#origen')).includes('Datos reales'), `${etiqueta}: carga con 3 empleados reales`)
   await p.click('#empezar'); await p.waitForTimeout(500)
   await T('.gm-title').waitFor()
   ok((await title()).includes('Bienvenido'), `${etiqueta}: abre con la tarjeta de bienvenida`)
-  ok((await p.textContent('#origen')) === 'Modo práctica' && (await p.locator('#filas tr').count()) === 5, `${etiqueta}: modo práctica muestra 5 empleados de ejemplo`)
+  ok((await p.textContent('#origen')).includes('Modo práctica') && (await p.locator('#filas tr').count()) === 5, `${etiqueta}: modo práctica muestra 5 empleados de ejemplo`)
   if (shot) await p.screenshot({ path: `/home/claude/demo-${etiqueta}-1.png` })
   await T('.gm-primary').first().click()
   await p.waitForTimeout(500)
@@ -49,7 +49,7 @@ async function recorrido(p, etiqueta) {
   await T('.gm-primary').first().click(); await p.waitForTimeout(500)
   ok((await title()).includes('todo'), `${etiqueta}: tarjeta final`)
   await T('.gm-primary').first().click(); await p.waitForTimeout(600)
-  ok((await p.locator('#filas tr').count()) === 3 && (await p.textContent('#origen')) === 'Datos reales', `${etiqueta}: al terminar vuelven los datos reales, sin Zoé`)
+  ok((await p.locator('#filas tr').count()) === 3 && (await p.textContent('#origen')).includes('Datos reales'), `${etiqueta}: al terminar vuelven los datos reales, sin Zoé`)
 }
 try {
   const d = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage()

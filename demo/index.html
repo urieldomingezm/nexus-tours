@@ -5,65 +5,96 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Nexus Personal · demo de nexus-tours · DevMedina</title>
   <meta name="description" content="Demo interactiva de nexus-tours, la librería de tours guiados de DevMedina: modales, pasos interactivos y modo práctica." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2316151d'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='15' font-weight='800' fill='white' text-anchor='middle'%3EDM%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='15' font-weight='800' fill='white' text-anchor='middle'%3EDM%3C/text%3E%3C/svg%3E" />
   <style>
-    :root{--ink:#16151d;--muted:#5b5970;--bg:#f4f5fb;--card:#fff;--line:#e4e3f0;--accent:#4263eb;--ok:#12805c;--warn:#b45309}
+    :root{--ink:#1d1b16;--muted:#6a665a;--bg:#f5f3ee;--card:#fffdf9;--line:#e3dfd3;--accent:#0f766e;--accent-d:#0b5c55;--tint:#e3f1ee;--ok:#2f7d4f;--warn:#b7791f;--info:#2563a8}
     *{box-sizing:border-box}
-    body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+    body{margin:0;font:14.5px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
     button{font:inherit;cursor:pointer}
-    .shell{display:grid;grid-template-columns:210px 1fr;min-height:100vh;min-height:100dvh}
-    aside{background:#16151d;color:#cfcdf0;padding:18px 14px;display:flex;flex-direction:column;gap:4px}
-    aside .brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:18px;letter-spacing:-.02em;margin-bottom:16px}
-    aside .logo{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
-    aside a{display:flex;gap:10px;align-items:center;color:inherit;text-decoration:none;padding:9px 10px;border-radius:9px;font-weight:600;opacity:.8}
-    aside a.on{background:#2a2940;opacity:1;color:#fff}
-    aside .bot{margin-top:auto;font-size:12px;opacity:.7;padding:8px 10px}
-    aside .bot a.by{display:inline;padding:0;opacity:1;border-radius:0;color:#fff;font-weight:800;text-decoration:none;border-bottom:2px solid var(--accent)}
-    main{padding:22px clamp(14px,3vw,32px) 40px;min-width:0}
-    .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-    h1{margin:0;font-size:24px;letter-spacing:-.02em}
-    .sub{color:var(--muted);margin:2px 0 0}
-    .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;background:var(--accent);color:#fff}
-    .btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-    .banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:linear-gradient(135deg,#4263eb,#7048e8);color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:16px}
-    .banner b{font-size:16px}.banner span{opacity:.9;display:block;font-size:14px}
-    .banner .btn{background:#fff;color:#3b4fd0}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-    .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
-    .stat small{color:var(--muted);font-weight:600}.stat strong{display:block;font-size:28px;letter-spacing:-.02em;line-height:1.2}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    i.bi{line-height:1;vertical-align:-.125em}
+    .shell{display:grid;grid-template-columns:224px 1fr;min-height:100vh;min-height:100dvh}
+
+    /* barra lateral */
+    aside{background:var(--card);border-inline-end:1px solid var(--line);padding:20px 12px 14px;display:flex;flex-direction:column;gap:2px}
+    .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px;letter-spacing:-.02em;padding:0 8px 18px}
+    .mark{width:26px;height:26px;border-radius:6px;background:var(--ink);color:var(--card);display:grid;place-items:center;font-size:14px}
+    .nav{display:flex;align-items:center;gap:10px;color:var(--muted);text-decoration:none;padding:8px 10px;border-radius:6px;font-weight:600;border-inline-start:3px solid transparent}
+    .nav:hover{background:var(--bg);color:var(--ink)}
+    .nav.on{color:var(--ink);background:var(--tint);border-inline-start-color:var(--accent)}
+    .nav .bi{font-size:16px}
+    .nav small{margin-inline-start:auto;font-size:11px;color:var(--muted);font-weight:500}
+    .bot{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6}
+    .bot a{color:var(--ink);font-weight:700;text-decoration:none}
+    .bot a:hover,.made a:hover{color:var(--accent)}
+
+    main{padding:26px clamp(14px,3vw,36px) 36px;min-width:0;max-width:1060px}
+    .top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    .crumb{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+    h1{margin:2px 0 0;font-size:26px;letter-spacing:-.025em;line-height:1.15}
+    .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--accent);border-radius:7px;padding:9px 14px;font-weight:700;background:var(--accent);color:#fff;transition:background .15s}
+    .btn:hover{background:var(--accent-d)}
+    .btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}
+    .btn.alt:hover{background:var(--card);border-color:#cfc9b8}
+    .btn.ghost{background:transparent;color:var(--accent)}
+    .btn.ghost:hover{background:var(--tint)}
+
+    .guide{display:flex;align-items:center;gap:14px;background:var(--tint);border:1px solid #c6e0da;border-inline-start:4px solid var(--accent);border-radius:7px;padding:12px 14px;margin-bottom:18px}
+    .guide>.bi{font-size:22px;color:var(--accent)}
+    .guide div{flex:1;min-width:0}.guide b{display:block}.guide span{color:var(--muted);font-size:13.5px}
+
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:18px}
+    .stat{padding:14px 18px;display:flex;gap:12px;align-items:center}
+    .stat+.stat{border-inline-start:1px solid var(--line)}
+    .stat .bi{font-size:20px;color:var(--muted)}
+    .stat small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+    .stat strong{font-size:26px;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
     .card header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);gap:10px}
-    .card header b{font-size:16px}
+    .card header b{font-size:15px}
+    .src{font-size:12px;font-weight:700;color:var(--info);display:inline-flex;align-items:center;gap:5px}
+    .src.pr{color:var(--warn)}
     table{width:100%;border-collapse:collapse}
     th,td{text-align:start;padding:11px 16px;border-bottom:1px solid var(--line)}
-    th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700;background:#faf8f3}
+    tbody tr:hover{background:#faf8f3}
     tr:last-child td{border-bottom:0}
-    .who{display:flex;align-items:center;gap:10px;font-weight:600}
-    .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;flex:none}
-    .tag{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:#e6f6ef;color:var(--ok)}
-    .tag.v{background:#fff3e0;color:var(--warn)}.tag.n{background:#e8edff;color:#2f4bc9}
-    .note{font-size:13px;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line)}
-    .made{color:var(--muted);font-size:13px;margin:22px 0 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-    .made a{color:var(--ink);font-weight:700;text-decoration:none}
-    .made a:hover{color:var(--accent)}
-    .by2{display:inline-flex;align-items:center;gap:6px}
-    .dm{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#16151d;color:#fff;font-size:10px;font-weight:800;letter-spacing:-.02em}
-    .foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-    dialog{border:0;border-radius:16px;padding:22px;width:min(420px,92vw);box-shadow:0 24px 70px rgba(0,0,0,.3);opacity:0;transform:translateY(30px) scale(.96);transition:opacity .35s,transform .35s;color:var(--ink)}
+    .who{display:flex;align-items:center;gap:11px;font-weight:600}
+    .av{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+    .st{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13.5px}
+    .st .bi{font-size:8px}
+    .st.a{color:var(--ok)}.st.v{color:var(--warn)}.st.n{color:var(--info)}
+    .note{font-size:12.5px;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:6px;align-items:center}
+    .foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+    .made{color:var(--muted);font-size:13px;margin:24px 0 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+    .made a{color:var(--ink);font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+    .dm{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:800}
+
+    dialog{border:1px solid var(--line);border-radius:10px;padding:0;width:min(420px,92vw);box-shadow:0 24px 60px rgba(29,27,22,.28);opacity:0;transform:translateY(24px) scale(.97);transition:opacity .35s,transform .35s;color:var(--ink);background:var(--card)}
     dialog[open]{opacity:1;transform:none}
-    dialog::backdrop{background:rgba(10,10,30,.45)}
-    dialog h2{margin:0 0 2px;font-size:20px}
-    dialog label{display:block;margin:12px 0 4px;font-weight:600}
-    dialog input,dialog select{width:100%;padding:10px;border:1px solid #bbb9d0;border-radius:9px;font:inherit}
-    .row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+    dialog::backdrop{background:rgba(29,27,22,.5)}
+    .m-h{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+    .m-h .bi{color:var(--accent);font-size:19px}.m-h h2{margin:0;font-size:17px}
+    .m-b{padding:6px 20px 18px}
+    dialog label{display:block;margin:14px 0 5px;font-weight:700;font-size:13px}
+    dialog input,dialog select{width:100%;padding:9px 11px;border:1px solid #cfc9b8;border-radius:6px;font:inherit;background:#fff;color:var(--ink)}
+    dialog input:focus,dialog select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+    .row{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+    .load{padding:28px 0;color:var(--muted);display:flex;gap:10px;align-items:center}
+    .load .bi{animation:giro 1s linear infinite;color:var(--accent)}
+    @keyframes giro{to{transform:rotate(360deg)}}
+    @media (prefers-reduced-motion:reduce){.load .bi{animation:none}}
     [hidden]{display:none!important}
+
     @media (max-width:760px){
       .shell{grid-template-columns:1fr}
-      aside{flex-direction:row;align-items:center;padding:10px 14px}
-      aside .brand{margin:0}aside a,aside .bot{display:none}
-      .stats{grid-template-columns:repeat(3,1fr);gap:8px}.stat{padding:10px}.stat strong{font-size:22px}
+      aside{flex-direction:row;align-items:center;padding:10px 14px;border-inline-end:0;border-bottom:1px solid var(--line)}
+      .brand{padding:0}.nav,.bot{display:none}
+      main{padding-top:18px}
+      .stat{padding:10px 12px;gap:8px;flex-direction:column;align-items:flex-start}.stat .bi{display:none}.stat strong{font-size:22px}
       th:nth-child(2),td:nth-child(2){display:none}
       th,td{padding:10px 12px}
+      .guide{flex-wrap:wrap}.guide .btn{width:100%;justify-content:center}
     }
     /* ?embed=1 → sin barra lateral, ideal para un iframe */
     .embed aside{display:none}.embed .shell{grid-template-columns:1fr;min-height:0}
@@ -72,54 +103,57 @@
 <body>
   <div class="shell">
     <aside>
-      <div class="brand"><span class="logo"><svg width="16" height="16" viewBox="0 0 32 32"><path d="M9 22V10l14 12V10" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Nexus</div>
-      <a class="on" href="#"><i>👥</i> Personal</a>
-      <a href="#"><i>🏖</i> Vacaciones</a>
-      <a href="#"><i>📦</i> Inventario</a>
-      <a href="#"><i>📊</i> Reportes</a>
-      <div class="bot">Demo · datos ficticios<br>por <a class="by" href="https://cv-uriel-nine.vercel.app" target="_blank" rel="noopener">DevMedina</a></div>
+      <div class="brand"><span class="mark"><i class="bi bi-diagram-3-fill"></i></span> Nexus</div>
+      <a class="nav on" href="#"><i class="bi bi-people"></i> Personal</a>
+      <a class="nav" href="#"><i class="bi bi-calendar2-check"></i> Vacaciones</a>
+      <a class="nav" href="#"><i class="bi bi-box-seam"></i> Inventario <small>pronto</small></a>
+      <a class="nav" href="#"><i class="bi bi-bar-chart-line"></i> Reportes</a>
+      <div class="bot">Demo · datos ficticios<br>por <a href="https://cv-uriel-nine.vercel.app" target="_blank" rel="noopener">DevMedina</a></div>
     </aside>
     <main>
       <div class="top">
-        <div><h1>Personal</h1><p class="sub">Altas, puestos y vacaciones de tu equipo.</p></div>
-        <button class="btn" id="nuevo">＋ Nuevo empleado</button>
+        <div><div class="crumb">Nexus / Personal</div><h1>Empleados</h1></div>
+        <button class="btn" id="nuevo"><i class="bi bi-plus-lg"></i> Nuevo empleado</button>
       </div>
 
-      <div class="banner">
+      <div class="guide">
+        <i class="bi bi-signpost-split"></i>
         <div><b>¿Primera vez aquí?</b><span>Recorrido de 30 segundos. Nada de lo que hagas se guarda.</span></div>
-        <button class="btn" id="empezar">▶ Empezar recorrido</button>
+        <button class="btn" id="empezar"><i class="bi bi-play-fill"></i> Empezar recorrido</button>
       </div>
 
       <div class="stats" id="stats">
-        <div class="stat"><small>Activos</small><strong id="s-act">–</strong></div>
-        <div class="stat"><small>De vacaciones</small><strong id="s-vac">–</strong></div>
-        <div class="stat"><small>Nuevos</small><strong id="s-new">–</strong></div>
+        <div class="stat"><i class="bi bi-person-check"></i><div><small>Activos</small><strong id="s-act">–</strong></div></div>
+        <div class="stat"><i class="bi bi-umbrella"></i><div><small>De vacaciones</small><strong id="s-vac">–</strong></div></div>
+        <div class="stat"><i class="bi bi-person-plus"></i><div><small>Nuevos</small><strong id="s-new">–</strong></div></div>
       </div>
 
       <div class="card" id="tabla">
-        <header><b>Empleados</b><span class="tag n" id="origen"></span></header>
+        <header><b>Plantilla</b><span class="src" id="origen"></span></header>
         <table><thead><tr><th>Nombre</th><th>Puesto</th><th>Estado</th></tr></thead><tbody id="filas"></tbody></table>
         <div class="note" id="nota"></div>
       </div>
 
       <div class="foot">
-        <button class="btn alt" id="constructor">🛠 Abrir constructor visual</button>
-        <button class="btn alt" id="reiniciar">↺ Reiniciar demo</button>
+        <button class="btn alt" id="constructor"><i class="bi bi-tools"></i> Constructor visual</button>
+        <button class="btn alt" id="reiniciar"><i class="bi bi-arrow-counterclockwise"></i> Reiniciar demo</button>
       </div>
-      <p class="made">Hecho con <b>nexus-tours</b> por <a class="by2" href="https://cv-uriel-nine.vercel.app" target="_blank" rel="noopener"><span class="dm">DM</span> DevMedina</a> · <a href="https://github.com/urieldomingezm" target="_blank" rel="noopener">GitHub</a></p>
+      <p class="made">Hecho con <b>nexus-tours</b> por <a href="https://cv-uriel-nine.vercel.app" target="_blank" rel="noopener"><span class="dm">DM</span> DevMedina</a> <span aria-hidden="true">·</span> <a href="https://github.com/urieldomingezm" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a></p>
     </main>
   </div>
 
   <dialog id="modal" aria-labelledby="m-t">
-    <h2 id="m-t">Nuevo empleado</h2>
-    <div id="cargando" style="padding:26px 0;color:#5b5970">Cargando formulario…</div>
-    <form id="form" hidden>
-      <label for="nombre">Nombre completo</label>
-      <input id="nombre" autocomplete="off" placeholder="Ej. María López" />
-      <label for="puesto">Puesto</label>
-      <select id="puesto"><option>Ventas</option><option>Soporte</option><option>Diseño</option><option>Administración</option></select>
-      <div class="row"><button type="button" class="btn alt" id="cancelar">Cancelar</button><button class="btn" id="guardar">Guardar</button></div>
-    </form>
+    <div class="m-h"><i class="bi bi-person-plus"></i><h2 id="m-t">Nuevo empleado</h2></div>
+    <div class="m-b">
+      <div id="cargando" class="load"><i class="bi bi-arrow-repeat"></i> Cargando formulario…</div>
+      <form id="form" hidden>
+        <label for="nombre">Nombre completo</label>
+        <input id="nombre" autocomplete="off" placeholder="Ej. María López" />
+        <label for="puesto">Puesto</label>
+        <select id="puesto"><option>Ventas</option><option>Soporte</option><option>Diseño</option><option>Administración</option></select>
+        <div class="row"><button type="button" class="btn alt" id="cancelar">Cancelar</button><button class="btn" id="guardar"><i class="bi bi-check2"></i> Guardar</button></div>
+      </form>
+    </div>
   </dialog>
   <script type="module" src="./main.ts"></script>
 </body>
