@@ -37,6 +37,7 @@
         orders: { clients: { table: 'clients', from: 'client_id' } },
         clients: { orders: { table: 'orders', from: 'id', to: 'client_id', many: true } },
       },
+      defaults: { orders: { total: 0, status: 'pending', created_at: 'now()', folio: ({ db }) => 'P-' + (db.orders.length + 1), token: 'uuid()' } },
       rpc: { total_pedidos: ({ db }) => db.orders.reduce((s, o) => s + o.total, 0), echo: ({ args }) => args },
       functions: { hola: ({ body }) => ({ saludo: 'hola ' + body.nombre }) },
     }),

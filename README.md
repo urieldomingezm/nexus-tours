@@ -312,6 +312,9 @@ new Tour({
     },
     rpc: { total_pedidos: ({ db }) => db.pedidos.reduce((s, o) => s + o.total, 0) },
     functions: { 'enviar-factura': () => ({ ok: true }) },    // edge function simulada
+    defaults: {                                               // valores por defecto de columnas al insertar
+      pedidos: { estado: 'pendiente', creado_en: 'now()', folio: ({ db }) => 'P-' + (db.pedidos.length + 1) },
+    },
     onStart: () => app.recargar(), onEnd: () => app.recargar(),
   }),
 })
@@ -319,12 +322,14 @@ new Tour({
 
 **Qué entiende** (probado contra el `supabase-js` real): `eq neq gt gte lt lte like ilike is in not or and`, `order` (los nulos como Postgres), `limit` / `range`, `select('a, b')` y alias, `single()` / `maybeSingle()`, `count` y `head`, `insert` (uno o varios, id automático), `update`, `delete`, `upsert` (`onConflict`), errores de clave única (`23505`), `.select()` tras escribir, joins declarados en `relations` (también `!inner`), `rpc()` y edge functions.
 
+**Valores por defecto (`defaults`)**: igual que en Postgres, se aplican solo cuando la columna se **omite** al insertar (un `null` explícito se respeta) y no pisan una fila existente en un `upsert`. Cada valor puede ser una constante, una función `({ row, db, table }) => valor` o los textos `'now()'`, `'gen_random_uuid()'` y `'uuid()'`. El id sigue siendo automático.
+
 **Reglas de seguridad**
 - Las escrituras solo cambian la copia en memoria; **un tour nuevo parte otra vez de los datos originales**.
 - Una tabla que no sembraste **no** se responde: las lecturas llegan a tu backend real y las escrituras reciben `403`.
 - Un `rpc()` sin manejador se bloquea (podría escribir). Si es de solo lectura y seguro, agrégalo a `allowRpc: ['nombre']`.
 - `/auth/v1/*` pasa para que la sesión del usuario siga funcionando. Las subidas a Storage se bloquean.
-- No soportado (responde `400` en vez de adivinar): búsqueda de texto completo, operadores de arreglo/JSON, agregados, filtros anidados dentro de joins, realtime. Tampoco aplica valores por defecto de columnas (`created_at`, etc.).
+- No soportado (responde `400` en vez de adivinar): búsqueda de texto completo, operadores de arreglo/JSON, agregados, filtros anidados dentro de joins, realtime.
 - Si pasas un `fetch` propio a `createClient`, usa `global: { fetch: liveFetch }` (se exporta del mismo módulo) para que siga el parche.
 
 ### 4.9 Datos de ejemplo (fixtures)
@@ -563,7 +568,9 @@ La suite (Playwright) cubre el núcleo, el adaptador Supabase contra `supabase-j
 - ✅ Celulares (hoja inferior, deslizar) · ✅ `advanceOn` · ✅ progreso guardado · ✅ cambio de página
 - ✅ Modo práctica: `fetch`, `XMLHttpRequest` (axios, jQuery), adaptador Supabase/PostgREST
 - ✅ Checklist · ✅ constructor visual · ✅ demo de portafolio
-- ⏭ Valores por defecto de columnas en el adaptador Supabase (`created_at`, …) · demo en vivo de Supabase en el sitio de docs · publicación en npm
+- ✅ Valores por defecto de columnas en el adaptador Supabase (`defaults`)
+- ✅ Demo publicada en `devmedina.is-a.dev/demos/nexus-tours/`
+- ⏭ Demo en vivo del adaptador Supabase en el sitio de docs · publicación en npm
 
 ## 11. Autoría, licencia y derechos de autor
 
