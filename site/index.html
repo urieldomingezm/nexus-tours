@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>nexus-tours · tours de producto que no se rompen con modales</title>
   <meta name="description" content="Tours guiados sin dependencias (~8 KB) que funcionan con modales, dialog, portales y UI animada. Modo práctica con datos de ejemplo." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d5efc'/%3E%3Cpath d='M9 22V10l14 12V10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234263eb'/%3E%3Cpath d='M9 22V10l14 12V10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <style>
-    :root{--ink:#16151d;--muted:#555369;--bg:#f6f5fb;--card:#fff;--line:#e3e1ef;--accent:#6d5efc}
+    :root{--ink:#16151d;--muted:#555369;--bg:#f6f5fb;--card:#fff;--line:#e3e1ef;--accent:#4263eb}
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
@@ -44,7 +44,7 @@
     .app .body{padding:16px}
     .app table{width:100%;border-collapse:collapse}
     .app td,.app th{text-align:start;padding:9px 10px;border-bottom:1px solid var(--line)}
-    .tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eceaff;color:#4a3fd0}
+    .tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e8edff;color:#2f4bc9}
     .note{font-size:13px;color:var(--muted);margin-top:10px}
     dialog{border:0;border-radius:14px;padding:22px;width:min(400px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3);opacity:0;transform:translateY(30px) scale(.96);transition:opacity .35s,transform .35s}
     dialog[open]{opacity:1;transform:none}
@@ -100,9 +100,10 @@
           <button class="btn" id="start" data-i="start">▶ Iniciar tour</button>
           <label><span data-i="c_practice">Modo práctica</span><input type="checkbox" id="practice" /></label>
           <label><span data-i="c_theme">Tema</span>
-            <select id="theme"><option value="light">light</option><option value="dark">dark</option><option value="ocean">ocean</option><option value="sunset">sunset</option><option value="mono">mono</option><option value="auto">auto</option></select></label>
+            <select id="theme"><option value="light">light</option><option value="dark">dark</option><option value="ocean">ocean</option><option value="sunset">sunset</option><option value="mint">mint</option><option value="rose">rose</option><option value="mono">mono</option><option value="auto">auto</option></select></label>
           <label><span data-i="c_font">Fuente</span>
             <select id="font"><option value="" data-i="font_sys">Sistema</option><option value="Georgia, serif">Serif</option><option value="ui-monospace, Menlo, monospace">Mono</option><option value="inherit" data-i="font_inh">Heredar</option></select></label>
+          <label><span data-i="c_check">Checklist</span><input type="checkbox" id="checklist" /></label>
           <label><span data-i="c_arrow">Flecha</span><input type="checkbox" id="arrow" checked /></label>
           <label><span data-i="c_rtl">Derecha a izquierda</span><input type="checkbox" id="rtl" /></label>
           <p class="note" data-i="c_note">Con modo práctica activo, guardar un cliente no toca los datos reales; al terminar el tour todo vuelve.</p>
@@ -123,6 +124,7 @@
       <div class="tabs" role="tablist">
         <button class="pill" role="tab" aria-selected="true" data-tab="core">Core</button>
         <button class="pill" role="tab" aria-selected="false" data-tab="practice">Practice</button>
+        <button class="pill" role="tab" aria-selected="false" data-tab="checklist">Checklist</button>
         <button class="pill" role="tab" aria-selected="false" data-tab="vue">Vue</button>
         <button class="pill" role="tab" aria-selected="false" data-tab="react">React</button>
         <button class="pill" role="tab" aria-selected="false" data-tab="theme">Theme</button>

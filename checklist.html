@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><title>checklist</title></head>
+<body style="font:16px system-ui;padding:40px">
+  <button id="t1">One</button> <button id="t2">Two</button> <button id="t3">Three</button>
+  <script type="module">
+    import { Checklist } from 'nexus-tours/checklist'
+    window.Checklist = Checklist
+    window.make = (extra = {}) => {
+      window.cl = new Checklist({
+        id: 'onb',
+        items: [
+          { id: 'a', title: 'Create a client', description: 'First step', tour: [{ element: '#t1', title: 'T-A1' }, { element: '#t2', title: 'T-A2' }] },
+          { id: 'b', title: 'Send invoice', tour: [{ element: '#t3', title: 'T-B1' }] },
+          { id: 'c', title: 'Read the docs', onSelect: () => (window.sel = (window.sel || 0) + 1) },
+        ],
+        ...extra,
+      })
+      window.completed = 0
+      window.cl.on('complete', () => window.completed++)
+      window.cl.mount()
+      return true
+    }
+  </script>
+</body></html>

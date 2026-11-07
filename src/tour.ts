@@ -1,6 +1,7 @@
 import { CSS } from './styles'
 import type { Labels, Side, Step, StepContext, TargetRef, Theme, TourApi, TourEvent, TourOptions } from './types'
 import { PracticeSession } from './practice'
+import { themeVars } from './theme'
 import { isVisible, waitForElement } from './wait'
 
 const DEFAULT_LABELS: Labels = {
@@ -307,22 +308,7 @@ export class Tour implements TourApi {
     const th: Theme = { ...this.opts.theme }
     if (this.opts.font) th.font = this.opts.font
     if (!th.font && this.opts.fonts?.length) th.font = `"${this.opts.fonts[0]!.family.replace(/"/g, '')}", system-ui, sans-serif`
-    if (th.font === 'inherit') th.font = getComputedStyle(document.body).fontFamily
-    const map: [keyof Theme, string][] = [
-      ['accent', '--gm-accent'],
-      ['accentContrast', '--gm-accent-fg'],
-      ['background', '--gm-bg'],
-      ['text', '--gm-fg'],
-      ['muted', '--gm-muted'],
-      ['border', '--gm-border'],
-      ['overlay', '--gm-dim'],
-      ['radius', '--gm-radius'],
-      ['font', '--gm-font'],
-      ['zIndex', '--gm-z'],
-      ['fontSize', '--gm-font-size'],
-      ['width', '--gm-width'],
-    ]
-    for (const [k, v] of map) if (th[k] !== undefined) host.style.setProperty(v, String(th[k]))
+    for (const [k, v] of Object.entries(themeVars(th))) host.style.setProperty(k, v)
   }
 
   /** @font-face rules must live in the page (not in a shadow root); they are added once. */
