@@ -166,8 +166,8 @@ input,textarea,select{width:100%;font:inherit;font-size:13px;padding:6px 8px;bor
 textarea{resize:vertical;min-height:44px}
 .sel{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 .badge{flex:none;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:99px;cursor:pointer;border:0;font-family:inherit}
-.badge[data-ok=true]{background:rgba(18,184,134,.18);color:#0b7a59}
-.badge[data-ok=false]{background:rgba(230,73,80,.16);color:#c92a2a}
+.badge[data-ok=true]{background:rgba(18,184,134,.18);color:#075c41}
+.badge[data-ok=false]{background:rgba(230,73,80,.16);color:#a51d1d}
 .muted{font-size:12px;color:var(--gm-muted,#4a4958)}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px}
 .opts label{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--gm-muted,#4a4958)}

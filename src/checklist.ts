@@ -82,6 +82,7 @@ const CSS = `
 *,*::before,*::after{box-sizing:border-box}
 button{font:inherit;color:inherit;cursor:pointer}
 .launch{display:flex;align-items:center;gap:10px;padding:10px 16px 10px 12px;border-radius:999px;border:1px solid var(--gm-border,transparent);background:var(--gm-bg,#fff);box-shadow:0 8px 28px rgba(0,0,0,.22);font-weight:700}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .launch:focus-visible,.item:focus-visible,.link:focus-visible,.x:focus-visible{outline:2px solid var(--gm-accent,#4263eb);outline-offset:2px}
 .ring{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;color:var(--gm-accent-fg,#fff);background:conic-gradient(var(--gm-accent,#4263eb) calc(var(--p,0)*1%),rgba(128,128,150,.28) 0)}
 .ring span{width:20px;height:20px;border-radius:50%;background:var(--gm-bg,#fff);display:grid;place-items:center;color:var(--gm-fg,#1c1b22);font-size:10px;font-weight:800}
@@ -348,7 +349,8 @@ export class Checklist {
     launch.type = 'button'
     launch.dataset.k = 'launch'
     launch.setAttribute('aria-expanded', String(this.isOpen))
-    launch.setAttribute('aria-label', `${this.isOpen ? L.close : L.open}: ${L.title} ${this.fmt(L.progress, p)}`)
+    // Sin aria-label: el nombre accesible es el texto visible (WCAG 2.5.3) y aria-expanded indica si está abierto.
+    launch.title = this.isOpen ? L.close : L.open
     const ring = mk('div', p.complete ? 'ring full' : 'ring')
     ring.style.setProperty('--p', String(pct))
     ring.appendChild(mk('span', undefined, p.complete ? '✓' : String(p.done)))
@@ -372,6 +374,8 @@ export class Checklist {
       bar.setAttribute('aria-valuemin', '0')
       bar.setAttribute('aria-valuemax', String(p.total))
       bar.setAttribute('aria-valuenow', String(p.done))
+      bar.setAttribute('aria-label', L.title)
+      bar.setAttribute('aria-valuetext', this.fmt(L.progress, p))
       bar.appendChild(document.createElement('i'))
       panel.append(head, bar, mk('p', 'meta', this.fmt(L.progress, p)))
       if (p.complete) panel.appendChild(mk('p', 'cheer', L.complete))
@@ -383,11 +387,13 @@ export class Checklist {
         const b = mk('button', done ? 'item done' : 'item')
         b.type = 'button'
         b.dataset.k = `item:${it.id}`
-        b.setAttribute('aria-label', `${it.title}, ${done ? L.completed : L.pending}`)
+        // El nombre accesible sale del texto visible + el estado oculto para lectores de pantalla (WCAG 2.5.3).
         const txt = mk('span', 'txt')
-        txt.appendChild(mk('b', undefined, it.title))
+        txt.append(mk('b', undefined, it.title), mk('span', 'sr', `, ${done ? L.completed : L.pending}`))
         if (it.description) txt.appendChild(mk('small', undefined, it.description))
-        b.append(mk('span', 'tick', '✓'), txt)
+        const tick = mk('span', 'tick', '✓')
+        tick.setAttribute('aria-hidden', 'true')
+        b.append(tick, txt)
         if (it.tour || it.onSelect) b.appendChild(mk('span', 'act', done ? L.review : L.start))
         b.addEventListener('click', () => (it.tour || it.onSelect ? void this.start(it.id) : this.markDone(it.id)))
         li.appendChild(b)

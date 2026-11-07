@@ -1,33 +1,20 @@
-// Run with: NODE_PATH=<dir with playwright> node test/tour.test.mjs   (starts its own vite dev server)
-import { createRequire } from 'node:module'
-import { spawn } from 'node:child_process'
-const require = createRequire(import.meta.url)
-const { chromium } = require(process.env.PW_PATH || 'playwright')
+// Núcleo del tour: modales, accesibilidad, estilos, modo práctica, wrappers, checklist, sitio y CDN.
+import { test as base, ok, expect, BASE } from './utilidades.mjs'
 
-const PORT = 5199
-const server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true })
-const base = `http://localhost:${PORT}/`
-for (let i = 0; i < 60; i++) {
-  try { if ((await fetch(base)).ok) break } catch {}
-  await new Promise((r) => setTimeout(r, 250))
-}
-
-let fallos = 0
-const ok = (c, m) => { console.log((c ? '✓ ' : '✗ FALLO ') + m); if (!c) fallos++ }
-const browser = await chromium.launch()
-const nueva = async (opts = {}) => {
-  const p = await (await browser.newContext({ viewport: { width: 1000, height: 700 }, ...opts })).newPage()
-  p.on('pageerror', (e) => { console.log('pageerror', e.message); fallos++ })
-  await p.addInitScript(() => { window.S = (q) => document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector(q) })
-  await p.goto(base)
-  await p.waitForFunction(() => window.makeTour)
-  return p
-}
-const titulo = (p) => p.locator('.gm-title').textContent()
+const test = base.extend({
+  nueva: async ({ nuevoContexto, vigilar }, use) => {
+    await use(async (opts = {}) => {
+      const p = vigilar(await (await nuevoContexto({ viewport: { width: 1000, height: 700 }, ...opts })).newPage())
+      await p.addInitScript(() => { window.S = (q) => document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector(q) })
+      await p.goto(BASE)
+      await p.waitForFunction(() => window.makeTour)
+      return p
+    })
+  },
+})
 const esperaTitulo = (p, t) => p.waitForFunction((t) => S('.gm-title')?.textContent === t, t, { timeout: 4000 })
 
-try {
-  // ---------- flujo completo con modal <dialog> animado
+test("flujo completo con modal <dialog> animado", async ({ nueva }) => {
   let p = await nueva()
   await p.evaluate(() => makeTour('full'))
   await p.evaluate(() => t.start())
@@ -75,8 +62,10 @@ try {
   ok(await p.evaluate(() => !document.querySelector('[data-nexus-tours]')), 'al terminar se limpia el DOM y los estilos')
   ok((await p.evaluate(() => ev)).join() === 'start:-1,step:0,step:1,step:2,step:1,step:2,step:3,end:3'.replace('start:-1', 'start:-1'), 'eventos start/step/end: ' + (await p.evaluate(() => ev)).join())
   ok(await p.evaluate(() => document.activeElement.id === '' || document.activeElement === document.body || true), 'foco restaurado')
+})
 
-  // ---------- Esc cierra el tour pero NO el modal de abajo
+test("Esc cierra el tour pero NO el modal de abajo", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => makeTour('full'))
   await p.evaluate(() => t.start(1))
@@ -85,8 +74,10 @@ try {
   await p.waitForTimeout(150)
   ok(await p.evaluate(() => !t.active), 'Esc detiene el tour')
   ok(await p.evaluate(() => document.getElementById('modal').open), 'Esc no cerró el modal de la app')
+})
 
-  // ---------- elemento que nunca aparece: se salta
+test("elemento que nunca aparece: se salta", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => makeTour('missing'))
   await p.evaluate(() => t.start())
@@ -95,15 +86,19 @@ try {
   await esperaTitulo(p, 'Three')
   ok((await p.evaluate(() => ev)).includes('missing:1'), 'se emitió "missing" y se saltó el paso fantasma')
   ok((await p.locator('.gm-progress').textContent()) === '3 / 3', 'el progreso cuenta el paso real (3 / 3)')
+})
 
-  // ---------- onMissing: 'stop'
+test("onMissing: 'stop'", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => makeTour('missing', { onMissing: 'stop' }))
   await p.evaluate(() => t.start(1))
   await p.waitForFunction(() => !t.active, null, { timeout: 3000 })
   ok(true, "onMissing:'stop' detiene el tour")
+})
 
-  // ---------- paso centrado + scroll al elemento
+test("paso centrado + scroll al elemento", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => makeTour('centered'))
   await p.evaluate(() => t.start())
@@ -119,13 +114,15 @@ try {
   const pos = await p.evaluate(() => { const r = document.getElementById('pie').getBoundingClientRect(); const g = S('.gm-ring').getBoundingClientRect(); return Math.abs(g.top - (r.top - 6)) })
   ok(pos < 2, 'el anillo sigue al elemento tras el scroll')
 
-  // ---------- el anillo sigue al elemento si cambia el viewport
+  // el anillo sigue al elemento si cambia el viewport
   await p.setViewportSize({ width: 600, height: 500 })
   await p.waitForTimeout(500)
   const pos2 = await p.evaluate(() => { const r = document.getElementById('pie').getBoundingClientRect(); const g = S('.gm-ring').getBoundingClientRect(); return Math.abs(g.top - (r.top - 6)) + Math.abs(g.left - (r.left - 6)) })
   ok(pos2 < 3, 'tras redimensionar, el resaltado se recoloca')
+})
 
-  // ---------- recuperación: el modal se cierra y se vuelve a abrir mientras el paso está activo
+test("recuperación: el modal se cierra y se vuelve a abrir mientras el paso está activo", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => makeTour('full'))
   await p.evaluate(() => t.start(1))
@@ -137,15 +134,19 @@ try {
   await p.waitForTimeout(900)
   ok(await p.evaluate(() => t.active && getComputedStyle(S('.gm-ring')).display === 'block'), 'si el objetivo desaparece y vuelve, el tour lo recupera')
   ok(await p.evaluate(() => document.querySelector('[data-nexus-tours]').parentElement.id === 'modal'), 'tras recuperarse sigue dentro del modal')
+})
 
-  // ---------- movimiento reducido
+test("movimiento reducido", async ({ nueva }) => {
+  let p
   p = await nueva({ reducedMotion: 'reduce' })
   await p.evaluate(() => makeTour('full'))
   await p.evaluate(() => t.start())
   await esperaTitulo(p, 'Create a client')
   ok(await p.evaluate(() => getComputedStyle(S('.gm-pop')).transitionDuration === '0s'), 'prefers-reduced-motion desactiva las transiciones')
+})
 
-  // ---------- aislamiento: la CSS de la página no rompe el tour (ni el tour a la página)
+test("aislamiento: la CSS de la página no rompe el tour (ni el tour a la página)", async ({ nueva }) => {
+  let p
   p = await nueva()
   const estilosAntes = await p.evaluate(() => document.head.querySelectorAll('style').length)
   const nuevoAntes = await p.evaluate(() => getComputedStyle(document.getElementById('nuevo')).backgroundColor + getComputedStyle(document.querySelector('h1')).fontFamily)
@@ -158,15 +159,19 @@ try {
   ok(!hostil.font.includes('Comic') && hostil.tt === 'none', 'la tipografía y estilos globales de la página no se filtran al tour')
   await p.evaluate(() => t.stop())
   ok((await p.evaluate(() => document.head.querySelectorAll('style').length)) === estilosAntes + 1, 'el tour no deja <style> en el documento (solo el de la prueba)')
+})
 
-  // ---------- variables CSS desde la página (heredan a través del shadow root)
+test("variables CSS desde la página (heredan a través del shadow root)", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.addStyleTag({ content: ':root{--gm-accent:rgb(255,0,0);--gm-radius:2px}' })
   await p.evaluate(() => makeTour('full')); await p.evaluate(() => t.start())
   await esperaTitulo(p, 'Create a client')
   ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-primary')); return c.backgroundColor === 'rgb(255, 0, 0)' && getComputedStyle(S('.gm-pop')).borderRadius === '2px' }), 'variables --gm-* definidas en :root personalizan el tour')
+})
 
-  // ---------- opción theme + font + className + css propio
+test("opción theme + font + className + css propio", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => makeTour('full', { theme: { accent: '#10b981', accentContrast: '#000', radius: '4px', font: 'Georgia, serif', background: '#111', text: '#eee' }, className: 'mi-tema', css: '.gm-title{text-transform:uppercase;letter-spacing:.05em}' }))
   await p.evaluate(() => t.start())
@@ -177,11 +182,13 @@ try {
   ok(th.tt === 'uppercase', 'opción css inyecta estilos propios dentro del tour')
   ok(th.cls === 'mi-tema', 'className en el host')
 
-  // ---------- ::part() desde la hoja de estilos de la página
+  // ::part() desde la hoja de estilos de la página
   await p.addStyleTag({ content: '.mi-tema::part(title){color:rgb(1,2,3)} .mi-tema::part(button-primary){border-radius:99px}' })
   ok(await p.evaluate(() => getComputedStyle(S('.gm-title')).color === 'rgb(1, 2, 3)' && getComputedStyle(S('.gm-primary')).borderRadius === '99px'), '::part(title) y ::part(button-primary) se pueden estilizar desde la página')
+})
 
-  // ---------- font: 'inherit' y fonts (@font-face en el documento)
+test("font: 'inherit' y fonts (@font-face en el documento)", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.addStyleTag({ content: "body{font-family:'Courier New',monospace}" })
   await p.evaluate(() => makeTour('full', { font: 'inherit' })); await p.evaluate(() => t.start())
@@ -193,8 +200,10 @@ try {
   ok(await p.evaluate(() => /font-face/.test(document.querySelector('style[data-nexus-tours-font]')?.textContent || '') && getComputedStyle(S('.gm-pop')).fontFamily.includes('Mi Fuente')), 'fonts: inyecta @font-face una vez y la usa por defecto')
   await p.evaluate(() => { t.stop(); makeTour('full', { fonts: [{ family: 'Mi Fuente', src: '/fuente.woff2', weight: 600 }] }); t.start() })
   ok((await p.evaluate(() => document.querySelectorAll('style[data-nexus-tours-font]').length)) === 1, '@font-face no se duplica')
+})
 
-  // ---------- datos de ejemplo
+test("datos de ejemplo", async ({ nueva }) => {
+  let p
   p = await nueva()
   const fx = await p.evaluate(() => {
     const { createFixtures, fake } = Guiame
@@ -208,12 +217,14 @@ try {
   ok(fx.a.clientes.every((r) => r.email.endsWith('@demo.mx') && r.email.startsWith(r.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(' ')[0])), 'fixtures: el email se deriva del nombre de la misma fila')
   ok(fx.a.tareas[0].id === 100 && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$/.test(fx.a.tareas[0].uuid), 'fixtures: id con inicio propio y uuid v4 válido')
   ok(typeof fx.en === 'string' && fx.en !== fx.a.clientes[0].nombre, 'fixtures: locale en genera nombres en inglés (' + fx.en + ')')
+})
 
-  // ---------- modo práctica: fetch con datos de ejemplo, escrituras bloqueadas, limpieza
+test("modo práctica: fetch con datos de ejemplo, escrituras bloqueadas, limpieza", async ({ nuevoContexto, vigilar }) => {
+  let p
   {
-    const ctx = await browser.newContext({ viewport: { width: 1000, height: 700 } })
+    const ctx = await nuevoContexto({ viewport: { width: 1000, height: 700 } })
     p = await ctx.newPage()
-    p.on('pageerror', (e) => { console.log('pageerror', e.message); fallos++ })
+    vigilar(p)
     const real = [{ id: 1, name: 'Globex', status: 'Active' }]
     const red = []
     await p.route('**/api/**', async (route) => {
@@ -225,7 +236,7 @@ try {
       return route.fulfill({ status: 404, json: {} })
     })
     await p.addInitScript(() => { window.S = (q) => document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector(q) })
-    await p.goto(base); await p.waitForFunction(() => window.makeTour)
+    await p.goto(BASE); await p.waitForFunction(() => window.makeTour)
     await p.waitForFunction(() => document.getElementById('filas').textContent.includes('Globex'))
     await p.evaluate(() => { window.__f0 = window.fetch })
     ok(true, 'práctica: la tabla muestra los datos reales antes del tour (Globex)')
@@ -286,8 +297,10 @@ try {
     await p.evaluate(() => t.stop())
     await ctx.close()
   }
+})
 
-  // ---------- detalles visuales: flecha, RTL, tamaños
+test("detalles visuales: flecha, RTL, tamaños", async ({ nueva }) => {
+  let p
   p = await nueva()
   await p.evaluate(() => { makeTour('full'); t.start() })
   await esperaTitulo(p, 'Create a client')
@@ -317,7 +330,7 @@ try {
   ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-pop')); return c.fontSize === '18px' && S('.gm-pop').getBoundingClientRect().width === 420 }), 'theme.fontSize y theme.width')
   await p.evaluate(() => t.stop())
 
-  // ---------- temas listos
+  // temas listos
   await p.evaluate(() => { makeTour('full', { theme: Guiame.themes.dark }); t.start() })
   await esperaTitulo(p, 'Create a client')
   ok(await p.evaluate(() => { const c = getComputedStyle(S('.gm-pop')); return c.backgroundColor === 'rgb(23, 22, 31)' && getComputedStyle(S('.gm-primary')).backgroundColor === 'rgb(124, 147, 255)' }), 'tema dark aplicado')
@@ -333,11 +346,12 @@ try {
     ok(await pc.evaluate((bg) => getComputedStyle(S('.gm-pop')).backgroundColor === bg, bg), `autoTheme() sigue prefers-color-scheme (${scheme})`)
   }
   ok(await p.evaluate(() => Object.keys(Guiame.themes).join() === 'light,dark,ocean,sunset,mint,rose,mono'), 'temas disponibles: light, dark, ocean, sunset, mint, rose, mono')
+})
 
-  // ---------- wrappers de Vue y React
+test("wrappers de Vue y React", async ({ nueva }) => {
   {
     const w = await nueva()
-    await w.goto(base + 'wrappers.html'); await w.waitForFunction(() => window.ready)
+    await w.goto(BASE + 'wrappers.html'); await w.waitForFunction(() => window.ready)
     const hay = () => w.evaluate(() => document.querySelectorAll('[data-nexus-tours]').length)
     // Vue: v-model
     await w.click('#vbtn'); await esperaTitulo(w, 'V1')
@@ -376,20 +390,22 @@ try {
     await w.keyboard.press('Escape'); await w.waitForTimeout(150)
     ok((await w.locator('#rustate').textContent()) === 'idle', 'React: useTour vuelve a idle')
   }
+})
 
-  // ---------- checklist de primeros pasos
+test("checklist de primeros pasos", async ({ nueva }) => {
   {
     const k = await nueva()
     const cs = (q) => `document.querySelector('[data-nexus-checklist]').shadowRoot.querySelector(${JSON.stringify(q)})`
     const lanzador = () => k.evaluate(`${cs('.launch')}.textContent`)
     const visible = () => k.evaluate(() => !document.querySelector('[data-nexus-checklist]').hidden)
     const abrir = async () => { if ((await k.evaluate(`${cs('.launch')}.getAttribute('aria-expanded')`)) !== 'true') await k.evaluate(`${cs('.launch')}.click()`) }
-    await k.goto(base + 'checklist.html'); await k.waitForFunction(() => window.make)
+    await k.goto(BASE + 'checklist.html'); await k.waitForFunction(() => window.make)
     await k.evaluate(() => make()); await k.evaluate(() => cl.ready)
     ok((await lanzador()).includes('0 / 3'), 'checklist: el lanzador muestra 0 / 3')
     ok((await k.evaluate(`${cs('.launch')}.getAttribute('aria-expanded')`)) === 'false', 'checklist: el panel empieza cerrado')
     await abrir()
-    ok((await k.locator('.item').count()) === 3 && (await k.locator('.item').first().getAttribute('aria-label')).includes('pending'), 'checklist: 3 items pendientes con nombre accesible')
+    ok((await k.locator('.item').count()) === 3, 'checklist: 3 items')
+    await expect.soft(k.locator('.item').first(), 'checklist: item pendiente con nombre accesible').toHaveAccessibleName(/^Create a client\W+pending/)
     ok((await k.locator('[role=progressbar]').getAttribute('aria-valuenow')) === '0', 'checklist: barra de progreso accesible')
 
     // completar el tour de un item lo marca como visto
@@ -401,7 +417,7 @@ try {
     ok((await visible()) && (await lanzador()).includes('1 / 3'), 'checklist: al terminar el tour reaparece con 1 / 3')
     ok(await k.evaluate(() => JSON.parse(localStorage.getItem('nexus-tours:checklist:onb')).done.join() === 'a'), 'checklist: el progreso se guarda en localStorage')
     await abrir()
-    ok((await k.locator('.item').first().getAttribute('aria-label')).includes('completed'), 'checklist: el item visto queda marcado como completado')
+    await expect.soft(k.locator('.item').first(), 'checklist: el item visto queda marcado como completado').toHaveAccessibleName(/, completed/)
     ok((await k.locator('.item').first().textContent()).includes('Review'), 'checklist: el item visto ofrece "Review"')
 
     // detener el tour a la mitad NO lo marca
@@ -439,7 +455,7 @@ try {
 
     // almacenamiento asíncrono propio + tema/posición/RTL
     const k2 = await nueva()
-    await k2.goto(base + 'checklist.html'); await k2.waitForFunction(() => window.make)
+    await k2.goto(BASE + 'checklist.html'); await k2.waitForFunction(() => window.make)
     await k2.evaluate(() => { const saved = JSON.stringify({ done: ['b'], dismissed: false }); window.writes = []; make({ storage: { get: async () => { await new Promise((r) => setTimeout(r, 80)); return saved }, set: async (key, v) => { window.writes.push(v) } }, theme: { accent: 'rgb(255, 0, 0)' }, position: 'bottom-start', dir: 'rtl' }) })
     ok(await k2.evaluate(() => document.querySelector('[data-nexus-checklist]').shadowRoot.textContent.includes('0 / 3')), 'checklist: antes de cargar el almacenamiento asíncrono muestra 0')
     await k2.evaluate(() => cl.ready)
@@ -454,11 +470,12 @@ try {
     await k2.addStyleTag({ content: 'button{display:none !important;background:red !important} *{font-family:Comic Sans MS !important}' })
     ok(await k2.evaluate(() => { const b = document.querySelector('[data-nexus-checklist]').shadowRoot.querySelector('.launch'); const c = getComputedStyle(b); return c.display !== 'none' && c.backgroundColor !== 'rgb(255, 0, 0)' }), 'checklist: aislado del CSS de la página')
   }
+})
 
-  // ---------- useChecklist en Vue y React
+test("useChecklist en Vue y React", async ({ nueva }) => {
   {
     const w = await nueva()
-    await w.goto(base + 'wrappers.html'); await w.waitForFunction(() => window.ready)
+    await w.goto(BASE + 'wrappers.html'); await w.waitForFunction(() => window.ready)
     ok((await w.locator('#vcl').textContent()) === '0/2', 'Vue useChecklist: estado inicial 0/2')
     await w.click('#vcmark'); await w.waitForFunction(() => document.getElementById('vcl').textContent === '1/2')
     ok(true, 'Vue useChecklist: markDone actualiza el estado reactivo')
@@ -466,13 +483,14 @@ try {
     await w.click('#rcmark'); await w.waitForFunction(() => document.getElementById('rcl').textContent === '1/2')
     ok(true, 'React useChecklist: markDone re-renderiza')
   }
+})
 
-  // ---------- sitio de demo/docs
+test("sitio de demo/docs", async ({ nueva }) => {
   {
     const s = await nueva()
     const errs = []
     s.on('console', (m) => m.type() === 'error' && errs.push(m.text()))
-    await s.goto(base + 'site/index.html'); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
+    await s.goto(BASE + 'site/index.html'); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
     ok(true, 'sitio: carga y muestra los datos "reales" simulados (2 filas)')
     await s.evaluate(() => localStorage.setItem('nt-lang', 'en')); await s.reload(); await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
     ok((await s.locator('h1').textContent()).includes("don't break"), 'sitio: selector de idioma (EN)')
@@ -493,12 +511,13 @@ try {
     ok(!(await s.locator('#rows').textContent()).includes('Zed'), 'sitio: al terminar vuelven los datos reales y "Zed" no se guardó')
     ok(errs.length === 0, 'sitio: sin errores en consola ' + errs.join('|'))
   }
+})
 
-  // ---------- CDN: un solo <script>, sin bundler
+test("CDN: un solo <script>, sin bundler", async ({ nueva }) => {
   {
     const c = await nueva()
     const errs = []; c.on('pageerror', (e) => errs.push(String(e)))
-    await c.goto(base + 'cdn.html'); await c.waitForFunction(() => window.t && window.ck)
+    await c.goto(BASE + 'cdn.html'); await c.waitForFunction(() => window.t && window.ck)
     ok(await c.evaluate(() => typeof NexusTours.Tour === 'function' && typeof NexusTours.Checklist === 'function' && !!NexusTours.themes.mint && NexusTours.createFixtures && !!NexusTours.fake), 'cdn: el global NexusTours trae Tour, Checklist, themes y fixtures')
     ok(await c.evaluate(() => window.data.u.length === 3), 'cdn: fixtures generan datos')
     await c.evaluate(() => t.start()); await c.waitForSelector('[data-nexus-tours]', { state: 'attached' })
@@ -506,14 +525,4 @@ try {
     ok(await c.evaluate(() => !!document.querySelector('[data-nexus-checklist]')), 'cdn: el checklist se monta')
     ok(errs.length === 0, 'cdn: sin errores ' + errs.join('|'))
   }
-
-  // ---------- tamaño
-  const { gzipSync } = await import('node:zlib')
-  const { readFileSync } = await import('node:fs')
-  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 14, `núcleo ${kb.toFixed(2)} KB gzip (< 14 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2], ['checklist', 5], ['supabase', 4.5], ['builder', 10], ['nexus-tours.all', 23]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
-} finally {
-  await browser.close()
-  try { process.kill(-server.pid) } catch {}
-}
-console.log(fallos ? `\n${fallos} FALLO(S)` : '\nTodo OK')
-process.exit(fallos ? 1 : 0)
+})

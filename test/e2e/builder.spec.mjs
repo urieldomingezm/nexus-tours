@@ -1,35 +1,24 @@
 // Constructor visual de tours: elegir elementos, selectores, modales, probar, exportar, guardar.
-import { createRequire } from 'node:module'
-import { spawn } from 'node:child_process'
-const require = createRequire(import.meta.url)
-const { chromium } = require(process.env.PW_PATH || 'playwright')
+import { test as base, ok, BASE } from './utilidades.mjs'
 
-const PORT = 5193
-const server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true })
-const base = `http://localhost:${PORT}/`
-for (let i = 0; i < 80; i++) {
-  try { if ((await fetch(base)).ok) break } catch {}
-  await new Promise((r) => setTimeout(r, 250))
-}
-let fallos = 0
-const ok = (c, m) => { console.log((c ? '✓ ' : '✗ FALLO ') + m); if (!c) fallos++ }
-const browser = await chromium.launch()
+const test = base.extend({
+  nueva: async ({ nuevoContexto, vigilar }, use) => {
+    await use(async () => {
+      const p = vigilar(await (await nuevoContexto({ viewport: { width: 1100, height: 700 } })).newPage())
+      await p.goto(BASE + 'builder.html'); await p.waitForFunction(() => window.ready)
+      return p
+    })
+  },
+})
 const B = (q) => `document.querySelector('[data-nexus-builder]').shadowRoot.querySelector(${JSON.stringify(q)})`
 const BA = (q) => `[...document.querySelector('[data-nexus-builder]').shadowRoot.querySelectorAll(${JSON.stringify(q)})]`
 const T = (q) => `document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector(${JSON.stringify(q)})`
-const nueva = async () => {
-  const p = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage()
-  p.on('pageerror', (e) => { console.log('pageerror', e.message); fallos++ })
-  await p.goto(base + 'builder.html'); await p.waitForFunction(() => window.ready)
-  return p
-}
-const centro = async (p, sel) => { const r = await p.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 } }, sel); return r }
+const centro = async (p, sel) => p.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 } }, sel)
 const hover = async (p, sel) => { const c = await centro(p, sel); await p.mouse.move(c.x, c.y); await p.waitForTimeout(120) }
 const clic = async (p, sel) => { const c = await centro(p, sel); await p.mouse.click(c.x, c.y); await p.waitForTimeout(120) }
 const pasos = (p) => p.evaluate(() => b.toJSON().steps)
 
-try {
-  // ================= generador de selectores
+test("generador de selectores", async ({ nueva }) => {
   {
     const p = await nueva()
     const r = await p.evaluate(() => {
@@ -51,8 +40,9 @@ try {
     ok(r.tres.ok && r.tres.s.includes('nth-child'), `hermanos iguales: nth-child (${r.tres.s})`)
     ok(Object.values(r).every((x) => x.ok), 'todos los selectores generados son únicos')
   }
+})
 
-  // ================= elegir elementos
+test("elegir elementos", async ({ nueva }) => {
   {
     const p = await nueva()
     await p.evaluate(() => { window.b = new TourBuilder({ storage: null, lang: 'es' }).open() })
@@ -76,7 +66,6 @@ try {
     ok(s[1].element === '[data-testid="stats"]', 'el clic elige el contenedor resaltado')
     ok(s[1].route === undefined, 'misma página que el paso anterior: no repite route')
     // editar
-    await p.fill('xpath=//never', '').catch(() => {})
     await p.evaluate(`(() => { const t = ${BA('.card .title')}[0]; t.value = 'Exporta'; t.dispatchEvent(new Event('input')); const d = ${BA('.card .desc')}[0]; d.value = 'Descarga tus datos'; d.dispatchEvent(new Event('input')); const c = ${BA('.card input[type=checkbox]')}[0]; c.checked = true; c.dispatchEvent(new Event('change')) })()`)
     s = await pasos(p)
     ok(s[0].title === 'Exporta' && s[0].description === 'Descarga tus datos' && s[0].advanceOn === 'click', 'editar título, descripción y "avanza al hacer clic"')
@@ -99,8 +88,9 @@ try {
     await p.evaluate(() => b.close())
     ok(await p.evaluate(() => !document.querySelector('[data-nexus-builder]')), 'close() quita el panel')
   }
+})
 
-  // ================= modales: interactuar, grabar clics, elegir dentro del modal, probar
+test("modales: interactuar, grabar clics, elegir dentro del modal, probar", async ({ nueva }) => {
   {
     const p = await nueva()
     await p.evaluate(() => { window.b = new TourBuilder({ storage: null, lang: 'es' }).open() })
@@ -142,8 +132,9 @@ try {
     ok(await p.evaluate(`!document.querySelector('[data-nexus-builder]').hidden`), 'cerrar la prueba con Omitir/× devuelve el panel')
     await p.evaluate(() => b.close())
   }
+})
 
-  // ================= exportar / importar / guardar / borrador
+test("exportar / importar / guardar / borrador", async ({ nueva }) => {
   {
     const p = await nueva()
     await p.evaluate(() => {
@@ -178,8 +169,9 @@ try {
     ok(again === 'Persistente', 'el borrador se recupera al volver (localStorage)')
     ok(await p.evaluate(async () => { const x = new TourBuilder({ id: 'otro' }); await x.ready; return x.toJSON().steps.length === 0 }), 'cada id tiene su propio borrador')
   }
+})
 
-  // ================= el JSON exportado funciona tal cual en un Tour
+test("el JSON exportado funciona tal cual en un Tour", async ({ nueva }) => {
   {
     const p = await nueva()
     await p.evaluate(() => { window.b = new TourBuilder({ storage: null }).open() })
@@ -193,11 +185,13 @@ try {
     })
     ok(ok2 === 'Exportar', 'new Tour({ steps: json.steps }) funciona sin conversión')
   }
-  // ================= por CDN (dos <script>, sin bundler)
+})
+
+test("por CDN (dos <script>, sin bundler)", async ({ nuevoContexto }) => {
   {
-    const p = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage()
+    const p = await (await nuevoContexto({ viewport: { width: 1100, height: 700 } })).newPage()
     const errs = []; p.on('pageerror', (e) => errs.push(String(e)))
-    await p.goto(base + 'cdn-builder.html'); await p.waitForFunction(() => window.ready)
+    await p.goto(BASE + 'cdn-builder.html'); await p.waitForFunction(() => window.ready)
     ok(await p.evaluate(() => !!document.querySelector('[data-nexus-builder]')), 'cdn: el constructor abre con dos <script>')
     const c = await centro(p, '#a'); await p.mouse.move(c.x, c.y); await p.mouse.click(c.x, c.y); await p.waitForTimeout(150)
     ok(await p.evaluate(() => b.toJSON().steps[0]?.element === '#a'), 'cdn: elegir un elemento funciona')
@@ -205,12 +199,4 @@ try {
     ok(await p.evaluate(() => !!document.querySelector('[data-nexus-tours]')), 'cdn: probar usa el Tour del archivo global')
     ok(errs.length === 0, 'cdn: sin errores ' + errs.join('|'))
   }
-} catch (e) {
-  console.log('ERROR', e)
-  fallos++
-} finally {
-  await browser.close()
-  try { process.kill(-server.pid) } catch {}
-}
-console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo OK')
-process.exit(fallos ? 1 : 0)
+})
