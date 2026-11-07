@@ -211,3 +211,120 @@ describe('supabasePractice sin crypto.randomUUID (HTTP sin TLS, navegadores viej
     }
   })
 })
+
+describe('PracticeSession (XMLHttpRequest)', () => {
+  const xhr = (method: string, url: string, body?: string, responseType: XMLHttpRequestResponseType = '') =>
+    new Promise<{ x: XMLHttpRequest; ev: string[] }>((res) => {
+      const x = new XMLHttpRequest()
+      const ev: string[] = []
+      x.responseType = responseType
+      x.onreadystatechange = () => ev.push('rs' + x.readyState)
+      x.onload = () => ev.push('load')
+      x.onloadend = () => res({ x, ev: [...ev, 'end'] })
+      x.open(method, url)
+      if (body) x.setRequestHeader('content-type', 'application/json')
+      x.send(body)
+    })
+
+  it('responde GET/POST desde memoria con estado, cabeceras, responseURL y eventos en orden', async () => {
+    iniciar({ data: { clients: [{ id: 1, name: 'Ana' }] }, rest: { clients: '/api/clients' } })
+    const g = await xhr('GET', '/api/clients')
+    expect(g.x.status).toBe(200)
+    expect(JSON.parse(g.x.responseText)).toEqual([{ id: 1, name: 'Ana' }])
+    expect(g.x.getResponseHeader('x-practice-mode')).toBe('1')
+    expect(g.x.getAllResponseHeaders()).toContain('content-type: application/json')
+    expect(g.x.responseURL).toMatch(/\/api\/clients$/)
+    expect(g.ev).toEqual(['rs2', 'rs4', 'load', 'end'])
+    const p = await xhr('POST', '/api/clients', JSON.stringify({ name: 'Zed' }), 'json')
+    expect(p.x.status).toBe(201)
+    expect(p.x.response).toMatchObject({ id: 2, name: 'Zed' })
+  })
+
+  it('bloquea escrituras sin ruta (403) y abort() cancela sin load', async () => {
+    const onBlocked = vi.fn()
+    iniciar({ onBlocked })
+    const b = await xhr('DELETE', '/api/otra/1')
+    expect(b.x.status).toBe(403)
+    expect(onBlocked).toHaveBeenCalled()
+    iniciar({ data: { c: [] }, rest: { c: '/api/c' }, latency: 50 })
+    const ev = await new Promise<string[]>((res) => {
+      const x = new XMLHttpRequest()
+      const e: string[] = []
+      x.onabort = () => e.push('abort')
+      x.onload = () => e.push('load')
+      x.onloadend = () => res([...e, 'end'])
+      x.open('GET', '/api/c')
+      x.send()
+      x.abort()
+    })
+    expect(ev).toEqual(['abort', 'end'])
+  })
+
+  it('xhr: false no parchea XMLHttpRequest; stop() restaura el prototipo', () => {
+    const send = XMLHttpRequest.prototype.send
+    const s = iniciar({ xhr: false })
+    expect(XMLHttpRequest.prototype.send).toBe(send)
+    s.stop()
+    const s2 = iniciar({})
+    expect(XMLHttpRequest.prototype.send).not.toBe(send)
+    s2.stop()
+    sesion = null
+    expect(XMLHttpRequest.prototype.send).toBe(send)
+  })
+})
+
+describe('supabasePractice: más operadores', () => {
+  const rest = (ruta: string, init?: RequestInit) => fetch(`https://p.supabase.co/rest/v1/${ruta}`, init)
+  const ops = () =>
+    supabasePractice({
+      data: {
+        t: [
+          { id: 1, n: 'Ana', e: 'ana@x.com', d: null, k: 5 },
+          { id: 2, n: 'Bea', e: 'bea@y.com', d: '2026-01-01', k: 7 },
+          { id: 3, n: 'Cris', e: 'cris@y.com', d: null, k: 9 },
+        ],
+      },
+      functions: { hola: ({ body }) => ({ hola: body?.n ?? 'nadie' }) },
+    })
+  const ids = async (r: Response) => ((await r.json()) as { id: number }[]).map((x) => x.id)
+
+  it('in, is, neq, gte/lte, like, not y and', async () => {
+    iniciar(ops())
+    expect(await ids(await rest('t?select=id&id=in.(1,3,9)'))).toEqual([1, 3])
+    expect(await ids(await rest('t?select=id&d=is.null'))).toEqual([1, 3])
+    expect(await ids(await rest('t?select=id&n=neq.Ana'))).toEqual([2, 3])
+    expect(await ids(await rest('t?select=id&k=gte.6&k=lte.8'))).toEqual([2])
+    expect(await ids(await rest('t?select=id&e=like.*@y.com'))).toEqual([2, 3])
+    expect(await ids(await rest('t?select=id&n=not.eq.Ana'))).toEqual([2, 3])
+    expect(await ids(await rest('t?select=id&and=(k.gt.5,d.is.null)'))).toEqual([3])
+  })
+
+  it('HEAD cuenta, Range pagina, PATCH y DELETE con y sin representación', async () => {
+    iniciar(ops())
+    const h = await rest('t?select=*', { method: 'HEAD', headers: { prefer: 'count=exact' } })
+    expect(h.headers.get('content-range')).toBe('0-2/3')
+    expect(await ids(await rest('t?select=id&order=id', { headers: { range: '1-2' } }))).toEqual([2, 3])
+    const pa = await rest('t?id=eq.1', { method: 'PATCH', headers: { prefer: 'return=representation' }, body: JSON.stringify({ k: 0 }) })
+    expect(await pa.json()).toMatchObject([{ id: 1, k: 0 }])
+    expect((await rest('t?id=eq.2', { method: 'PATCH', body: JSON.stringify({ k: 1 }) })).status).toBe(204)
+    expect((await rest('t?id=eq.3', { method: 'PATCH', body: '[]' })).status).toBe(400)
+    expect((await rest('t?id=eq.3', { method: 'DELETE' })).status).toBe(204)
+    const del = await rest('t?id=eq.2', { method: 'DELETE', headers: { prefer: 'return=representation' } })
+    expect(await ids(del)).toEqual([2])
+    expect(await ids(await rest('t?select=id'))).toEqual([1])
+  })
+
+  it('insert inválido, ignore-duplicates y funciones edge', async () => {
+    iniciar(ops())
+    expect((await rest('t', { method: 'POST', body: '"texto"' })).status).toBe(400)
+    const ig = await rest('t', {
+      method: 'POST',
+      headers: { prefer: 'resolution=ignore-duplicates' },
+      body: JSON.stringify({ id: 1, n: 'X' }),
+    })
+    expect(ig.status).toBe(201)
+    expect((await (await rest('t?select=n&id=eq.1')).json())[0].n).toBe('Ana')
+    const f = await fetch('https://p.supabase.co/functions/v1/hola', { method: 'POST', body: JSON.stringify({ n: 'Uri' }) })
+    expect(await f.json()).toEqual({ hola: 'Uri' })
+  })
+})

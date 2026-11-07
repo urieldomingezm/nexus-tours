@@ -10,7 +10,7 @@ export default defineConfig({
       // Lógica pura. Los módulos de interfaz (tour, checklist, builder, wrappers) se cubren en test/e2e.
       include: ['src/{fixtures,router,storage,theme,wait,practice,supabase}.ts', 'src/core/{layout,progress}.ts'],
       // Piso de cobertura: el CI falla si baja. Súbelo conforme agregues pruebas.
-      thresholds: { lines: 80, functions: 75, branches: 70, statements: 80 },
+      thresholds: { lines: 90, functions: 85, branches: 75, statements: 88 },
       reporter: ['text-summary', 'html', 'json-summary'],
       reportsDirectory: 'coverage',
     },
