@@ -33,6 +33,7 @@ const T: Record<string, [string, string]> = {
   ck_b: ['Conoce tu lista', 'Meet your list'], ck_c: ['Prueba el modo práctica', 'Try practice mode'], ck_cd: ['Actívalo en el panel', 'Turn it on in the panel'],
   ck_complete: ['¡Listo! Ya viste todo.', 'All done! You have seen everything.'], ck_start: ['Empezar', 'Start'], ck_review: ['Repetir', 'Replay'], ck_reset: ['Reiniciar', 'Reset'], ck_hide: ['Ocultar', 'Hide'],
   ck_open: ['Abrir checklist', 'Open checklist'], ck_close: ['Cerrar', 'Close'], ck_completed: ['completado', 'completed'], ck_pending: ['pendiente', 'pending'],
+  skip: ['Omitir', 'Skip'],
   next: ['Siguiente', 'Next'], previous: ['Atrás', 'Back'], done: ['Listo', 'Done'], close: ['Cerrar tour', 'Close tour'], practiceLbl: ['Modo práctica · nada se guarda', 'Practice mode · nothing is saved'],
 }
 let lang: Lang = (localStorage.getItem('nt-lang') as Lang) || (navigator.language.startsWith('es') ? 'es' : 'en')
@@ -99,7 +100,7 @@ function common() {
     font: font || undefined,
     arrow: $<HTMLInputElement>('arrow').checked,
     dir: ($<HTMLInputElement>('rtl').checked ? 'rtl' : 'auto') as 'rtl' | 'auto',
-    labels: { next: tr('next'), previous: tr('previous'), done: tr('done'), close: tr('close'), practice: tr('practiceLbl') },
+    labels: { skip: tr('skip'), next: tr('next'), previous: tr('previous'), done: tr('done'), close: tr('close'), practice: tr('practiceLbl') },
     practice: $<HTMLInputElement>('practice').checked
       ? {
           data: createFixtures({ clients: { count: 5, fields: { id: fake.id(), name: fake.name(), status: fake.pick(['Active', 'Pending', 'New']) } } }, { seed: 7, locale: lang }),

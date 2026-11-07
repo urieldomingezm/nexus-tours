@@ -1,6 +1,6 @@
 # nexus-tours
 
-Product tours that **don't break with modals**. Zero dependencies, ~10 KB gzip, TypeScript, accessible, with Vue and React wrappers.
+Product tours that **don't break with modals**. Zero dependencies, ~12 KB gzip, TypeScript, accessible, with Vue and React wrappers.
 
 Most tour libraries fall apart when the target lives inside a modal: it doesn't exist yet (animation, async content),
 the highlight ends up *under* the `<dialog>`, the tour's buttons are `inert`, or `Esc` closes the wrong thing.
@@ -154,6 +154,26 @@ npm run dev          # then open /site/index.html
 npm run build:site   # → site-dist/ (deploy to Vercel/Netlify/GitHub Pages)
 ```
 
+## Look and feel
+
+Out of the box: **progress dots** (a thin bar above 10 steps), a quiet **Skip** instead of the ×, and a **welcome card** for steps without a target (centered, wider, big title). Interactive steps (`advanceOn`) make the highlight **pulse**.
+
+```ts
+new Tour({
+  steps: [
+    { title: 'Welcome to Acme', description: 'A one-minute tour.', icon: '👋' },        // no element → welcome card
+    { element: '#new', title: 'Create a client', advanceOn: 'click', hint: 'Click the button' },
+    { title: 'All set', icon: '🎉', image: '/img/done.png' },                          // image: https://, /path or data:image/
+  ],
+  celebrate: true,            // light confetti at the end (skipped with prefers-reduced-motion)
+  progress: 'dots',           // 'dots' | 'text' ("2 / 5") | 'both'
+  skip: true,                 // quiet "Skip" button (labels.skip)
+  closeButton: undefined,     // the × shows only when there is no Skip; true / false to force it
+})
+```
+
+Parts for your CSS (`::part()`): `dots`, `icon`, `image`, `skip`, `hint`, `never`, plus the existing ones.
+
 ## Phones
 
 On narrow screens (≤ 600 px, change with `mobileBreakpoint`) the popover becomes a **bottom sheet**: full width, 44 px touch buttons, no arrow, it respects the notch / home-bar (`env(safe-area-inset-*)`) and rides above the on-screen keyboard. **Swipe sideways** to go next / back (mirrored in RTL), and the highlighted element is scrolled above the sheet (if it sits at the very end of the page, temporary room is added below it and removed afterwards).
@@ -264,7 +284,7 @@ new Tour({
 
 ## Use it from a CDN (no npm, no bundler)
 
-For plain websites (WordPress, static HTML, PHP...), one `<script>` is enough. The file includes **everything** (tours, checklist, themes, fixtures, practice mode) in ~19 KB gzip and exposes a single global, `NexusTours`.
+For plain websites (WordPress, static HTML, PHP...), one `<script>` is enough. The file includes **everything** (tours, checklist, themes, fixtures, practice mode) in ~21 KB gzip and exposes a single global, `NexusTours`.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.1/dist/nexus-tours.all.iife.js"></script>
@@ -290,7 +310,7 @@ Or as an ES module:
 
 - Pin the version (`@0.1.0`) in production, and add [`integrity` (SRI)](https://www.srihash.org/) if you want the browser to verify the file.
 - `unpkg.com/nexus-tours@0.1` also works (the `unpkg`/`jsdelivr` fields in `package.json` point to the global file).
-- The per-feature files (`nexus-tours.js` ~10 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
+- The per-feature files (`nexus-tours.js` ~12 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
 - **Publishing:** CDNs serve what is on npm (or a *public* GitHub repo). While this repo is private there is no public URL yet; `npm publish` is what turns on the links above.
 
 ## Onboarding checklist
@@ -362,7 +382,8 @@ new Tour({
   keyboard?: boolean,            // ←/→/Enter, default true
   showProgress?: boolean,        // "2 / 5", default true
   padding?: number,              // default 6
-  labels?: { next, previous, done, close, progress, practice, never },
+  labels?: { next, previous, done, close, progress, practice, never, skip },
+  progress?: 'dots' | 'text' | 'both', skip?: boolean, closeButton?: boolean, celebrate?: boolean,
   mobile?: 'auto' | 'always' | 'never', mobileBreakpoint?: number,   // bottom sheet on phones
   router?: 'history' | 'location' | { current(), go(path), reloads? },
   persist?: { id, storage?, version?, dontShowAgain? },
@@ -383,6 +404,7 @@ interface Step {
   padding?: number
   advanceOn?: 'click' | 'input' | … | { event?, target?, when?, until?, delay? }   // move on when the user acts
   hint?: string                        // call to action under the description
+  icon?: string, image?: string        // emoji / image above the title
   hideNext?: boolean                   // with advanceOn: no "Next" button
   route?: string                       // needs the tour's router
 }

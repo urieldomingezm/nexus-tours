@@ -4,6 +4,7 @@ import { PracticeSession } from './practice'
 import { themeVars } from './theme'
 import { isVisible, waitForElement } from './wait'
 import { localStore, memoryStore } from './storage'
+import { confetti } from './confetti'
 import { resolveRouter, sameRoute } from './router'
 
 const DEFAULT_LABELS: Labels = {
@@ -14,6 +15,7 @@ const DEFAULT_LABELS: Labels = {
   progress: '{current} / {total}',
   practice: 'Practice mode · nothing is saved',
   never: "Don't show again",
+  skip: 'Skip',
 }
 
 const GAP = 12
@@ -233,6 +235,7 @@ export class Tour implements TourApi {
     this.write('completed', this.opts.steps.length - 1, true)
     this.emit('end')
     this.teardown()
+    if (this.opts.celebrate) confetti(this.opts.theme?.accent)
   }
 
   private async leave() {
@@ -535,6 +538,47 @@ export class Tour implements TourApi {
       pop.appendChild(a)
       this.arrow = a
     }
+    const prog = this.opts.progress ?? 'dots'
+    if (this.opts.showProgress && total > 1 && prog !== 'text') {
+      if (total > 10) {
+        const bar = document.createElement('div')
+        bar.className = 'gm-bar'
+        bar.setAttribute('part', 'dots')
+        bar.setAttribute('aria-hidden', 'true')
+        const fill = document.createElement('i')
+        fill.style.width = `${((i + 1) / total) * 100}%`
+        bar.appendChild(fill)
+        pop.appendChild(bar)
+      } else {
+        const dots = document.createElement('div')
+        dots.className = 'gm-dots'
+        dots.setAttribute('part', 'dots')
+        dots.setAttribute('aria-hidden', 'true')
+        for (let n = 0; n < total; n++) {
+          const d = document.createElement('span')
+          d.className = 'gm-dot'
+          d.dataset.state = n < i ? 'done' : n === i ? 'current' : 'todo'
+          dots.appendChild(d)
+        }
+        pop.appendChild(dots)
+      }
+    }
+    if (step.image && /^(https?:|data:image\/|\/|\.{1,2}\/)/i.test(step.image)) {
+      const img = document.createElement('img')
+      img.className = 'gm-img'
+      img.setAttribute('part', 'image')
+      img.alt = ''
+      img.src = step.image
+      pop.appendChild(img)
+    }
+    if (step.icon) {
+      const ic = document.createElement('div')
+      ic.className = 'gm-icon'
+      ic.setAttribute('part', 'icon')
+      ic.setAttribute('aria-hidden', 'true')
+      ic.textContent = step.icon
+      pop.appendChild(ic)
+    }
     pop.removeAttribute('aria-labelledby')
     pop.removeAttribute('aria-describedby')
     pop.setAttribute('aria-label', step.title ? step.title : 'Tour')
@@ -569,22 +613,26 @@ export class Tour implements TourApi {
       pop.setAttribute('aria-describedby', [pop.getAttribute('aria-describedby'), h.id].filter(Boolean).join(' '))
     }
 
-    const x = this.button('×', 'gm-btn gm-x', 'close', () => this.stop())
-    x.setAttribute('aria-label', this.labels.close)
-    pop.appendChild(x)
+    const last = i === total - 1
+    const skip = this.opts.skip !== false && total > 1 && !last
+    if (this.opts.closeButton ?? !skip) {
+      const x = this.button('×', 'gm-btn gm-x', 'close', () => this.stop())
+      x.setAttribute('aria-label', this.labels.close)
+      pop.appendChild(x)
+    }
 
     const foot = document.createElement('div')
     foot.className = 'gm-foot'
     foot.setAttribute('part', 'footer')
+    if (skip) foot.appendChild(this.button(this.labels.skip, 'gm-skip', 'skip', () => this.stop()))
     if (this.opts.showProgress && total > 1) {
       const p = document.createElement('span')
-      p.className = 'gm-progress'
+      p.className = prog === 'dots' ? 'gm-progress gm-sr' : 'gm-progress'
       p.setAttribute('part', 'progress')
       p.textContent = this.labels.progress.replace('{current}', String(i + 1)).replace('{total}', String(total))
       foot.appendChild(p)
     }
     if (i > 0) foot.appendChild(this.button(this.labels.previous, 'gm-btn', 'button button-secondary', () => void this.previous()))
-    const last = i === total - 1
     if (!(step.hideNext && step.advanceOn)) foot.appendChild(this.button(last ? this.labels.done : this.labels.next, 'gm-btn gm-primary', 'button button-primary', () => void this.next()))
     pop.appendChild(foot)
     if (this.opts.persist?.dontShowAgain) {
@@ -659,6 +707,8 @@ export class Tour implements TourApi {
       hole = { x: r.left - pad - ox, y: r.top - pad - oy, w: r.width + pad * 2, h: r.height + pad * 2 }
     }
 
+    this.pop.toggleAttribute('data-welcome', !hole)
+    this.ring.toggleAttribute('data-pulse', !!step.advanceOn && !!hole)
     if (hole) {
       this.ring.style.display = 'block'
       const rs = this.ring.style
