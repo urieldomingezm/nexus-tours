@@ -76,6 +76,18 @@
     "accessibility"
   ],
   "license": "MIT",
+  "author": {
+    "name": "Angel Uriel Domínguez Medina (DevMedina)",
+    "url": "https://cv-uriel-nine.vercel.app"
+  },
+  "homepage": "https://github.com/urieldomingezm/nexus-tours#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/urieldomingezm/nexus-tours.git"
+  },
+  "bugs": {
+    "url": "https://github.com/urieldomingezm/nexus-tours/issues"
+  },
   "devDependencies": {
     "@supabase/supabase-js": "^2.119.0",
     "@types/react": "^19.3.0",

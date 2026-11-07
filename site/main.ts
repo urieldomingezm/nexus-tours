@@ -21,7 +21,7 @@ const T: Record<string, [string, string]> = {
   c_arrow: ['Flecha', 'Arrow'], c_rtl: ['Derecha a izquierda', 'Right-to-left'],
   c_note: ['Con modo práctica activo, guardar un cliente no toca los datos reales; al terminar el tour todo vuelve.', 'With practice mode on, saving a client never touches the real data; when the tour ends everything is back.'],
   new: ['Nuevo cliente', 'New client'], th_name: ['Nombre', 'Name'], th_status: ['Estado', 'Status'],
-  use_h: ['Uso', 'Usage'], foot: ['Hecho por Uriel Domínguez · rama de librerías de Nexus · MIT', 'By Uriel Domínguez · Nexus libraries branch · MIT'],
+  use_h: ['Uso', 'Usage'], foot: ['© 2026 DevMedina (Angel Uriel Domínguez Medina) · rama de librerías de Nexus · Licencia MIT', '© 2026 DevMedina (Angel Uriel Domínguez Medina) · Nexus libraries branch · MIT License'],
   m_title: ['Nuevo cliente', 'New client'], m_loading: ['Cargando formulario…', 'Loading form…'], m_name: ['Nombre', 'Name'], m_cancel: ['Cancelar', 'Cancel'], m_save: ['Guardar', 'Save'],
   src_real: ['Mostrando datos reales (simulados en esta página).', 'Showing real data (simulated on this page).'],
   src_practice: ['Modo práctica: datos de ejemplo, nada se guarda.', 'Practice mode: example data, nothing is saved.'],
