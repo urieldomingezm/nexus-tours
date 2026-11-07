@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Nexus Personal · demo de nexus-tours</title>
-  <meta name="description" content="Demo interactiva de nexus-tours: recorrido guiado con modales, pasos interactivos y modo práctica." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234263eb'/%3E%3Cpath d='M9 22V10l14 12V10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <title>Nexus Personal · demo de nexus-tours · DevMedina</title>
+  <meta name="description" content="Demo interactiva de nexus-tours, la librería de tours guiados de DevMedina: modales, pasos interactivos y modo práctica." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2316151d'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='15' font-weight='800' fill='white' text-anchor='middle'%3EDM%3C/text%3E%3C/svg%3E" />
   <style>
     :root{--ink:#16151d;--muted:#5b5970;--bg:#f4f5fb;--card:#fff;--line:#e4e3f0;--accent:#4263eb;--ok:#12805c;--warn:#b45309}
     *{box-sizing:border-box}
@@ -17,7 +17,8 @@
     aside .logo{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
     aside a{display:flex;gap:10px;align-items:center;color:inherit;text-decoration:none;padding:9px 10px;border-radius:9px;font-weight:600;opacity:.8}
     aside a.on{background:#2a2940;opacity:1;color:#fff}
-    aside .bot{margin-top:auto;font-size:12px;opacity:.6;padding:8px 10px}
+    aside .bot{margin-top:auto;font-size:12px;opacity:.7;padding:8px 10px}
+    aside .bot a.by{display:inline;padding:0;opacity:1;border-radius:0;color:#fff;font-weight:800;text-decoration:none;border-bottom:2px solid var(--accent)}
     main{padding:22px clamp(14px,3vw,32px) 40px;min-width:0}
     .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px}
     h1{margin:0;font-size:24px;letter-spacing:-.02em}
@@ -42,6 +43,11 @@
     .tag{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:#e6f6ef;color:var(--ok)}
     .tag.v{background:#fff3e0;color:var(--warn)}.tag.n{background:#e8edff;color:#2f4bc9}
     .note{font-size:13px;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line)}
+    .made{color:var(--muted);font-size:13px;margin:22px 0 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .made a{color:var(--ink);font-weight:700;text-decoration:none}
+    .made a:hover{color:var(--accent)}
+    .by2{display:inline-flex;align-items:center;gap:6px}
+    .dm{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#16151d;color:#fff;font-size:10px;font-weight:800;letter-spacing:-.02em}
     .foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
     dialog{border:0;border-radius:16px;padding:22px;width:min(420px,92vw);box-shadow:0 24px 70px rgba(0,0,0,.3);opacity:0;transform:translateY(30px) scale(.96);transition:opacity .35s,transform .35s;color:var(--ink)}
     dialog[open]{opacity:1;transform:none}
@@ -71,7 +77,7 @@
       <a href="#"><i>🏖</i> Vacaciones</a>
       <a href="#"><i>📦</i> Inventario</a>
       <a href="#"><i>📊</i> Reportes</a>
-      <div class="bot">Demo · datos ficticios</div>
+      <div class="bot">Demo · datos ficticios<br>por <a class="by" href="https://cv-uriel-nine.vercel.app" target="_blank" rel="noopener">DevMedina</a></div>
     </aside>
     <main>
       <div class="top">
@@ -100,6 +106,7 @@
         <button class="btn alt" id="constructor">🛠 Abrir constructor visual</button>
         <button class="btn alt" id="reiniciar">↺ Reiniciar demo</button>
       </div>
+      <p class="made">Hecho con <b>nexus-tours</b> por <a class="by2" href="https://cv-uriel-nine.vercel.app" target="_blank" rel="noopener"><span class="dm">DM</span> DevMedina</a> · <a href="https://github.com/urieldomingezm" target="_blank" rel="noopener">GitHub</a></p>
     </main>
   </div>
 

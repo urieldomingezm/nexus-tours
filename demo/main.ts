@@ -89,7 +89,7 @@ const pasos = () => [
   { element: '#nombre', title: 'Escribe el nombre', description: 'El formulario cargó después de abrir el modal y el recorrido esperó por él.', hint: 'Escribe al menos 3 letras', advanceOn: { event: 'input', delay: 700, when: (e: Event) => (e.target as HTMLInputElement).value.trim().length >= 3 }, hideNext: true },
   { element: '#guardar', title: 'Guarda', description: 'En modo práctica esto se queda en datos de ejemplo.', hint: 'Pulsa “Guardar”', advanceOn: { event: 'click', delay: 500 }, hideNext: true },
   { element: '#tabla', title: '¡Ahí está!', description: 'Tu empleado aparece en la lista. Al terminar, todo vuelve a como estaba.', side: 'top' as const },
-  { icon: '🎉', title: '¡Eso es todo!', description: 'Así de fácil es guiar a tus usuarios con nexus-tours.' },
+  { icon: '🎉', title: '¡Eso es todo!', description: 'Así de fácil es guiar a tus usuarios con nexus-tours, una librería hecha por DevMedina.' },
 ]
 let tour: Tour | null = null
 function empezar() {
