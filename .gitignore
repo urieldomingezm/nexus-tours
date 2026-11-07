@@ -2,3 +2,6 @@ node_modules
 dist
 site-dist
 demo-dist
+coverage/
+test-results/
+playwright-report/

@@ -1,32 +1,16 @@
-// Móvil, pasos interactivos (advanceOn), progreso guardado y cambio de página.
-import { createRequire } from 'node:module'
-import { spawn } from 'node:child_process'
-const require = createRequire(import.meta.url)
-const { chromium } = require(process.env.PW_PATH || 'playwright')
+// Móvil, pasos interactivos (advanceOn), aspecto, progreso guardado y cambio de página.
+import { test as base, ok, BASE, S } from './utilidades.mjs'
 
-const PORT = 5197
-const server = spawn('npx', ['vite', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true })
-const base = `http://localhost:${PORT}/`
-for (let i = 0; i < 80; i++) {
-  try { if ((await fetch(base)).ok) break } catch {}
-  await new Promise((r) => setTimeout(r, 250))
-}
-let fallos = 0
-const ok = (c, m) => { console.log((c ? '✓ ' : '✗ FALLO ') + m); if (!c) fallos++ }
-const browser = await chromium.launch()
-const S = (q) => `document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector(${JSON.stringify(q)})`
-const nueva = async (opts = {}) => {
-  const ctx = await browser.newContext({ viewport: { width: 1000, height: 700 }, ...opts })
-  const p = await ctx.newPage()
-  p.on('pageerror', (e) => { console.log('pageerror', e.message); fallos++ })
-  return p
-}
+const test = base.extend({
+  nueva: async ({ nuevoContexto, vigilar }, use) => {
+    await use(async (opts = {}) => vigilar(await (await nuevoContexto({ viewport: { width: 1000, height: 700 }, ...opts })).newPage()))
+  },
+})
 const titulo = (p) => p.evaluate(`${S('.gm-title')}?.textContent ?? null`)
 const espera = (p, t) => p.waitForFunction(`${S('.gm-title')}?.textContent === ${JSON.stringify(t)}`, null, { timeout: 4000 })
-const abre = async (p, url = 'features.html') => { await p.goto(base + url); await p.waitForFunction(() => window.ready) }
+const abre = async (p, url = 'features.html') => { await p.goto(BASE + url); await p.waitForFunction(() => window.ready) }
 
-try {
-  // ================= pasos que avanzan solos
+test("pasos que avanzan solos", async ({ nueva }) => {
   {
     const p = await nueva(); await abre(p)
     await p.evaluate(() => {
@@ -101,8 +85,9 @@ try {
     await p.evaluate(() => (window.listo = true)); await espera(p, 'Fin')
     ok(true, 'until: avanza cuando la condición se cumple')
   }
+})
 
-  // ================= aspecto: puntos, Omitir, bienvenida, pulso, confeti
+test("aspecto: puntos, Omitir, bienvenida, pulso, confeti", async ({ nueva }) => {
   {
     const p = await nueva(); await abre(p)
     await p.evaluate(() => {
@@ -153,8 +138,9 @@ try {
     await espera(r, 'Solo'); await r.evaluate(`${S('.gm-primary')}.click()`); await r.waitForTimeout(300)
     ok(await r.evaluate(() => !document.querySelector('[data-nexus-confetti]')), 'movimiento reducido: no hay confeti')
   }
+})
 
-  // ================= móvil
+test("móvil", async ({ nueva }) => {
   {
     const p = await nueva({ viewport: { width: 390, height: 700 }, hasTouch: true, isMobile: true }); await abre(p)
     await p.evaluate(() => {
@@ -203,8 +189,9 @@ try {
     await espera(n, 'Hola')
     ok((await n.evaluate(`${S('.gm-pop')}.dataset.mode`)) === 'float', "mobile: 'never' mantiene el popover flotante")
   }
+})
 
-  // ================= progreso guardado
+test("progreso guardado", async ({ nueva }) => {
   {
     const p = await nueva(); await abre(p)
     const mk = `window.mk = (extra = {}) => new Tour({ persist: { id: 'bienvenida', dontShowAgain: true, ...extra }, steps: [{ element: '#go', title: 'A' }, { element: '#other', title: 'B' }, { element: '#go', title: 'C' }] })`
@@ -241,8 +228,9 @@ try {
     ok(await p.evaluate(() => Object.keys(db).includes('nexus-tours:tour:bienvenida')), 'storage propio asíncrono: guarda con la clave nexus-tours:tour:<id>')
     await p.evaluate(() => t.stop())
   }
+})
 
-  // ================= cambio de página: SPA
+test("cambio de página: SPA", async ({ nueva }) => {
   {
     const p = await nueva(); await abre(p)
     await p.evaluate(() => {
@@ -274,8 +262,9 @@ try {
     await espera(q, 'Con router propio')
     ok(await q.evaluate(() => log.length === 1 && log[0] === '/clients'), 'router propio: llama a go() una vez')
   }
+})
 
-  // ================= cambio de página: sitio de varias páginas
+test("cambio de página: sitio de varias páginas", async ({ nueva }) => {
   {
     const p = await nueva(); await abre(p, 'mpa-a.html')
     await p.evaluate(() => t.startIfNeeded()); await espera(p, 'Paso en A')
@@ -289,12 +278,4 @@ try {
     ok((await p.evaluate(() => t.status())) === 'completed', 'multipágina: termina y queda completado')
     ok((await p.evaluate(() => t.startIfNeeded())) === false, 'multipágina: ya no reaparece')
   }
-} catch (e) {
-  console.log('ERROR', e)
-  fallos++
-} finally {
-  await browser.close()
-  try { process.kill(-server.pid) } catch {}
-}
-console.log(fallos ? `\n${fallos} FALLOS` : '\nTodo OK')
-process.exit(fallos ? 1 : 0)
+})

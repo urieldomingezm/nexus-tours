@@ -57,6 +57,14 @@ const res = (body: unknown, status = 200, headers: Record<string, string> = {}) 
   })
 const fail = (status: number, code: string, message: string, details: string | null = null) => res({ code, details, hint: null, message }, status)
 
+/** UUID v4. `crypto.randomUUID` solo existe en contextos seguros (HTTPS/localhost) y navegadores recientes. */
+const uuid = (): string =>
+  globalThis.crypto?.randomUUID?.() ??
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
+
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /** Split on top-level commas (ignores commas inside parentheses and double quotes). */
@@ -203,13 +211,13 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
           : d === 'now()'
             ? new Date().toISOString()
             : d === 'gen_random_uuid()' || d === 'uuid()'
-              ? crypto.randomUUID()
+              ? uuid()
               : d
     }
   }
   const nextId = (rows: Row[], key: string): unknown => {
     const ids = rows.map((r) => r[key])
-    if (ids.some((i) => typeof i === 'string')) return globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
+    if (ids.some((i) => typeof i === 'string')) return uuid()
     const nums = ids.map(Number).filter((n) => !Number.isNaN(n))
     return (nums.length ? Math.max(...nums) : 0) + 1
   }
