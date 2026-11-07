@@ -7,6 +7,7 @@ const ALIAS = {
 
 // Library builds (one per mode). `vite build` = core. See "build" in package.json.
 const LIBS = {
+  all: { entry: 'src/global.ts', name: 'NexusTours', fileName: 'nexus-tours.all', formats: ['es', 'iife'], external: [] },
   core: { entry: 'src/index.ts', name: 'NexusTours', fileName: 'nexus-tours', formats: ['es', 'umd'], external: [] },
   fixtures: { entry: 'src/fixtures.ts', name: 'NexusToursFixtures', fileName: 'fixtures', formats: ['es', 'umd'], external: [] },
   themes: { entry: 'src/themes.ts', name: 'NexusToursThemes', fileName: 'themes', formats: ['es', 'umd'], external: [] },
@@ -28,6 +29,7 @@ export default defineConfig(({ mode, command }) => {
   const lib = LIBS[mode]
   if (command === 'build' && lib) {
     return {
+      resolve: mode === 'all' ? { alias: ALIAS } : undefined,
       build: {
         lib: { entry: lib.entry, name: lib.name, fileName: lib.fileName, formats: lib.formats },
         rollupOptions: { external: lib.external },

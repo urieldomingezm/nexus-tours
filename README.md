@@ -153,6 +153,37 @@ npm run dev          # then open /site/index.html
 npm run build:site   # → site-dist/ (deploy to Vercel/Netlify/GitHub Pages)
 ```
 
+## Use it from a CDN (no npm, no bundler)
+
+For plain websites (WordPress, static HTML, PHP...), one `<script>` is enough. The file includes **everything** (tours, checklist, themes, fixtures, practice mode) in ~12 KB gzip and exposes a single global, `NexusTours`.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.1/dist/nexus-tours.all.iife.js"></script>
+<script>
+  const tour = new NexusTours.Tour({
+    theme: NexusTours.themes.mint,
+    steps: [
+      { element: '#new', title: 'Create a client', description: 'Start here.' },
+      { element: '#table', title: 'Your list', description: 'They show up here.' },
+    ],
+  })
+  tour.start()
+</script>
+```
+
+Or as an ES module:
+
+```html
+<script type="module">
+  import { Tour, Checklist, themes, createFixtures, fake } from 'https://cdn.jsdelivr.net/npm/nexus-tours@0.1/dist/nexus-tours.all.js'
+</script>
+```
+
+- Pin the version (`@0.1.0`) in production, and add [`integrity` (SRI)](https://www.srihash.org/) if you want the browser to verify the file.
+- `unpkg.com/nexus-tours@0.1` also works (the `unpkg`/`jsdelivr` fields in `package.json` point to the global file).
+- The per-feature files (`nexus-tours.js` ~8 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
+- **Publishing:** CDNs serve what is on npm (or a *public* GitHub repo). While this repo is private there is no public URL yet; `npm publish` is what turns on the links above.
+
 ## Onboarding checklist
 
 A floating "Getting started" widget that remembers **what each user has already seen**. Finishing an item's tour checks it off.
