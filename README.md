@@ -479,3 +479,21 @@ Practice mode answers `XMLHttpRequest` the same way it answers `fetch`, so axios
 get their writes blocked too. Nothing to configure; turn it off with `practice: { xhr: false }`. Synchronous XHR is never intercepted.
 Requests nobody handles (reads) go to the real server; `abort()`, `responseType` (`json`, `blob`, `arraybuffer`), response headers and
 the `readystatechange`/`load`/`loadend` events behave like the real thing.
+
+
+## Demo para portafolio
+
+`demo/` es una mini app ("Nexus Personal") que enseña la librería en uso: tarjeta de bienvenida, pasos interactivos (`advanceOn`), un modal que carga después, modo práctica con datos de ejemplo, confetti, hoja inferior en móvil y el constructor visual.
+
+```bash
+npm run build:demo        # → demo-dist/ (HTML + JS estáticos, rutas relativas)
+```
+
+Sube la carpeta a cualquier hosting estático (o a `public/nexus-tours-demo/` de tu portafolio) y enlázala, o incrústala:
+
+```html
+<iframe src="/nexus-tours-demo/?embed=1" title="Demo de nexus-tours"
+        style="width:100%;height:640px;border:0;border-radius:14px" loading="lazy"></iframe>
+```
+
+`?embed=1` oculta la barra lateral. El CI publica la carpeta como artefacto (`demo-portafolio`) en cada push.

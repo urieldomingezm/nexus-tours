@@ -28,6 +28,15 @@ export default defineConfig(({ mode, command }) => {
       build: { outDir: '../site-dist', emptyOutDir: true, target: 'es2020' },
     }
   }
+  // Demo para portafolio: `vite build --mode demo` (root: demo/) → demo-dist/
+  if (mode === 'demo') {
+    return {
+      root: 'demo',
+      base: './',
+      resolve: { alias: ALIAS },
+      build: { outDir: '../demo-dist', emptyOutDir: true, target: 'es2020' },
+    }
+  }
   const lib = LIBS[mode]
   if (command === 'build' && lib) {
     return {

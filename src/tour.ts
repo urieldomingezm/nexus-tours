@@ -393,10 +393,13 @@ export class Tour implements TourApi {
     const raw = step.advanceOn
     if (!raw) return
     const a: AdvanceOn = typeof raw === 'string' ? { event: raw } : raw
+    const idx = this._index
     const go = () => {
       this.clearAdvance()
+      // The user already did it: still move on if the step was only re-shown meanwhile (e.g. the action closed
+      // the modal that held the target). Pressing Next / Back or stopping the tour in the meantime wins.
       setTimeout(() => {
-        if (this._active && this.nav === my && this.shown === step) void this.next()
+        if (this._active && this._index === idx) void this.next()
       }, a.delay ?? 0)
     }
     if (a.event) {
