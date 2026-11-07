@@ -1,8 +1,10 @@
 import { CSS } from './styles'
-import type { Labels, Side, Step, StepContext, TargetRef, Theme, TourApi, TourEvent, TourOptions } from './types'
+import type { AdvanceOn, Labels, PersistStorage, Router, Side, Step, StepContext, TargetRef, Theme, TourApi, TourEvent, TourOptions, TourStatus } from './types'
 import { PracticeSession } from './practice'
 import { themeVars } from './theme'
 import { isVisible, waitForElement } from './wait'
+import { localStore, memoryStore } from './storage'
+import { resolveRouter, sameRoute } from './router'
 
 const DEFAULT_LABELS: Labels = {
   next: 'Next',
@@ -11,6 +13,7 @@ const DEFAULT_LABELS: Labels = {
   close: 'Close tour',
   progress: '{current} / {total}',
   practice: 'Practice mode · nothing is saved',
+  never: "Don't show again",
 }
 
 const GAP = 12
@@ -66,6 +69,12 @@ export class Tour implements TourApi {
   private session: PracticeSession | null = null
   private rtl = false
   private previousFocus: Element | null = null
+  private router: Router | null
+  private store: PersistStorage | null = null
+  private saved: { status: Exclude<TourStatus, 'new'>; index: number } | null = null
+  private disarm: (() => void) | null = null
+  private untilFn: (() => void) | null = null
+  private spacer: HTMLElement | null = null
 
   constructor(options: TourOptions) {
     this.opts = {
@@ -79,6 +88,9 @@ export class Tour implements TourApi {
       ...options,
     }
     this.labels = { ...DEFAULT_LABELS, ...options.labels }
+    this.router = resolveRouter(options.router)
+    const p = options.persist
+    if (p) this.store = p.storage ?? (p.storage === null ? memoryStore() : localStore())
   }
 
   get index() {
@@ -113,10 +125,66 @@ export class Tour implements TourApi {
     return { index: this._index, step: this.opts.steps[this._index] as Step, element: this.target, tour: this }
   }
 
+  // ---------------------------------------------------------------- saved progress
+
+  private key() {
+    return `nexus-tours:tour:${this.opts.persist!.id}`
+  }
+
+  private async load() {
+    if (!this.store) return null
+    try {
+      const raw = await this.store.get(this.key())
+      if (!raw) return null
+      const s = JSON.parse(raw) as { status: Exclude<TourStatus, 'new'>; index: number; v?: unknown }
+      return s.v === (this.opts.persist!.version ?? null) ? { status: s.status, index: s.index } : null
+    } catch {
+      return null
+    }
+  }
+
+  private write(status: Exclude<TourStatus, 'new'>, index: number, force = false) {
+    if (!this.store) return
+    // Replaying a finished tour must not turn it back into "in progress".
+    if (!force && status === 'in-progress' && this.saved && this.saved.status !== 'in-progress') return
+    this.saved = { status, index }
+    try {
+      void Promise.resolve(this.store.set(this.key(), JSON.stringify({ status, index, v: this.opts.persist!.version ?? null }))).catch(() => {})
+    } catch {
+      /* storage unavailable: progress just isn't saved */
+    }
+  }
+
+  async status(): Promise<TourStatus> {
+    return (await this.load())?.status ?? 'new'
+  }
+
+  async startIfNeeded() {
+    if (this._active || !this.opts.steps.length) return false
+    const s = await this.load()
+    if (s && s.status !== 'in-progress') return false
+    await this.start(Math.min(Math.max(0, s?.index ?? 0), this.opts.steps.length - 1))
+    return true
+  }
+
+  async reset() {
+    this.saved = null
+    if (!this.store) return
+    try {
+      await (this.store.remove ? this.store.remove(this.key()) : this.store.set(this.key(), ''))
+    } catch {
+      /* ignore */
+    }
+  }
+
   async start(index = 0) {
     if (this._active || !this.opts.steps.length) return
     this._active = true
     this.previousFocus = document.activeElement
+    if (this.store) {
+      this.saved = await this.load()
+      if (!this._active) return
+    }
     this.build()
     if (this.opts.practice) {
       this.session = new PracticeSession(this.opts.practice)
@@ -162,11 +230,13 @@ export class Tour implements TourApi {
   }
 
   private finish() {
+    this.write('completed', this.opts.steps.length - 1, true)
     this.emit('end')
     this.teardown()
   }
 
   private async leave() {
+    this.clearAdvance()
     const step = this.shown
     if (!step) return
     const ctx = this.ctx()
@@ -190,7 +260,26 @@ export class Tour implements TourApi {
     this.target = null
     this.lastKey = ''
     this.ring.style.display = 'none'
+    this.clearAdvance()
+    this.spacer?.remove()
+    this.spacer = null
     try {
+      const router = this.router
+      if (step.route && router && !sameRoute(router.current(), step.route)) {
+        if (router.reloads) {
+          // The page is about to unload: save the step so the next page resumes here (startIfNeeded).
+          this.write('in-progress', i, true)
+          await router.go(step.route)
+          return
+        }
+        await router.go(step.route)
+        const end = Date.now() + (step.waitTimeout ?? this.opts.waitTimeout)
+        while (!sameRoute(router.current(), step.route) && Date.now() < end) {
+          await new Promise((r) => setTimeout(r, 40))
+          if (aborted.aborted) return
+        }
+        if (aborted.aborted) return
+      }
       if (runBefore) {
         try {
           await step.before?.({ index: i, step, element: null, tour: this })
@@ -225,10 +314,15 @@ export class Tour implements TourApi {
       this.shown = step
       this.mount(el)
       this.renderPopover(step, i)
-      if (el) this.reveal(el)
       this.reposition(true)
+      if (el) {
+        this.reveal(el) // after the first layout: on phones it needs the sheet's height
+        this.reposition(true)
+      }
       this.pop.focus({ preventScroll: true })
       this.emit('step')
+      this.write('in-progress', i)
+      this.armAdvance(step, my)
     } finally {
       if (this.nav === my) this.busy = false
     }
@@ -236,9 +330,83 @@ export class Tour implements TourApi {
 
   /** Scrolls only when needed: centered if it is off-screen, minimal if it is clipped by a scroll container. */
   private reveal(el: Element) {
+    const behavior = this.reduceMotion() ? 'auto' : 'smooth'
+    if (this.pop.dataset.mode === 'sheet') {
+      // Phone: bring it into view, then a bit more so it ends up above the bottom sheet.
+      el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
+      const rect = el.getBoundingClientRect()
+      const over = Math.min(rect.bottom - (window.innerHeight - this.pop.offsetHeight - 24), rect.top - 8)
+      if (over > 0) {
+        let s: Element | null = el.parentElement
+        while (s && !(s.scrollHeight > s.clientHeight && /auto|scroll/.test(getComputedStyle(s).overflowY))) s = s.parentElement
+        const scroller = s ?? document.scrollingElement
+        if (scroller) {
+          const from = scroller.scrollTop
+          scroller.scrollBy({ top: over, behavior: 'auto' })
+          const missing = over - (scroller.scrollTop - from)
+          if (missing > 1) {
+            // The target is at the very end of the page: add temporary room below it so it can rise above the sheet.
+            const sp = document.createElement('div')
+            sp.setAttribute('aria-hidden', 'true')
+            sp.style.cssText = `height:${Math.ceil(missing)}px;width:1px;flex:none;pointer-events:none`
+            ;(s ?? document.body).appendChild(sp)
+            this.spacer = sp
+            scroller.scrollBy({ top: missing, behavior: 'auto' })
+          }
+        }
+      }
+      return
+    }
     const r = el.getBoundingClientRect()
     const inView = r.top >= 0 && r.left >= 0 && r.bottom <= window.innerHeight && r.right <= document.documentElement.clientWidth
-    el.scrollIntoView({ block: inView ? 'nearest' : 'center', inline: 'nearest', behavior: this.reduceMotion() ? 'auto' : 'smooth' })
+    el.scrollIntoView({ block: inView ? 'nearest' : 'center', inline: 'nearest', behavior })
+  }
+
+  // ---------------------------------------------------------------- interactive steps
+
+  private clearAdvance() {
+    this.disarm?.()
+    this.disarm = null
+    this.untilFn = null
+  }
+
+  /** `advanceOn`: move on by itself when the user does the action. */
+  private armAdvance(step: Step, my: number) {
+    this.clearAdvance()
+    const raw = step.advanceOn
+    if (!raw) return
+    const a: AdvanceOn = typeof raw === 'string' ? { event: raw } : raw
+    const go = () => {
+      this.clearAdvance()
+      setTimeout(() => {
+        if (this._active && this.nav === my && this.shown === step) void this.next()
+      }, a.delay ?? 0)
+    }
+    if (a.event) {
+      const ev = a.event
+      const h = (e: Event) => {
+        const path = e.composedPath()
+        if (this.root && path.includes(this.root)) return // the tour's own buttons
+        const t = a.target !== undefined ? resolveRef(a.target) : this.target
+        if (a.target !== undefined && !t) return
+        if (t && !path.includes(t)) return
+        if (a.when && !a.when(e, this.ctx())) return
+        go()
+      }
+      document.addEventListener(ev, h, true)
+      this.disarm = () => document.removeEventListener(ev, h, true)
+    }
+    if (a.until) {
+      const f = a.until
+      this.untilFn = () => {
+        if (f(this.ctx())) go()
+      }
+    }
+  }
+
+  private isSheet(vw: number) {
+    const m = this.opts.mobile ?? 'auto'
+    return m === 'always' || (m === 'auto' && vw <= (this.opts.mobileBreakpoint ?? 600))
   }
 
   private reduceMotion() {
@@ -287,6 +455,19 @@ export class Tour implements TourApi {
     this.pop.tabIndex = -1
     this.pop.setAttribute('role', 'dialog')
     this.pop.setAttribute('aria-modal', 'false')
+    // Phone: swipe the sheet sideways to move between steps.
+    let sx = 0
+    let sy = 0
+    this.pop.addEventListener('touchstart', (e) => ((sx = e.touches[0]!.clientX), (sy = e.touches[0]!.clientY)), { passive: true })
+    this.pop.addEventListener('touchend', (e) => {
+      if (this.pop.dataset.mode !== 'sheet') return
+      const t = e.changedTouches[0]!
+      const dx = t.clientX - sx
+      if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(t.clientY - sy) * 1.5) return
+      if (this.rtl ? dx > 0 : dx < 0) {
+        if (!(this.shown?.hideNext && this.shown.advanceOn)) void this.next()
+      } else void this.previous()
+    })
 
     this.live = document.createElement('div')
     this.live.className = 'gm-sr'
@@ -378,6 +559,16 @@ export class Tour implements TourApi {
       pop.setAttribute('aria-describedby', d.id)
     }
 
+    if (step.hint) {
+      const h = document.createElement('p')
+      h.className = 'gm-hint'
+      h.setAttribute('part', 'hint')
+      h.id = `${id}-h`
+      h.textContent = step.hint
+      pop.appendChild(h)
+      pop.setAttribute('aria-describedby', [pop.getAttribute('aria-describedby'), h.id].filter(Boolean).join(' '))
+    }
+
     const x = this.button('×', 'gm-btn gm-x', 'close', () => this.stop())
     x.setAttribute('aria-label', this.labels.close)
     pop.appendChild(x)
@@ -394,8 +585,16 @@ export class Tour implements TourApi {
     }
     if (i > 0) foot.appendChild(this.button(this.labels.previous, 'gm-btn', 'button button-secondary', () => void this.previous()))
     const last = i === total - 1
-    foot.appendChild(this.button(last ? this.labels.done : this.labels.next, 'gm-btn gm-primary', 'button button-primary', () => void this.next()))
+    if (!(step.hideNext && step.advanceOn)) foot.appendChild(this.button(last ? this.labels.done : this.labels.next, 'gm-btn gm-primary', 'button button-primary', () => void this.next()))
     pop.appendChild(foot)
+    if (this.opts.persist?.dontShowAgain) {
+      pop.appendChild(
+        this.button(this.labels.never, 'gm-never', 'never', () => {
+          this.write('dismissed', this._index, true)
+          this.stop()
+        }),
+      )
+    }
 
     this.live.textContent = [this.labels.progress.replace('{current}', String(i + 1)).replace('{total}', String(total)), step.title]
       .filter(Boolean)
@@ -419,6 +618,11 @@ export class Tour implements TourApi {
     if (!this._active) return
     this.raf = requestAnimationFrame(this.tick)
     if (this.busy || !this.shown) return
+    try {
+      this.untilFn?.()
+    } catch (e) {
+      console.error('[guiame] advanceOn.until()', e)
+    }
     const el = this.target
     if (el && !isVisible(el)) {
       // The target went away (modal closed, route changed…): wait for it again.
@@ -435,9 +639,12 @@ export class Tour implements TourApi {
     if (!step || !root) return
     const vw = document.documentElement.clientWidth
     const vh = window.innerHeight
+    const sheet = this.isSheet(vw)
+    const vv = window.visualViewport
+    const kb = sheet && vv ? Math.max(0, Math.round(vh - vv.height - vv.offsetTop)) : 0 // on-screen keyboard
     const el = this.target
     const r = el?.getBoundingClientRect()
-    const key = `${vw}|${vh}|${r ? `${r.left}|${r.top}|${r.width}|${r.height}` : 'c'}|${this.pop.offsetWidth}|${this.pop.offsetHeight}`
+    const key = `${sheet}|${kb}|${vw}|${vh}|${r ? `${r.left}|${r.top}|${r.width}|${r.height}` : 'c'}|${this.pop.offsetWidth}|${this.pop.offsetHeight}`
     if (!force && key === this.lastKey) return
     this.lastKey = key
 
@@ -459,7 +666,7 @@ export class Tour implements TourApi {
       rs.top = `${hole.y}px`
       rs.width = `${hole.w}px`
       rs.height = `${hole.h}px`
-      rs.pointerEvents = step.allowTargetClick ? 'none' : 'auto'
+      rs.pointerEvents = step.allowTargetClick || step.advanceOn ? 'none' : 'auto'
       const { x, y, w, h } = hole
       // The hole follows the ring's border radius so rounded themes don't show square corners.
       const r = Math.max(0, Math.min(parseFloat(getComputedStyle(this.ring).borderTopLeftRadius) || 0, w / 2, h / 2))
@@ -470,6 +677,19 @@ export class Tour implements TourApi {
       this.backdrop.style.clipPath = ''
     }
 
+    const ps = this.pop.style
+    const wasSheet = this.pop.dataset.mode === 'sheet'
+    this.pop.dataset.mode = sheet ? 'sheet' : 'float'
+    if (sheet) {
+      ps.left = ps.right = '12px'
+      ps.top = 'auto'
+      ps.width = 'auto'
+      ps.maxWidth = 'none'
+      ps.bottom = `calc(max(12px, env(safe-area-inset-bottom, 0px)) + ${kb}px)`
+      this.pop.dataset.side = 'center'
+      return
+    }
+    if (wasSheet) ps.right = ps.bottom = ps.width = ps.maxWidth = ''
     const pw = this.pop.offsetWidth
     const ph = this.pop.offsetHeight
     let px = (vw - pw) / 2 - ox
@@ -554,6 +774,7 @@ export class Tour implements TourApi {
     const back = this.rtl ? 'ArrowRight' : 'ArrowLeft'
     if (e.key === fwd || (e.key === 'Enter' && !(t instanceof HTMLButtonElement))) {
       e.preventDefault()
+      if (this.shown?.hideNext && this.shown.advanceOn) return
       void this.next()
     } else if (e.key === back) {
       e.preventDefault()
@@ -569,6 +790,9 @@ export class Tour implements TourApi {
     this.busy = false
     cancelAnimationFrame(this.raf)
     document.removeEventListener('keydown', this.onKey, true)
+    this.clearAdvance()
+    this.spacer?.remove()
+    this.spacer = null
     this.session?.stop()
     this.session = null
     if (this.root) {

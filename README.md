@@ -1,6 +1,6 @@
 # nexus-tours
 
-Product tours that **don't break with modals**. Zero dependencies, ~8 KB gzip, TypeScript, accessible, with Vue and React wrappers.
+Product tours that **don't break with modals**. Zero dependencies, ~10 KB gzip, TypeScript, accessible, with Vue and React wrappers.
 
 Most tour libraries fall apart when the target lives inside a modal: it doesn't exist yet (animation, async content),
 the highlight ends up *under* the `<dialog>`, the tour's buttons are `inert`, or `Esc` closes the wrong thing.
@@ -46,6 +46,7 @@ tour.start()
 | `Esc` | Closes the tour, **not** the modal underneath |
 | Nested scroll containers, resize | Scrolls only when needed; the highlight follows the target |
 | Page CSS clashes | Shadow DOM isolation in both directions |
+| Phones | Bottom sheet with 44 px buttons, safe-area aware, swipe to move, target kept above the sheet, on-screen keyboard aware |
 | Accessibility | `role="dialog"`, labelled, focus moved in and restored, Tab trapped, `aria-live` announcements, `prefers-reduced-motion` |
 
 ## Looks: your font, your CSS — without breaking the host page
@@ -153,6 +154,76 @@ npm run dev          # then open /site/index.html
 npm run build:site   # → site-dist/ (deploy to Vercel/Netlify/GitHub Pages)
 ```
 
+## Phones
+
+On narrow screens (≤ 600 px, change with `mobileBreakpoint`) the popover becomes a **bottom sheet**: full width, 44 px touch buttons, no arrow, it respects the notch / home-bar (`env(safe-area-inset-*)`) and rides above the on-screen keyboard. **Swipe sideways** to go next / back (mirrored in RTL), and the highlighted element is scrolled above the sheet (if it sits at the very end of the page, temporary room is added below it and removed afterwards).
+
+```ts
+new Tour({ steps })                        // 'auto': sheet on phones, floating popover elsewhere
+new Tour({ steps, mobile: 'never' })       // always floating  ·  'always' → always the sheet
+```
+
+Style it with `::part(popover)`: the host element has `data-mode="sheet"` on the popover in this layout.
+
+## Steps that move on by themselves
+
+The best way to learn is by doing. `advanceOn` completes the step when the user does the action (the highlighted element becomes clickable and the click still reaches your page):
+
+```ts
+const steps = [
+  { element: '#new', title: 'Create a client', hint: 'Click the button to continue',
+    advanceOn: 'click', hideNext: true },                       // no "Next": the click is the way forward
+  { element: '#name', title: 'Type a name',
+    advanceOn: { event: 'input', when: (e) => e.target.value.length >= 3, delay: 400 } },
+  { element: '#save', title: 'Save it', advanceOn: 'click' },    // "Next" still works as a shortcut
+  { title: 'Wait for it…', advanceOn: { until: () => document.querySelector('.toast-success') } },  // polled each frame
+]
+```
+
+- `advanceOn: 'click' | 'input' | 'change' | 'submit' | 'focus' | …` (any DOM event) listens on the step's element; `target` listens somewhere else; `when(e)` adds a condition; `until()` advances when it returns true; `delay` lets the user see the result first.
+- Works great with **practice mode**: the user really creates a client, safely.
+- `hideNext` removes "Next" (and the keyboard / swipe shortcut) on that step. `Esc` and × always close the tour.
+
+## Remember progress
+
+```ts
+const tour = new Tour({
+  steps,
+  persist: { id: 'welcome', dontShowAgain: true, version: 1 },   // storage: localStorage by default
+})
+
+await tour.startIfNeeded()   // first visit: starts · closed halfway: resumes there · finished or dismissed: does nothing
+await tour.status()          // 'new' | 'in-progress' | 'completed' | 'dismissed'
+await tour.reset()           // forget it
+tour.start()                 // always starts: use it for a "Repeat the tour" button (it won't un-complete the saved state)
+```
+
+- `dontShowAgain` adds a small "Don't show again" link. Change `version` when you rewrite the tour so everybody sees it again.
+- Keep it per account (not per browser) by passing your own async `storage: { get, set, remove? }`: your API, Supabase, anything.
+
+## Moving between pages
+
+Give steps a `route` and a `router`: the tour navigates there, waits for the page, then looks for the element.
+
+```ts
+new Tour({
+  router: 'history',          // single-page apps: pushState + popstate
+  steps: [
+    { element: '#menu-clients', title: 'Clients', route: '/' },
+    { element: '#new-client',  title: 'Add one', route: '/clients' },     // navigates to /clients first
+  ],
+})
+```
+
+```ts
+// Vue Router
+router: { current: () => router.currentRoute.value.fullPath, go: (p) => router.push(p) }
+// React Router (const navigate = useNavigate(); const location = useLocation())
+router: { current: () => location.pathname + location.search, go: (p) => navigate(p) }
+```
+
+**Multi-page sites** (WordPress, PHP, static): use `router: 'location'` plus `persist`. Before leaving the page the tour saves the step; call `tour.startIfNeeded()` on every page load and it continues where it was.
+
 ## Practice mode with Supabase
 
 If your app talks to Supabase (`supabase-js`, or any PostgREST client), `supabasePractice()` answers `from()`, `rpc()` and `functions.invoke()` from example data while the tour runs. Your real database is never touched.
@@ -193,7 +264,7 @@ new Tour({
 
 ## Use it from a CDN (no npm, no bundler)
 
-For plain websites (WordPress, static HTML, PHP...), one `<script>` is enough. The file includes **everything** (tours, checklist, themes, fixtures, practice mode) in ~12 KB gzip and exposes a single global, `NexusTours`.
+For plain websites (WordPress, static HTML, PHP...), one `<script>` is enough. The file includes **everything** (tours, checklist, themes, fixtures, practice mode) in ~19 KB gzip and exposes a single global, `NexusTours`.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.1/dist/nexus-tours.all.iife.js"></script>
@@ -219,7 +290,7 @@ Or as an ES module:
 
 - Pin the version (`@0.1.0`) in production, and add [`integrity` (SRI)](https://www.srihash.org/) if you want the browser to verify the file.
 - `unpkg.com/nexus-tours@0.1` also works (the `unpkg`/`jsdelivr` fields in `package.json` point to the global file).
-- The per-feature files (`nexus-tours.js` ~8 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
+- The per-feature files (`nexus-tours.js` ~10 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
 - **Publishing:** CDNs serve what is on npm (or a *public* GitHub repo). While this repo is private there is no public URL yet; `npm publish` is what turns on the links above.
 
 ## Onboarding checklist
@@ -291,7 +362,10 @@ new Tour({
   keyboard?: boolean,            // ←/→/Enter, default true
   showProgress?: boolean,        // "2 / 5", default true
   padding?: number,              // default 6
-  labels?: { next, previous, done, close, progress },
+  labels?: { next, previous, done, close, progress, practice, never },
+  mobile?: 'auto' | 'always' | 'never', mobileBreakpoint?: number,   // bottom sheet on phones
+  router?: 'history' | 'location' | { current(), go(path), reloads? },
+  persist?: { id, storage?, version?, dontShowAgain? },
   container?: HTMLElement,       // where to mount when not inside a modal
   nonce?: string,                // CSP nonce for the injected <style>
 })
@@ -307,9 +381,14 @@ interface Step {
   onMissing?: 'skip' | 'stop'
   allowTargetClick?: boolean           // let the user click the highlighted element
   padding?: number
+  advanceOn?: 'click' | 'input' | … | { event?, target?, when?, until?, delay? }   // move on when the user acts
+  hint?: string                        // call to action under the description
+  hideNext?: boolean                   // with advanceOn: no "Next" button
+  route?: string                       // needs the tour's router
 }
 
-tour.start(index?)  tour.next()  tour.previous()  tour.goTo(i)  tour.stop()  tour.destroy()
+tour.start(index?)  tour.startIfNeeded()  tour.status()  tour.reset()
+tour.next()  tour.previous()  tour.goTo(i)  tour.stop()  tour.destroy()
 tour.on('start' | 'step' | 'missing' | 'end' | 'stop', ctx => …)   // returns an unsubscribe fn
 ```
 
@@ -318,7 +397,7 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 ## Roadmap
 
 - v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. ✅ Supabase/PostgREST adapter. Next: XHR (axios).
-- ✅ Vue/React wrappers · ✅ themes · ✅ RTL · ✅ arrow · ✅ docs site.
+- ✅ Vue/React wrappers · ✅ themes · ✅ RTL · ✅ arrow · ✅ docs site · ✅ phone layout · ✅ `advanceOn` · ✅ saved progress · ✅ page changes.
 - Next: XHR interception (axios), live demo of the Supabase adapter on the docs site.
 
 ## Develop

@@ -56,7 +56,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode supabase && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
-    "test": "node test/tour.test.mjs && node test/supabase.test.mjs",
+    "test": "node test/tour.test.mjs && node test/supabase.test.mjs && node test/ux.test.mjs",
     "build:site": "vite build --mode site",
     "dev:site": "vite --mode site-dev site"
   },

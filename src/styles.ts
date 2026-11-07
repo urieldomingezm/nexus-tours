@@ -21,7 +21,16 @@ export const CSS = `
 .gm-btn:focus-visible{outline:2px solid var(--gm-accent,#4263eb);outline-offset:2px}
 .gm-x{position:absolute;top:8px;inset-inline-end:8px;width:30px;height:30px;padding:0;line-height:1;font-size:18px;border:0;border-radius:999px;background:transparent;opacity:.65}
 .gm-x:hover{opacity:1}
-.gm-banner{position:fixed;top:12px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:6px 14px;border-radius:999px;background:var(--gm-accent,#4263eb);color:var(--gm-accent-fg,#fff);font:600 13px/1.3 var(--gm-font,system-ui,sans-serif);text-transform:none;letter-spacing:normal;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.gm-banner{position:fixed;top:max(12px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:6px 14px;border-radius:999px;background:var(--gm-accent,#4263eb);color:var(--gm-accent-fg,#fff);font:600 13px/1.3 var(--gm-font,system-ui,sans-serif);text-transform:none;letter-spacing:normal;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .gm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gm-hint{margin:10px 0 0;font-size:.93em;font-weight:600;color:var(--gm-accent,#4263eb)}
+.gm-never{display:block;margin:10px auto 0;padding:2px 4px;background:none;border:0;color:var(--gm-muted,#4a4958);font:inherit;font-size:.86em;text-decoration:underline;cursor:pointer}
+.gm-pop[data-mode=sheet]{padding:20px 18px 16px;border-radius:calc(var(--gm-radius,10px) + 8px);font-size:max(var(--gm-font-size,15px),16px);box-shadow:0 -6px 30px rgba(0,0,0,.28);animation:gm-up .25s ease-out;touch-action:pan-y;transition:opacity .15s}
+.gm-pop[data-mode=sheet]::before{content:"";display:block;width:36px;height:4px;margin:-10px auto 12px;border-radius:2px;background:var(--gm-border,rgba(0,0,0,.22))}
+.gm-pop[data-mode=sheet] .gm-btn{min-height:44px;padding:0 18px}
+.gm-pop[data-mode=sheet] .gm-foot .gm-btn{flex:1}
+.gm-pop[data-mode=sheet] .gm-x{top:2px;width:44px;height:44px;padding:0;min-height:44px}
+.gm-pop[data-mode=sheet] .gm-never{min-height:44px}
+@keyframes gm-up{from{opacity:0;transform:translateY(28px)}}
 @media (prefers-reduced-motion:reduce){.gm-ring,.gm-pop,.gm-backdrop{transition:none;animation:none}}
 `

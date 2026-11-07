@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Página A</title></head>
+<body>
+<h1>Página A</h1><button id="a">Botón A</button>
+<script type="module">
+  import { Tour } from 'nexus-tours'
+  window.t = new Tour({
+    router: 'location',
+    persist: { id: 'mpa', dontShowAgain: true },
+    steps: [
+      { element: '#a', title: 'Paso en A', route: '/mpa-a.html' },
+      { element: '#b', title: 'Paso en B', route: '/mpa-b.html' },
+      { element: '#b', title: 'Final en B', route: '/mpa-b.html' },
+    ],
+  })
+  window.ready = true
+</script>
+</body></html>

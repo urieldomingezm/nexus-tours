@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UX</title>
+<style>body{font-family:system-ui;margin:0;padding:16px}#far{margin-top:1400px}</style></head>
+<body>
+<nav><a href="/features.html" id="home">inicio</a></nav>
+<main id="view"></main>
+<script type="module">
+  import { Tour } from 'nexus-tours'
+  window.Tour = Tour
+  const view = document.getElementById('view')
+  window.hits = { go: 0, save: 0 }
+  function render() {
+    const p = location.pathname
+    if (p === '/clients') {
+      view.innerHTML = '<h1>Clientes</h1><input id="name" placeholder="nombre"><button id="save">Guardar</button>'
+      document.getElementById('save').onclick = () => hits.save++
+    } else {
+      view.innerHTML = '<h1>Inicio</h1><button id="go">Crear</button> <button id="other">Otro</button><div id="far"><button id="lejos">Abajo del todo</button></div>'
+      document.getElementById('go').onclick = () => hits.go++
+    }
+  }
+  addEventListener('popstate', render)
+  render()
+  window.ready = true
+</script>
+</body></html>
