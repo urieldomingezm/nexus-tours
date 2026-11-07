@@ -1,5 +1,5 @@
 import { CSS } from './styles'
-import type { Labels, Side, Step, StepContext, TargetRef, TourApi, TourEvent, TourOptions } from './types'
+import type { Labels, Side, Step, StepContext, TargetRef, Theme, TourApi, TourEvent, TourOptions } from './types'
 import { isVisible, waitForElement } from './wait'
 
 const DEFAULT_LABELS: Labels = {
@@ -12,7 +12,6 @@ const DEFAULT_LABELS: Labels = {
 
 const GAP = 12
 const EDGE = 8
-let styleCount = 0
 
 function resolveRef(ref: TargetRef | undefined): Element | null {
   if (!ref) return null
@@ -53,8 +52,8 @@ export class Tour implements TourApi {
   private target: Element | null = null
   private lastKey = ''
 
-  private styleEl: HTMLStyleElement | null = null
   private root: HTMLElement | null = null
+  private shadow!: ShadowRoot
   private backdrop!: HTMLElement
   private ring!: HTMLElement
   private pop!: HTMLElement
@@ -236,29 +235,39 @@ export class Tour implements TourApi {
   // ---------------------------------------------------------------- DOM
 
   private build() {
-    if (!document.querySelector('style[data-guiame]')) {
-      const s = document.createElement('style')
-      s.dataset.guiame = ''
-      if (this.opts.nonce) s.nonce = this.opts.nonce
-      s.textContent = CSS
-      document.head.appendChild(s)
-      this.styleEl = s
-    }
-    styleCount++
+    this.injectFonts()
+    const host = document.createElement('div')
+    host.setAttribute('data-nexus-tours', '')
+    if (this.opts.className) host.className = this.opts.className
+    if ('showPopover' in host) host.setAttribute('popover', 'manual')
+    this.applyTheme(host)
 
-    const root = document.createElement('div')
-    root.className = 'gm-root'
-    if ('showPopover' in root) root.setAttribute('popover', 'manual')
+    // Shadow DOM: the page's CSS can't break the tour and the tour's CSS can't leak into the page.
+    const shadow = host.attachShadow({ mode: 'open' })
+    const css = CSS + (this.opts.css ?? '')
+    if ('adoptedStyleSheets' in shadow && typeof CSSStyleSheet !== 'undefined' && 'replaceSync' in CSSStyleSheet.prototype) {
+      const sheet = new CSSStyleSheet()
+      sheet.replaceSync(css)
+      shadow.adoptedStyleSheets = [sheet]
+    } else {
+      const s = document.createElement('style')
+      if (this.opts.nonce) s.nonce = this.opts.nonce
+      s.textContent = css
+      shadow.appendChild(s)
+    }
 
     this.backdrop = document.createElement('div')
     this.backdrop.className = 'gm-backdrop'
+    this.backdrop.setAttribute('part', 'backdrop')
     this.backdrop.addEventListener('click', () => this.opts.closeOnBackdrop && this.stop())
 
     this.ring = document.createElement('div')
     this.ring.className = 'gm-ring'
+    this.ring.setAttribute('part', 'ring')
 
     this.pop = document.createElement('div')
     this.pop.className = 'gm-pop'
+    this.pop.setAttribute('part', 'popover')
     this.pop.tabIndex = -1
     this.pop.setAttribute('role', 'dialog')
     this.pop.setAttribute('aria-modal', 'false')
@@ -267,8 +276,43 @@ export class Tour implements TourApi {
     this.live.className = 'gm-sr'
     this.live.setAttribute('aria-live', 'polite')
 
-    root.append(this.backdrop, this.ring, this.pop, this.live)
-    this.root = root
+    shadow.append(this.backdrop, this.ring, this.pop, this.live)
+    this.root = host
+    this.shadow = shadow
+  }
+
+  private applyTheme(host: HTMLElement) {
+    const th: Theme = { ...this.opts.theme }
+    if (this.opts.font) th.font = this.opts.font
+    if (!th.font && this.opts.fonts?.length) th.font = `"${this.opts.fonts[0]!.family.replace(/"/g, '')}", system-ui, sans-serif`
+    if (th.font === 'inherit') th.font = getComputedStyle(document.body).fontFamily
+    const map: [keyof Theme, string][] = [
+      ['accent', '--gm-accent'],
+      ['accentContrast', '--gm-accent-fg'],
+      ['background', '--gm-bg'],
+      ['text', '--gm-fg'],
+      ['muted', '--gm-muted'],
+      ['border', '--gm-border'],
+      ['overlay', '--gm-dim'],
+      ['radius', '--gm-radius'],
+      ['font', '--gm-font'],
+      ['zIndex', '--gm-z'],
+    ]
+    for (const [k, v] of map) if (th[k] !== undefined) host.style.setProperty(v, String(th[k]))
+  }
+
+  /** @font-face rules must live in the page (not in a shadow root); they are added once. */
+  private injectFonts() {
+    for (const f of this.opts.fonts ?? []) {
+      const key = `${f.family}|${f.src}|${f.weight ?? ''}|${f.style ?? ''}`
+      if (Array.from(document.querySelectorAll('style[data-nexus-tours-font]')).some((n) => (n as HTMLElement).dataset.nexusToursFont === key)) continue
+      const s = document.createElement('style')
+      s.dataset.nexusToursFont = key
+      if (this.opts.nonce) s.nonce = this.opts.nonce
+      const q = (v: string) => v.replace(/["\\\n]/g, '')
+      s.textContent = `@font-face{font-family:"${q(f.family)}";src:url("${q(f.src)}");font-weight:${q(String(f.weight ?? 'normal'))};font-style:${f.style ?? 'normal'};font-display:swap}`
+      document.head.appendChild(s)
+    }
   }
 
   private mount(target: Element | null) {
@@ -299,6 +343,7 @@ export class Tour implements TourApi {
     if (step.title) {
       const h = document.createElement('p')
       h.className = 'gm-title'
+      h.setAttribute('part', 'title')
       h.id = `${id}-t`
       h.textContent = step.title
       pop.appendChild(h)
@@ -308,27 +353,30 @@ export class Tour implements TourApi {
     if (step.description) {
       const d = document.createElement('p')
       d.className = 'gm-desc'
+      d.setAttribute('part', 'description')
       d.id = `${id}-d`
       d.textContent = step.description
       pop.appendChild(d)
       pop.setAttribute('aria-describedby', d.id)
     }
 
-    const x = this.button('×', 'gm-btn gm-x', () => this.stop())
+    const x = this.button('×', 'gm-btn gm-x', 'close', () => this.stop())
     x.setAttribute('aria-label', this.labels.close)
     pop.appendChild(x)
 
     const foot = document.createElement('div')
     foot.className = 'gm-foot'
+    foot.setAttribute('part', 'footer')
     if (this.opts.showProgress && total > 1) {
       const p = document.createElement('span')
       p.className = 'gm-progress'
+      p.setAttribute('part', 'progress')
       p.textContent = this.labels.progress.replace('{current}', String(i + 1)).replace('{total}', String(total))
       foot.appendChild(p)
     }
-    if (i > 0) foot.appendChild(this.button(this.labels.previous, 'gm-btn', () => void this.previous()))
+    if (i > 0) foot.appendChild(this.button(this.labels.previous, 'gm-btn', 'button button-secondary', () => void this.previous()))
     const last = i === total - 1
-    foot.appendChild(this.button(last ? this.labels.done : this.labels.next, 'gm-btn gm-primary', () => void this.next()))
+    foot.appendChild(this.button(last ? this.labels.done : this.labels.next, 'gm-btn gm-primary', 'button button-primary', () => void this.next()))
     pop.appendChild(foot)
 
     this.live.textContent = [this.labels.progress.replace('{current}', String(i + 1)).replace('{total}', String(total)), step.title]
@@ -336,10 +384,11 @@ export class Tour implements TourApi {
       .join(': ')
   }
 
-  private button(text: string, cls: string, onClick: () => void) {
+  private button(text: string, cls: string, part: string, onClick: () => void) {
     const b = document.createElement('button')
     b.type = 'button'
     b.className = cls
+    b.setAttribute('part', part)
     b.textContent = text
     b.addEventListener('click', onClick)
     return b
@@ -436,7 +485,8 @@ export class Tour implements TourApi {
 
   private onKey = (e: KeyboardEvent) => {
     if (!this._active || !this.pop) return
-    const t = e.target as HTMLElement | null
+    // Events from inside the shadow root are retargeted to the host: use the real origin.
+    const t = (e.composedPath()[0] ?? e.target) as HTMLElement | null
     const inPop = !!t && this.pop.contains(t)
 
     if (e.key === 'Escape' && this.opts.closeOnEsc) {
@@ -451,7 +501,7 @@ export class Tour implements TourApi {
       if (!items.length) return
       const first = items[0] as HTMLElement
       const lastEl = items[items.length - 1] as HTMLElement
-      const activeEl = document.activeElement
+      const activeEl = this.shadow.activeElement
       if (e.shiftKey && (activeEl === first || activeEl === this.pop || !inPop)) {
         e.preventDefault()
         lastEl.focus()
@@ -491,9 +541,6 @@ export class Tour implements TourApi {
       this.root.remove()
       this.root = null
     }
-    styleCount = Math.max(0, styleCount - 1)
-    if (styleCount === 0) document.querySelector('style[data-guiame]')?.remove()
-    this.styleEl = null
     this.target = null
     this.shown = null
     this._index = -1

@@ -43,6 +43,7 @@
 
   <script type="module">
     import { Tour } from '/src/index.ts'
+    import { createFixtures, fake } from '/src/fixtures.ts'
     const modal = document.getElementById('modal')
     const form = document.getElementById('form')
     function abrir() {
@@ -58,7 +59,7 @@
       document.getElementById('filas').insertAdjacentHTML('beforeend', `<tr><td>${n.replace(/</g,'&lt;')}</td><td>New</td></tr>`)
     })
 
-    window.Guiame = { Tour }
+    window.Guiame = { Tour, createFixtures, fake }
     window.makeTour = (kind = 'full', extra = {}) => {
       const steps = {
         full: [

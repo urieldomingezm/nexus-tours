@@ -40,6 +40,30 @@ export interface Labels {
   progress: string
 }
 
+export interface Theme {
+  accent?: string
+  /** Text color on top of the accent (primary button). */
+  accentContrast?: string
+  background?: string
+  text?: string
+  muted?: string
+  border?: string
+  /** Backdrop color, e.g. "rgba(0,0,0,.6)". */
+  overlay?: string
+  radius?: string
+  /** CSS font-family, or "inherit" to use the page's body font. */
+  font?: string
+  zIndex?: number
+}
+
+export interface FontFace {
+  family: string
+  /** URL of the font file (woff2 recommended). */
+  src: string
+  weight?: string | number
+  style?: 'normal' | 'italic'
+}
+
 export interface TourOptions {
   steps: Step[]
   labels?: Partial<Labels>
@@ -58,8 +82,18 @@ export interface TourOptions {
   padding?: number
   /** Where to mount when the target is not inside a modal <dialog>. Default document.body. */
   container?: HTMLElement
-  /** CSP nonce for the injected <style>. */
+  /** CSP nonce for fallback <style> tags (only used in browsers without constructable stylesheets). */
   nonce?: string
+  /** Colors, radius and font. Also available as CSS variables: --gm-accent, --gm-bg, --gm-fg… */
+  theme?: Theme
+  /** Shortcut for `theme.font`. */
+  font?: string
+  /** Web fonts to load for the tour (injects @font-face once into the page). */
+  fonts?: FontFace[]
+  /** Extra CSS applied *inside* the tour (it is isolated in a shadow root). Target the `.gm-*` parts. */
+  css?: string
+  /** Class added to the host element, handy to scope `::part()` rules from your own stylesheet. */
+  className?: string
 }
 
 export type TourEvent = 'start' | 'step' | 'missing' | 'end' | 'stop'

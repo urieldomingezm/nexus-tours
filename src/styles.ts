@@ -1,9 +1,9 @@
 export const CSS = `
-.gm-root{position:fixed;inset:0;z-index:2147483000;pointer-events:none;margin:0;padding:0;border:0;background:none;overflow:visible;color:var(--gm-fg,#1c1b22);font:15px/1.45 var(--gm-font,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
-.gm-root:popover-open{inset:0;width:100%;height:100%}
+:host{all:initial;position:fixed;inset:0;width:100%;height:100%;z-index:var(--gm-z,2147483000);pointer-events:none}
+*,*::before,*::after{box-sizing:border-box}
 .gm-backdrop{position:fixed;inset:0;background:var(--gm-dim,rgba(15,15,25,.62));pointer-events:auto;transition:opacity .2s}
 .gm-ring{position:fixed;border-radius:var(--gm-radius,10px);outline:2px solid var(--gm-accent,#6d5efc);outline-offset:2px;pointer-events:none;transition:left .2s,top .2s,width .2s,height .2s}
-.gm-pop{position:fixed;box-sizing:border-box;width:min(340px,calc(100vw - 24px));padding:16px 18px;background:var(--gm-bg,#fff);border-radius:var(--gm-radius,10px);box-shadow:0 12px 40px rgba(0,0,0,.28);pointer-events:auto;transition:left .2s,top .2s,opacity .15s}
+.gm-pop{color:var(--gm-fg,#1c1b22);font:15px/1.45 var(--gm-font,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);text-transform:none;letter-spacing:normal;position:fixed;box-sizing:border-box;width:min(340px,calc(100vw - 24px));padding:16px 18px;background:var(--gm-bg,#fff);border-radius:var(--gm-radius,10px);box-shadow:0 12px 40px rgba(0,0,0,.28);pointer-events:auto;transition:left .2s,top .2s,opacity .15s}
 .gm-pop:focus{outline:none}
 .gm-title{margin:0 0 6px;font-size:16px;font-weight:700}
 .gm-desc{margin:0;color:var(--gm-muted,#4a4958)}
