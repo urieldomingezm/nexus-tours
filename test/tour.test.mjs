@@ -231,7 +231,7 @@ try {
 
     await p.evaluate(() => { makeTour('full', { practice: practiceCfg() }); t.start() })
     await esperaTitulo(p, 'Create a client')
-    await p.waitForFunction(() => document.getElementById('filas').textContent.includes('Pending') || document.getElementById('filas').textContent.includes('Active'))
+    await p.waitForFunction(() => document.querySelectorAll('#filas tr').length === 4 && !document.getElementById('filas').textContent.includes('Globex'))
     ok(await p.evaluate(() => !document.getElementById('filas').textContent.includes('Globex') && document.querySelectorAll('#filas tr').length === 4), 'práctica: la UI carga los 4 clientes de ejemplo en lugar de los reales')
     ok((await p.locator('.gm-banner').textContent()).includes('Practice mode'), 'aviso visual "modo práctica"')
     ok(await p.evaluate(() => window.fetch !== window.__f0), 'fetch está interceptado durante el tour')
