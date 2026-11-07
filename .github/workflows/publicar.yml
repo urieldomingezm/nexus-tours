@@ -1,7 +1,13 @@
 name: Publicar en npm
 
-# Se ejecuta al subir una etiqueta v* (p. ej. v0.1.0) o a mano desde la pestaña Actions.
-# Requiere el secreto NPM_TOKEN (token "Granular access" con permiso de publicar nexus-tours).
+# Se ejecuta al subir una etiqueta v* (p. ej. v0.2.0) o a mano desde la pestaña Actions.
+# Usa publicación en etapas (staged publishing): el flujo SUBE la versión a npm en espera y NO la hace pública.
+# Tú la apruebas con 2FA en npmjs.com (pestaña "Staged Packages") o con `npm stage approve <id>`.
+#
+# Requiere el secreto NPM_TOKEN: token "Granular access" con permiso "Read and write (stage only)",
+# SIN la opción bypass 2FA (los tokens bypass perderán la publicación directa en enero de 2027).
+# Importante: la PRIMERA versión de un paquete nuevo se publica una vez a mano (`npm login` + `npm publish`);
+# la publicación en etapas aplica a paquetes que ya existen en npm.
 on:
   push:
     tags: ['v*']
@@ -19,6 +25,9 @@ jobs:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
+
+      - name: npm reciente (stage requiere npm >= 11.15)
+        run: npm install -g npm@latest
 
       - run: npm ci
 
@@ -38,7 +47,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
 
-      - name: Publicar
-        run: npm publish --access public
+      - name: Subir a npm en espera de aprobación
+        run: npm stage publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
