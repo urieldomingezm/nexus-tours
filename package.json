@@ -11,16 +11,31 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/nexus-tours.js",
       "require": "./dist/nexus-tours.umd.cjs"
+    },
+    "./fixtures": {
+      "types": "./dist/fixtures.d.ts",
+      "import": "./dist/fixtures.js",
+      "require": "./dist/fixtures.umd.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc -p tsconfig.build.json",
+    "build": "vite build && vite build --mode fixtures && tsc -p tsconfig.build.json",
     "test": "node test/tour.test.mjs"
   },
-  "keywords": ["tour", "onboarding", "product-tour", "walkthrough", "modal", "dialog", "accessibility"],
+  "keywords": [
+    "tour",
+    "onboarding",
+    "product-tour",
+    "walkthrough",
+    "modal",
+    "dialog",
+    "accessibility"
+  ],
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.6.0",
