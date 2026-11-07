@@ -1,6 +1,6 @@
 # nexus-tours
 
-Product tours that **don't break with modals**. Zero dependencies, ~5 KB gzip, TypeScript, accessible.
+Product tours that **don't break with modals**. Zero dependencies, ~8 KB gzip, TypeScript, accessible, with Vue and React wrappers.
 
 Most tour libraries fall apart when the target lives inside a modal: it doesn't exist yet (animation, async content),
 the highlight ends up *under* the `<dialog>`, the tour's buttons are `inert`, or `Esc` closes the wrong thing.
@@ -104,6 +104,55 @@ const data = createFixtures(
 
 Generators: `id uuid firstName lastName name company email phone int float bool pick words date`.
 
+## Themes
+
+```ts
+import { themes, autoTheme } from 'nexus-tours/themes'   // ~0.5 KB
+
+new Tour({ steps, theme: themes.dark })                   // light · dark · ocean · sunset · mono
+new Tour({ steps, theme: autoTheme() })                   // follows prefers-color-scheme
+new Tour({ steps, theme: { ...themes.ocean, accent: '#f43f5e', radius: '20px' } })   // extend any of them
+```
+
+More visual options: `arrow` (little arrow pointing at the target, default on), `dir: 'rtl' | 'ltr' | 'auto'`,
+`theme.fontSize`, `theme.width`, `font`/`fonts`. Entry animations are disabled under `prefers-reduced-motion`.
+
+## Vue and React
+
+```vue
+<script setup>
+import { ref } from 'vue'
+import { NexusTour, useTour } from 'nexus-tours/vue'
+const open = ref(false)
+</script>
+<template>
+  <button @click="open = true">Help</button>
+  <NexusTour v-model="open" :steps="steps" :options="{ theme }" @end="markDone" />
+</template>
+```
+
+```tsx
+import { NexusTour, useTour } from 'nexus-tours/react'
+
+const [open, setOpen] = useState(false)
+<NexusTour open={open} onOpenChange={setOpen} steps={steps} theme={theme} onEnd={markDone} />
+
+// or imperative
+const { start, stop, active, index } = useTour({ steps })
+```
+
+Both are ~0.8 KB, import the core as a peer (`nexus-tours`), and clean up on unmount. The React one is StrictMode-safe.
+Events: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) or `@start @step @missing @end @stop` (Vue).
+
+## Demo / docs site
+
+`site/` is a static page with live demos (modal, practice mode, themes, fonts, arrow, RTL) in Spanish and English.
+
+```bash
+npm run dev          # then open /site/index.html
+npm run build:site   # → site-dist/ (deploy to Vercel/Netlify/GitHub Pages)
+```
+
 ## Practice mode
 
 Let new users click around on example data. While the tour runs, `fetch` is answered from memory; real writes never leave the browser.
@@ -170,7 +219,8 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 ## Roadmap
 
 - v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. Next: XHR (axios), Supabase/PostgREST adapter.
-- Vue and React wrappers, themes, RTL.
+- ✅ Vue/React wrappers · ✅ themes · ✅ RTL · ✅ arrow · ✅ docs site.
+- Next: Supabase/PostgREST adapter for practice mode, XHR interception.
 
 ## Develop
 
@@ -178,7 +228,8 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 npm i
 npm run dev      # demo with an animated <dialog> at http://localhost:5173
 npm run build
-npm test         # needs Playwright (NODE_PATH=…/playwright's node_modules)
+npx playwright install chromium
+npm test         # builds are needed first: npm run build
 ```
 
 ## License

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><title>wrappers</title></head>
+<body style="font:16px system-ui;padding:24px">
+  <div id="vue"></div><hr /><div id="react"></div>
+  <script type="module">
+    import { createApp, h, ref } from 'vue'
+    import { NexusTour, useTour } from 'nexus-tours/vue'
+    import React, { createElement as e, useState } from 'react'
+    import { createRoot } from 'react-dom/client'
+    import { NexusTour as RTour, useTour as useRTour } from 'nexus-tours/react'
+
+    window.log = []
+    const vsteps = [{ element: '#vt1', title: 'V1' }, { element: '#vt2', title: 'V2' }]
+    const UseDemo = { setup() { const t = useTour({ steps: [{ element: '#vt1', title: 'U1' }, { element: '#vt2', title: 'U2' }] }); return () => h('p', [h('button', { id: 'ubtn', onClick: () => t.start() }, 'useTour'), h('span', { id: 'ustate' }, t.active.value ? 'active:' + t.index.value : 'idle')]) } }
+    window.vOpen = ref(false)
+    createApp({ setup() { return () => h('div', [
+      h('button', { id: 'vbtn', onClick: () => (window.vOpen.value = true) }, 'Start Vue'),
+      h('span', { id: 'vt1' }, ' one '), h('span', { id: 'vt2' }, ' two '),
+      h(UseDemo),
+      h(NexusTour, { modelValue: window.vOpen.value, 'onUpdate:modelValue': (v) => (window.vOpen.value = v), steps: vsteps, options: { theme: { accent: 'rgb(255, 0, 0)' } }, onStep: (c) => window.log.push('vstep' + c.index), onEnd: () => window.log.push('vend') }),
+    ]) } }).mount('#vue')
+
+    const rsteps = [{ element: '#rt1', title: 'R1' }, { element: '#rt2', title: 'R2' }]
+    function UseR() { const t = useRTour({ steps: [{ element: '#rt1', title: 'RU1' }, { element: '#rt2', title: 'RU2' }] }); return e('p', null, e('button', { id: 'rubtn', onClick: () => t.start() }, 'hook'), e('span', { id: 'rustate' }, t.active ? 'active:' + t.index : 'idle')) }
+    function App() {
+      const [open, setOpen] = useState(false)
+      window.rOpen = open; window.rSet = setOpen
+      return e('div', null,
+        e('button', { id: 'rbtn', onClick: () => setOpen(true) }, 'Start React'),
+        e('span', { id: 'rt1' }, ' one '), e('span', { id: 'rt2' }, ' two '),
+        e(UseR),
+        e(RTour, { open, onOpenChange: setOpen, steps: rsteps, theme: { accent: 'rgb(0, 0, 255)' }, onStep: (c) => window.log.push('rstep' + c.index), onEnd: () => window.log.push('rend') }))
+    }
+    createRoot(document.getElementById('react')).render(e(React.StrictMode, null, e(App)))
+    window.ready = true
+  </script>
+</body></html>

@@ -60,8 +60,10 @@ export class Tour implements TourApi {
   private ring!: HTMLElement
   private pop!: HTMLElement
   private live!: HTMLElement
+  private arrow: HTMLElement | null = null
   private raf = 0
   private session: PracticeSession | null = null
+  private rtl = false
   private previousFocus: Element | null = null
 
   constructor(options: TourOptions) {
@@ -251,6 +253,9 @@ export class Tour implements TourApi {
     if (this.opts.className) host.className = this.opts.className
     if ('showPopover' in host) host.setAttribute('popover', 'manual')
     this.applyTheme(host)
+    const dirOpt = this.opts.dir ?? 'auto'
+    this.rtl = dirOpt === 'rtl' || (dirOpt === 'auto' && getComputedStyle(document.body).direction === 'rtl')
+    host.dir = this.rtl ? 'rtl' : 'ltr'
 
     // Shadow DOM: the page's CSS can't break the tour and the tour's CSS can't leak into the page.
     const shadow = host.attachShadow({ mode: 'open' })
@@ -314,6 +319,8 @@ export class Tour implements TourApi {
       ['radius', '--gm-radius'],
       ['font', '--gm-font'],
       ['zIndex', '--gm-z'],
+      ['fontSize', '--gm-font-size'],
+      ['width', '--gm-width'],
     ]
     for (const [k, v] of map) if (th[k] !== undefined) host.style.setProperty(v, String(th[k]))
   }
@@ -353,6 +360,14 @@ export class Tour implements TourApi {
     const id = `gm-${Math.random().toString(36).slice(2, 8)}`
     const pop = this.pop
     pop.replaceChildren()
+    this.arrow = null
+    if (this.opts.arrow !== false) {
+      const a = document.createElement('div')
+      a.className = 'gm-arrow'
+      a.setAttribute('part', 'arrow')
+      pop.appendChild(a)
+      this.arrow = a
+    }
     pop.removeAttribute('aria-labelledby')
     pop.removeAttribute('aria-describedby')
     pop.setAttribute('aria-label', step.title ? step.title : 'Tour')
@@ -481,9 +496,23 @@ export class Tour implements TourApi {
       else [px, py] = [hole.x - pw - GAP, hole.y + hole.h / 2 - ph / 2]
       px = Math.min(Math.max(px, EDGE - ox), vw - pw - EDGE - ox)
       py = Math.min(Math.max(py, EDGE - oy), vh - ph - EDGE - oy)
-    }
+      this.placeArrow(side, hole, px, py, pw, ph)
+    } else this.pop.dataset.side = 'center'
     this.pop.style.left = `${px}px`
     this.pop.style.top = `${py}px`
+  }
+
+  private placeArrow(side: Exclude<Side, 'auto'>, h: { x: number; y: number; w: number; h: number }, px: number, py: number, pw: number, ph: number) {
+    const a = this.arrow
+    this.pop.dataset.side = a ? side : 'center'
+    if (!a) return
+    const clamp = (v: number, max: number) => Math.min(Math.max(v, 14), Math.max(14, max - 26))
+    const st = a.style
+    st.top = st.bottom = st.left = st.right = ''
+    if (side === 'bottom') [st.top, st.left] = ['-6px', `${clamp(h.x + h.w / 2 - px - 6, pw)}px`]
+    else if (side === 'top') [st.bottom, st.left] = ['-6px', `${clamp(h.x + h.w / 2 - px - 6, pw)}px`]
+    else if (side === 'right') [st.left, st.top] = ['-6px', `${clamp(h.y + h.h / 2 - py - 6, ph)}px`]
+    else [st.right, st.top] = ['-6px', `${clamp(h.y + h.h / 2 - py - 6, ph)}px`]
   }
 
   private pickSide(side: Side, h: { x: number; y: number; w: number; h: number }, pw: number, ph: number, vw: number, vh: number, ox: number, oy: number): Exclude<Side, 'auto'> {
@@ -535,10 +564,12 @@ export class Tour implements TourApi {
     if (!this.opts.keyboard) return
     const typing = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))
     if (typing) return
-    if (e.key === 'ArrowRight' || (e.key === 'Enter' && !(t instanceof HTMLButtonElement))) {
+    const fwd = this.rtl ? 'ArrowLeft' : 'ArrowRight'
+    const back = this.rtl ? 'ArrowRight' : 'ArrowLeft'
+    if (e.key === fwd || (e.key === 'Enter' && !(t instanceof HTMLButtonElement))) {
       e.preventDefault()
       void this.next()
-    } else if (e.key === 'ArrowLeft') {
+    } else if (e.key === back) {
       e.preventDefault()
       void this.previous()
     }

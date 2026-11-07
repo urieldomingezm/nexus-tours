@@ -26,8 +26,11 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
-      - name: Build (core + fixtures + types)
+      - name: Build (core, fixtures, themes, vue, react + types)
         run: npm run build
+
+      - name: Build docs site
+        run: npm run build:site
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium

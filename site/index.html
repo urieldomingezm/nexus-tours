@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>nexus-tours · tours de producto que no se rompen con modales</title>
+  <meta name="description" content="Tours guiados sin dependencias (~8 KB) que funcionan con modales, dialog, portales y UI animada. Modo práctica con datos de ejemplo." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d5efc'/%3E%3Cpath d='M9 22V10l14 12V10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <style>
+    :root{--ink:#16151d;--muted:#555369;--bg:#f6f5fb;--card:#fff;--line:#e3e1ef;--accent:#6d5efc}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+    a{color:var(--accent)}
+    .wrap{max-width:1020px;margin:0 auto;padding:0 20px}
+    nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+    nav b{font-size:18px;letter-spacing:-.01em}
+    nav .r{display:flex;gap:10px;align-items:center}
+    .pill{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--card);padding:6px 12px;border-radius:999px;cursor:pointer;color:var(--ink)}
+    .hero{padding:48px 0 28px}
+    .hero h1{font-size:clamp(32px,6vw,56px);line-height:1.05;letter-spacing:-.03em;margin:0 0 14px;max-width:16ch}
+    .hero p{font-size:19px;color:var(--muted);max-width:58ch;margin:0 0 22px}
+    .cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:11px 18px;cursor:pointer;background:var(--accent);color:#fff}
+    .btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+    code,pre{font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .inst{background:#16151d;color:#e9e7ff;border-radius:10px;padding:10px 14px;display:inline-block}
+    section{padding:34px 0}
+    h2{font-size:28px;letter-spacing:-.02em;margin:0 0 6px}
+    .sub{color:var(--muted);margin:0 0 20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+    .card h3{margin:0 0 4px;font-size:17px}
+    .card p{margin:0;color:var(--muted);font-size:15px}
+    /* demo */
+    .lab{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+    @media (max-width:820px){.lab{grid-template-columns:1fr}}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+    .panel label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font-size:15px;font-weight:600}
+    .panel select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#fff;max-width:150px}
+    .panel .btn{width:100%;margin-top:8px}
+    .app{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-height:340px}
+    .app header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+    .app .body{padding:16px}
+    .app table{width:100%;border-collapse:collapse}
+    .app td,.app th{text-align:start;padding:9px 10px;border-bottom:1px solid var(--line)}
+    .tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eceaff;color:#4a3fd0}
+    .note{font-size:13px;color:var(--muted);margin-top:10px}
+    dialog{border:0;border-radius:14px;padding:22px;width:min(400px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3);opacity:0;transform:translateY(30px) scale(.96);transition:opacity .35s,transform .35s}
+    dialog[open]{opacity:1;transform:none}
+    dialog::backdrop{background:rgba(0,0,0,.4)}
+    dialog h3{margin:0 0 4px}
+    dialog label{display:block;margin:12px 0 4px;font-weight:600}
+    dialog input{width:100%;padding:9px;border:1px solid #bbb;border-radius:8px;font:inherit}
+    .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+    pre{background:#16151d;color:#e9e7ff;border-radius:12px;padding:16px;overflow:auto;margin:0}
+    .tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .tabs .pill[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+    footer{padding:30px 0 50px;color:var(--muted);font-size:14px}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <b>nexus-tours</b>
+      <div class="r">
+        <a href="#demo" data-i="nav_demo">Demo</a>
+        <a href="#uso" data-i="nav_use">Uso</a>
+        <button class="pill" id="lang" aria-label="Language">EN</button>
+      </div>
+    </nav>
+
+    <div class="hero">
+      <h1 data-i="h1">Tours que no se rompen con modales.</h1>
+      <p data-i="lead">Guías de producto sin dependencias (~8 KB). Esperan a que el modal exista, viven dentro del &lt;dialog&gt;, no chocan con tu CSS y dejan practicar con datos de ejemplo.</p>
+      <div class="cta">
+        <button class="btn" id="hero-start" data-i="try">Probar el tour</button>
+        <a class="btn alt" href="#uso" style="text-decoration:none" data-i="howto">Cómo se usa</a>
+        <span class="inst"><code>npm i nexus-tours</code></span>
+      </div>
+    </div>
+
+    <section>
+      <div class="grid">
+        <div class="card"><h3 data-i="f1t">Modales de verdad</h3><p data-i="f1d">Espera elementos animados o asíncronos, se monta dentro del &lt;dialog&gt; y se recupera si el modal se cierra y reabre.</p></div>
+        <div class="card"><h3 data-i="f2t">Aislado de tu CSS</h3><p data-i="f2d">Shadow DOM: tu página no lo rompe ni él rompe tu página. Personalízalo con variables, ::part() y temas.</p></div>
+        <div class="card"><h3 data-i="f3t">Modo práctica</h3><p data-i="f3d">Responde fetch con datos de ejemplo y bloquea escrituras reales mientras el usuario aprende.</p></div>
+        <div class="card"><h3 data-i="f4t">Accesible</h3><p data-i="f4d">Foco atrapado y restaurado, anuncios para lector de pantalla, teclado, RTL y movimiento reducido.</p></div>
+        <div class="card"><h3 data-i="f5t">Vue y React</h3><p data-i="f5d">Wrappers de ~1 KB: componente y hook/composable, seguros con StrictMode.</p></div>
+        <div class="card"><h3 data-i="f6t">Ligero</h3><p data-i="f6d">Núcleo ~8 KB gzip, datos de ejemplo 2 KB, temas 0.5 KB, sin dependencias.</p></div>
+      </div>
+    </section>
+
+    <section id="demo">
+      <h2 data-i="demo_h">Pruébalo aquí</h2>
+      <p class="sub" data-i="demo_s">El mini CRM de la derecha tiene un modal animado con contenido que carga después: el caso que rompe a otras librerías.</p>
+      <div class="lab">
+        <div class="panel" id="controls">
+          <button class="btn" id="start" data-i="start">▶ Iniciar tour</button>
+          <label><span data-i="c_practice">Modo práctica</span><input type="checkbox" id="practice" /></label>
+          <label><span data-i="c_theme">Tema</span>
+            <select id="theme"><option value="light">light</option><option value="dark">dark</option><option value="ocean">ocean</option><option value="sunset">sunset</option><option value="mono">mono</option><option value="auto">auto</option></select></label>
+          <label><span data-i="c_font">Fuente</span>
+            <select id="font"><option value="" data-i="font_sys">Sistema</option><option value="Georgia, serif">Serif</option><option value="ui-monospace, Menlo, monospace">Mono</option><option value="inherit" data-i="font_inh">Heredar</option></select></label>
+          <label><span data-i="c_arrow">Flecha</span><input type="checkbox" id="arrow" checked /></label>
+          <label><span data-i="c_rtl">Derecha a izquierda</span><input type="checkbox" id="rtl" /></label>
+          <p class="note" data-i="c_note">Con modo práctica activo, guardar un cliente no toca los datos reales; al terminar el tour todo vuelve.</p>
+        </div>
+
+        <div class="app" id="crm">
+          <header><strong>Acme CRM</strong><button class="btn" id="new" data-i="new">Nuevo cliente</button></header>
+          <div class="body">
+            <table id="table"><thead><tr><th data-i="th_name">Nombre</th><th data-i="th_status">Estado</th></tr></thead><tbody id="rows"></tbody></table>
+            <p class="note" id="source"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="uso">
+      <h2 data-i="use_h">Uso</h2>
+      <div class="tabs" role="tablist">
+        <button class="pill" role="tab" aria-selected="true" data-tab="core">Core</button>
+        <button class="pill" role="tab" aria-selected="false" data-tab="practice">Practice</button>
+        <button class="pill" role="tab" aria-selected="false" data-tab="vue">Vue</button>
+        <button class="pill" role="tab" aria-selected="false" data-tab="react">React</button>
+        <button class="pill" role="tab" aria-selected="false" data-tab="theme">Theme</button>
+      </div>
+      <pre><code id="code"></code></pre>
+    </section>
+
+    <footer data-i="foot">Hecho por Uriel Domínguez · rama de librerías de Nexus · MIT</footer>
+  </div>
+
+  <dialog id="modal">
+    <h3 data-i="m_title">Nuevo cliente</h3>
+    <p id="loading" class="note" data-i="m_loading">Cargando formulario…</p>
+    <form id="form" hidden>
+      <label for="name" data-i="m_name">Nombre</label><input id="name" autocomplete="off" />
+      <div class="row"><button type="button" class="btn alt" id="cancel" data-i="m_cancel">Cancelar</button><button class="btn" id="save" type="submit" data-i="m_save">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
