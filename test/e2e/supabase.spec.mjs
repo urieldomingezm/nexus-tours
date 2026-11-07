@@ -2,9 +2,11 @@
 // Una sola prueba: cada paso depende de los datos que dejó el anterior (ids, inserciones).
 import { test, ok, eq, BASE } from './utilidades.mjs'
 
-test("adaptador Supabase con supabase-js real", async ({ nuevoContexto, vigilar }) => {
+test("adaptador Supabase con supabase-js real", async ({ nuevoContexto, erroresPagina }) => {
   const p = await (await nuevoContexto()).newPage()
-  vigilar(p)
+  // La prueba llama a propósito a un host que no existe: WebKit reporta ese fallo de red como error de página.
+  const redEsperada = /access control checks|Failed to fetch|Load failed|NetworkError/
+  p.on('pageerror', (e) => { if (!redEsperada.test(e.message)) erroresPagina.push(e.message) })
   await p.goto(BASE + 'supabase.html')
   await p.waitForFunction(() => window.ready, null, { timeout: 30000 })
 

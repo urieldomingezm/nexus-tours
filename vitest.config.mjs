@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       // Lógica pura. Los módulos de interfaz (tour, checklist, builder, wrappers) se cubren en test/e2e.
-      include: ['src/{fixtures,router,storage,theme,wait,practice,supabase}.ts'],
+      include: ['src/{fixtures,router,storage,theme,wait,practice,supabase}.ts', 'src/core/{layout,progress}.ts'],
       // Piso de cobertura: el CI falla si baja. Súbelo conforme agregues pruebas.
       thresholds: { lines: 80, functions: 75, branches: 70, statements: 80 },
       reporter: ['text-summary', 'html', 'json-summary'],
