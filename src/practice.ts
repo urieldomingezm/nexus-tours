@@ -57,7 +57,10 @@ export const PASS: unique symbol = Symbol.for('nexus-tours.pass') as never
 
 const WRITE = /^(POST|PUT|PATCH|DELETE)$/i
 const json = (body: unknown, status = 200) =>
-  new Response(status === 204 ? null : JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'x-practice-mode': '1' } })
+  new Response(status === 204 ? null : JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json', 'x-practice-mode': '1' },
+  })
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 function pathRegex(pattern: string) {
@@ -151,10 +154,20 @@ export class PracticeSession {
     const self = this
     const fire = (x: XMLHttpRequest, type: string) => x.dispatchEvent(new Event(type))
     const set = (x: XMLHttpRequest, props: Record<string, unknown>) =>
-      Object.defineProperties(x, Object.fromEntries(Object.entries(props).map(([k, value]) => [k, { value, configurable: true, writable: true }])))
+      Object.defineProperties(
+        x,
+        Object.fromEntries(Object.entries(props).map(([k, value]) => [k, { value, configurable: true, writable: true }])),
+      )
 
     P.open = function (this: XMLHttpRequest, method: string, url: string | URL, ...rest: unknown[]) {
-      meta.set(this, { method: String(method).toUpperCase(), url: String(url), headers: new Headers(), sync: rest[0] === false, pending: false, aborted: false })
+      meta.set(this, {
+        method: String(method).toUpperCase(),
+        url: String(url),
+        headers: new Headers(),
+        sync: rest[0] === false,
+        pending: false,
+        aborted: false,
+      })
       return (orig.open as (...a: unknown[]) => void).call(this, method, url, ...rest)
     } as typeof P.open
     P.setRequestHeader = function (this: XMLHttpRequest, k: string, v: string) {
@@ -257,7 +270,8 @@ export class PracticeSession {
       const methods = r.method === undefined ? null : ([] as string[]).concat(r.method).map((m) => m.toUpperCase())
       if (methods && !methods.includes(method)) continue
       let params: Record<string, string> | null = null
-      if (typeof r.url === 'string') params = pathRegex(r.url).exec(url.pathname)?.groups ?? (pathRegex(r.url).test(url.pathname) ? {} : null)
+      if (typeof r.url === 'string')
+        params = pathRegex(r.url).exec(url.pathname)?.groups ?? (pathRegex(r.url).test(url.pathname) ? {} : null)
       else if (r.url.test(url.href)) params = {}
       if (!params) continue
       const out = await r.respond({ method, url, headers, body, params: { ...params }, db: this.db })
@@ -269,7 +283,8 @@ export class PracticeSession {
       const idField = typeof cfg === 'string' ? 'id' : (cfg.idField ?? 'id')
       const rows = (this.db[table] ??= [])
       const isColl = url.pathname.replace(/\/$/, '') === path
-      const m = !isColl && url.pathname.startsWith(path + '/') ? decodeURIComponent(url.pathname.slice(path.length + 1).replace(/\/$/, '')) : null
+      const m =
+        !isColl && url.pathname.startsWith(path + '/') ? decodeURIComponent(url.pathname.slice(path.length + 1).replace(/\/$/, '')) : null
       if (!isColl && m === null) continue
       const find = () => rows.findIndex((r) => String(r[idField]) === m)
 

@@ -50,11 +50,32 @@ describe('Progress (persist)', () => {
   })
 
   it('un storage que falla o datos corruptos no rompen nada', async () => {
-    const roto = new Progress({ id: 'r', storage: { get: () => '{no json', set: () => { throw new Error('lleno') }, remove: async () => { throw new Error('x') } } })
+    const roto = new Progress({
+      id: 'r',
+      storage: {
+        get: () => '{no json',
+        set: () => {
+          throw new Error('lleno')
+        },
+        remove: async () => {
+          throw new Error('x')
+        },
+      },
+    })
     expect(await roto.load()).toBeNull()
     expect(() => roto.write('completed', 0, true)).not.toThrow()
     await expect(roto.reset()).resolves.toBeUndefined()
-    const asincRoto = new Progress({ id: 'a', storage: { get: async () => { throw new Error('red') }, set: async () => { throw new Error('red') } } })
+    const asincRoto = new Progress({
+      id: 'a',
+      storage: {
+        get: async () => {
+          throw new Error('red')
+        },
+        set: async () => {
+          throw new Error('red')
+        },
+      },
+    })
     expect(await asincRoto.load()).toBeNull()
     asincRoto.write('completed', 0, true)
     await tick()

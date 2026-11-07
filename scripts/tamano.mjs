@@ -32,6 +32,9 @@ for (const [archivo, max] of Object.entries(LIMITES)) {
 
 // En GitHub Actions deja la tabla en el resumen del job.
 if (process.env.GITHUB_STEP_SUMMARY) {
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY, ['### Tamaño (gzip)', '', '| Archivo | Tamaño | Límite | |', '|---|---|---|---|', ...filas, ''].join('\n'))
+  appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY,
+    ['### Tamaño (gzip)', '', '| Archivo | Tamaño | Límite | |', '|---|---|---|---|', ...filas, ''].join('\n'),
+  )
 }
 process.exit(fallos ? 1 : 0)

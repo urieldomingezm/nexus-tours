@@ -24,7 +24,10 @@ async function abrir(nuevoContexto, vigilar, url, opts = {}) {
 test('tour: popover con modal <dialog>, progreso y botones', async ({ nuevoContexto, vigilar }) => {
   const p = await abrir(nuevoContexto, vigilar, '')
   await p.waitForFunction(() => window.makeTour)
-  await p.evaluate(() => { makeTour('full', { closeButton: true }); t.start() })
+  await p.evaluate(() => {
+    makeTour('full', { closeButton: true })
+    t.start()
+  })
   await espera(p, 'Create a client')
   await p.waitForTimeout(400)
   await auditar(p, '[data-nexus-tours]')
@@ -38,10 +41,13 @@ test('tour: tarjeta de bienvenida, puntos, Omitir, pista y "no volver a mostrar"
   const p = await abrir(nuevoContexto, vigilar, 'features.html')
   await p.waitForFunction(() => window.ready)
   await p.evaluate(() => {
-    window.t = new Tour({ persist: { id: 'a11y', dontShowAgain: true, storage: null }, steps: [
-      { title: 'Bienvenido', description: 'Un recorrido corto', icon: '👋' },
-      { element: '#go', title: 'Pulsa', hint: 'Haz clic en el botón', advanceOn: 'click', hideNext: true },
-    ] })
+    window.t = new Tour({
+      persist: { id: 'a11y', dontShowAgain: true, storage: null },
+      steps: [
+        { title: 'Bienvenido', description: 'Un recorrido corto', icon: '👋' },
+        { element: '#go', title: 'Pulsa', hint: 'Haz clic en el botón', advanceOn: 'click', hideNext: true },
+      ],
+    })
     return t.start()
   })
   await espera(p, 'Bienvenido')
@@ -56,7 +62,15 @@ test('tour: tarjeta de bienvenida, puntos, Omitir, pista y "no volver a mostrar"
 test('tour: panel inferior en celular', async ({ nuevoContexto, vigilar }) => {
   const p = await abrir(nuevoContexto, vigilar, 'features.html', { viewport: { width: 390, height: 700 }, hasTouch: true, isMobile: true })
   await p.waitForFunction(() => window.ready)
-  await p.evaluate(() => { window.t = new Tour({ steps: [{ element: '#go', title: 'Uno', description: 'Primer paso' }, { element: '#other', title: 'Dos' }] }); return t.start() })
+  await p.evaluate(() => {
+    window.t = new Tour({
+      steps: [
+        { element: '#go', title: 'Uno', description: 'Primer paso' },
+        { element: '#other', title: 'Dos' },
+      ],
+    })
+    return t.start()
+  })
   await espera(p, 'Uno')
   await p.waitForTimeout(500)
   await auditar(p, '[data-nexus-tours]')
@@ -65,13 +79,19 @@ test('tour: panel inferior en celular', async ({ nuevoContexto, vigilar }) => {
 test('tour: aviso de modo práctica y barra de progreso (más de 10 pasos)', async ({ nuevoContexto, vigilar }) => {
   const p = await abrir(nuevoContexto, vigilar, '')
   await p.waitForFunction(() => window.makeTour)
-  await p.evaluate(() => { makeTour('full', { practice: practiceCfg() }); t.start() })
+  await p.evaluate(() => {
+    makeTour('full', { practice: practiceCfg() })
+    t.start()
+  })
   await espera(p, 'Create a client')
   await p.waitForTimeout(400)
   await auditar(p, '[data-nexus-tours]')
   await p.goto(BASE + 'features.html')
   await p.waitForFunction(() => window.ready)
-  await p.evaluate(() => { window.t = new Tour({ steps: Array.from({ length: 12 }, (_, i) => ({ element: '#go', title: 'P' + i })) }); return t.start() })
+  await p.evaluate(() => {
+    window.t = new Tour({ steps: Array.from({ length: 12 }, (_, i) => ({ element: '#go', title: 'P' + i })) })
+    return t.start()
+  })
   await espera(p, 'P0')
   await p.waitForTimeout(400)
   await auditar(p, '[data-nexus-tours]')
@@ -81,7 +101,10 @@ for (const tema of ['light', 'dark', 'ocean', 'sunset', 'mint', 'rose', 'mono'])
   test(`tema ${tema}: contraste suficiente`, async ({ nuevoContexto, vigilar }) => {
     const p = await abrir(nuevoContexto, vigilar, '')
     await p.waitForFunction(() => window.makeTour)
-    await p.evaluate((tema) => { makeTour('full', { theme: Guiame.themes[tema], closeButton: true }); t.start() }, tema)
+    await p.evaluate((tema) => {
+      makeTour('full', { theme: Guiame.themes[tema], closeButton: true })
+      t.start()
+    }, tema)
     await espera(p, 'Create a client')
     await p.waitForTimeout(400)
     await auditar(p, '[data-nexus-tours]')
@@ -94,7 +117,10 @@ test('checklist: lanzador y panel abierto', async ({ nuevoContexto, vigilar }) =
   await p.evaluate(() => make())
   await p.evaluate(() => cl.ready)
   await auditar(p, '[data-nexus-checklist]')
-  await p.evaluate(() => { cl.markDone('a'); cl.open() })
+  await p.evaluate(() => {
+    cl.markDone('a')
+    cl.open()
+  })
   await p.waitForTimeout(300)
   await auditar(p, '[data-nexus-checklist]')
 })
@@ -102,7 +128,18 @@ test('checklist: lanzador y panel abierto', async ({ nuevoContexto, vigilar }) =
 test('constructor visual: panel con pasos', async ({ nuevoContexto, vigilar }) => {
   const p = await abrir(nuevoContexto, vigilar, 'builder.html', { viewport: { width: 1100, height: 700 } })
   await p.waitForFunction(() => window.ready)
-  await p.evaluate(() => { window.b = new TourBuilder({ storage: null, lang: 'es', steps: [{ element: '#nuevo', title: 'Hola', description: 'Primer paso' }, { element: '#no-existe', title: 'Roto' }, { element: 'button', title: 'Ambiguo' }, { title: 'Fin' }] }).open() })
+  await p.evaluate(() => {
+    window.b = new TourBuilder({
+      storage: null,
+      lang: 'es',
+      steps: [
+        { element: '#nuevo', title: 'Hola', description: 'Primer paso' },
+        { element: '#no-existe', title: 'Roto' },
+        { element: 'button', title: 'Ambiguo' },
+        { title: 'Fin' },
+      ],
+    }).open()
+  })
   await p.waitForTimeout(300)
   await auditar(p, '[data-nexus-builder]')
 })

@@ -108,30 +108,97 @@ export function bestSelector(el: Element): string {
 
 const TEXTS = {
   es: {
-    title: 'Constructor de tours', pick: 'Elegir elemento', interact: 'Interactuar',
+    title: 'Constructor de tours',
+    pick: 'Elegir elemento',
+    interact: 'Interactuar',
     hintPick: 'Pasa el cursor por la página y haz clic en lo que quieras resaltar. ↑ elige el contenedor · Esc para interactuar.',
-    hintInteract: 'Usa tu página con normalidad (abre modales, cambia de pestaña). Tus clics se guardan para repetirlos antes del siguiente paso.',
-    empty: 'Aún no hay pasos. Elige un elemento de la página o añade una bienvenida.', welcome: '+ Bienvenida',
-    stepTitle: 'Título del paso', stepDesc: 'Descripción', selector: 'Selector', noTarget: 'Sin elemento: se muestra centrado (bienvenida o cierre).',
-    found: 'encontrado ✓', missing: 'no encontrado ✗', many: (n: number) => `${n} elementos ✗`,
-    advance: 'Avanza al hacer clic', side: 'Posición', before: 'Antes, clic en', after: 'Después, clic en', route: 'Página',
-    tryIt: 'Probar', tryFrom: 'Probar desde este paso', up: 'Subir', down: 'Bajar', remove: 'Quitar', copyJson: 'Copiar JSON', copyCode: 'Copiar código',
-    copied: '¡Copiado!', importJson: 'Importar', load: 'Cargar', save: 'Guardar', saved: '¡Guardado!', clear: 'Borrar todo', sure: '¿Seguro?',
-    clicks: 'Clics grabados', dock: 'Mover el panel', close: 'Cerrar', pasteHere: 'Pega aquí el JSON del tour', badJson: 'JSON no válido',
-    auto: 'auto', top: 'arriba', bottom: 'abajo', left: 'izquierda', right: 'derecha', sep: ' → ',
+    hintInteract:
+      'Usa tu página con normalidad (abre modales, cambia de pestaña). Tus clics se guardan para repetirlos antes del siguiente paso.',
+    empty: 'Aún no hay pasos. Elige un elemento de la página o añade una bienvenida.',
+    welcome: '+ Bienvenida',
+    stepTitle: 'Título del paso',
+    stepDesc: 'Descripción',
+    selector: 'Selector',
+    noTarget: 'Sin elemento: se muestra centrado (bienvenida o cierre).',
+    found: 'encontrado ✓',
+    missing: 'no encontrado ✗',
+    many: (n: number) => `${n} elementos ✗`,
+    advance: 'Avanza al hacer clic',
+    side: 'Posición',
+    before: 'Antes, clic en',
+    after: 'Después, clic en',
+    route: 'Página',
+    tryIt: 'Probar',
+    tryFrom: 'Probar desde este paso',
+    up: 'Subir',
+    down: 'Bajar',
+    remove: 'Quitar',
+    copyJson: 'Copiar JSON',
+    copyCode: 'Copiar código',
+    copied: '¡Copiado!',
+    importJson: 'Importar',
+    load: 'Cargar',
+    save: 'Guardar',
+    saved: '¡Guardado!',
+    clear: 'Borrar todo',
+    sure: '¿Seguro?',
+    clicks: 'Clics grabados',
+    dock: 'Mover el panel',
+    close: 'Cerrar',
+    pasteHere: 'Pega aquí el JSON del tour',
+    badJson: 'JSON no válido',
+    auto: 'auto',
+    top: 'arriba',
+    bottom: 'abajo',
+    left: 'izquierda',
+    right: 'derecha',
+    sep: ' → ',
   },
   en: {
-    title: 'Tour builder', pick: 'Pick element', interact: 'Interact',
+    title: 'Tour builder',
+    pick: 'Pick element',
+    interact: 'Interact',
     hintPick: 'Move over the page and click what you want to highlight. ↑ picks the container · Esc to interact.',
     hintInteract: 'Use your page normally (open modals, switch tabs). Your clicks are saved and replayed before the next step.',
-    empty: 'No steps yet. Pick an element on the page or add a welcome.', welcome: '+ Welcome',
-    stepTitle: 'Step title', stepDesc: 'Description', selector: 'Selector', noTarget: 'No element: shown centered (welcome or goodbye).',
-    found: 'found ✓', missing: 'not found ✗', many: (n: number) => `${n} elements ✗`,
-    advance: 'Advance on click', side: 'Side', before: 'Before, click', after: 'After, click', route: 'Page',
-    tryIt: 'Try it', tryFrom: 'Try from this step', up: 'Move up', down: 'Move down', remove: 'Remove', copyJson: 'Copy JSON', copyCode: 'Copy code',
-    copied: 'Copied!', importJson: 'Import', load: 'Load', save: 'Save', saved: 'Saved!', clear: 'Clear all', sure: 'Sure?',
-    clicks: 'Recorded clicks', dock: 'Move panel', close: 'Close', pasteHere: 'Paste the tour JSON here', badJson: 'Invalid JSON',
-    auto: 'auto', top: 'top', bottom: 'bottom', left: 'left', right: 'right', sep: ' → ',
+    empty: 'No steps yet. Pick an element on the page or add a welcome.',
+    welcome: '+ Welcome',
+    stepTitle: 'Step title',
+    stepDesc: 'Description',
+    selector: 'Selector',
+    noTarget: 'No element: shown centered (welcome or goodbye).',
+    found: 'found ✓',
+    missing: 'not found ✗',
+    many: (n: number) => `${n} elements ✗`,
+    advance: 'Advance on click',
+    side: 'Side',
+    before: 'Before, click',
+    after: 'After, click',
+    route: 'Page',
+    tryIt: 'Try it',
+    tryFrom: 'Try from this step',
+    up: 'Move up',
+    down: 'Move down',
+    remove: 'Remove',
+    copyJson: 'Copy JSON',
+    copyCode: 'Copy code',
+    copied: 'Copied!',
+    importJson: 'Import',
+    load: 'Load',
+    save: 'Save',
+    saved: 'Saved!',
+    clear: 'Clear all',
+    sure: 'Sure?',
+    clicks: 'Recorded clicks',
+    dock: 'Move panel',
+    close: 'Close',
+    pasteHere: 'Paste the tour JSON here',
+    badJson: 'Invalid JSON',
+    auto: 'auto',
+    top: 'top',
+    bottom: 'bottom',
+    left: 'left',
+    right: 'right',
+    sep: ' → ',
   },
 }
 
@@ -189,7 +256,11 @@ const clean = (s: JSONStep): JSONStep => {
   return out as JSONStep
 }
 
-function h<K extends keyof HTMLElementTagNameMap>(tag: K, props: Record<string, unknown> = {}, ...kids: (Node | string | null | false | undefined)[]): HTMLElementTagNameMap[K] {
+function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  props: Record<string, unknown> = {},
+  ...kids: (Node | string | null | false | undefined)[]
+): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag)
   for (const [k, v] of Object.entries(props)) {
     if (v === undefined || v === null || v === false) continue
@@ -332,16 +403,24 @@ export class TourBuilder {
     imp.append(
       area,
       err,
-      h('button', { class: 'btn pri', type: 'button', onClick: () => {
-        try {
-          this.load(JSON.parse(area.value) as TourJSON)
-          imp.hidden = true
-          area.value = ''
-          err.textContent = ''
-        } catch {
-          err.textContent = L.badJson
-        }
-      } }, L.load),
+      h(
+        'button',
+        {
+          class: 'btn pri',
+          type: 'button',
+          onClick: () => {
+            try {
+              this.load(JSON.parse(area.value) as TourJSON)
+              imp.hidden = true
+              area.value = ''
+              err.textContent = ''
+            } catch {
+              err.textContent = L.badJson
+            }
+          },
+        },
+        L.load,
+      ),
     )
     const flash = (b: HTMLButtonElement, text: string) => {
       const old = b.dataset.label ?? b.textContent ?? ''
@@ -353,37 +432,67 @@ export class TourBuilder {
       void copyText(text).then(() => flash(b, L.copied))
     }
     const bTry = h('button', { class: 'btn pri', type: 'button', onClick: () => this.preview(0) }, L.tryIt)
-    const bJson = h('button', { class: 'btn', type: 'button', onClick: () => copy(bJson, JSON.stringify(this.toJSON(), null, 2)) }, L.copyJson)
+    const bJson = h(
+      'button',
+      { class: 'btn', type: 'button', onClick: () => copy(bJson, JSON.stringify(this.toJSON(), null, 2)) },
+      L.copyJson,
+    )
     const bCode = h('button', { class: 'btn', type: 'button', onClick: () => copy(bCode, this.toCode()) }, L.copyCode)
     const bImp = h('button', { class: 'btn', type: 'button', onClick: () => (imp.hidden = !imp.hidden) }, L.importJson)
     const bSave = this.o.onSave
-      ? h('button', { class: 'btn pri', type: 'button', onClick: async () => {
-          await this.o.onSave!(this.toJSON())
-          flash(bSave!, L.saved)
-        } }, L.save)
+      ? h(
+          'button',
+          {
+            class: 'btn pri',
+            type: 'button',
+            onClick: async () => {
+              await this.o.onSave!(this.toJSON())
+              flash(bSave!, L.saved)
+            },
+          },
+          L.save,
+        )
       : null
-    const bClear = h('button', { class: 'btn', type: 'button', onClick: () => {
-      if (bClear.dataset.armed) {
-        delete bClear.dataset.armed
-        bClear.textContent = L.clear
-        this.clear()
-      } else {
-        bClear.dataset.armed = '1'
-        bClear.textContent = L.sure
-        setTimeout(() => {
-          delete bClear.dataset.armed
-          bClear.textContent = L.clear
-        }, 2500)
-      }
-    } }, L.clear)
+    const bClear = h(
+      'button',
+      {
+        class: 'btn',
+        type: 'button',
+        onClick: () => {
+          if (bClear.dataset.armed) {
+            delete bClear.dataset.armed
+            bClear.textContent = L.clear
+            this.clear()
+          } else {
+            bClear.dataset.armed = '1'
+            bClear.textContent = L.sure
+            setTimeout(() => {
+              delete bClear.dataset.armed
+              bClear.textContent = L.clear
+            }, 2500)
+          }
+        },
+      },
+      L.clear,
+    )
 
     this.panel = h(
       'div',
       { class: 'panel', role: 'dialog', 'aria-label': L.title },
-      h('div', { class: 'head' },
+      h(
+        'div',
+        { class: 'head' },
         h('b', {}, L.title),
-        h('button', { class: 'ico', type: 'button', title: L.dock, 'aria-label': L.dock, onClick: () => this.panel.classList.toggle('left') }, '⇄'),
-        h('button', { class: 'ico', type: 'button', title: L.close, 'aria-label': L.close, onClick: () => (this.close(), this.o.onClose?.()) }, '×'),
+        h(
+          'button',
+          { class: 'ico', type: 'button', title: L.dock, 'aria-label': L.dock, onClick: () => this.panel.classList.toggle('left') },
+          '⇄',
+        ),
+        h(
+          'button',
+          { class: 'ico', type: 'button', title: L.close, 'aria-label': L.close, onClick: () => (this.close(), this.o.onClose?.()) },
+          '×',
+        ),
       ),
       h('div', { class: 'modes' }, this.modeBtns.pick, this.modeBtns.interact),
       this.hintEl,
@@ -413,7 +522,14 @@ export class TourBuilder {
     if (!this.pending.length) return
     this.recBar.append(this.L.clicks + ':')
     this.pending.forEach((s, i) =>
-      this.recBar.append(h('span', { class: 'chip' }, s, h('button', { type: 'button', 'aria-label': this.L.remove, onClick: () => (this.pending.splice(i, 1), this.renderRec()) }, '×'))),
+      this.recBar.append(
+        h(
+          'span',
+          { class: 'chip' },
+          s,
+          h('button', { type: 'button', 'aria-label': this.L.remove, onClick: () => (this.pending.splice(i, 1), this.renderRec()) }, '×'),
+        ),
+      ),
     )
   }
 
@@ -423,31 +539,65 @@ export class TourBuilder {
     this.list.replaceChildren()
     if (!this.steps.length) {
       this.list.append(
-        h('div', { class: 'empty' }, this.L.empty, h('div', { style: 'margin-top:8px' }, h('button', { class: 'btn', type: 'button', onClick: () => this.addStep({ title: '', description: '' }) }, this.L.welcome))),
+        h(
+          'div',
+          { class: 'empty' },
+          this.L.empty,
+          h(
+            'div',
+            { style: 'margin-top:8px' },
+            h('button', { class: 'btn', type: 'button', onClick: () => this.addStep({ title: '', description: '' }) }, this.L.welcome),
+          ),
+        ),
       )
       return
     }
     this.steps.forEach((s, i) => this.list.append(this.card(s, i)))
-    this.list.append(h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onClick: () => this.addStep({ title: '', description: '' }) }, this.L.welcome)))
+    this.list.append(
+      h(
+        'div',
+        { class: 'row' },
+        h('button', { class: 'btn', type: 'button', onClick: () => this.addStep({ title: '', description: '' }) }, this.L.welcome),
+      ),
+    )
   }
 
   private card(s: JSONStep, i: number) {
     const L = this.L
     const val = (e: Event) => (e.target as HTMLInputElement).value
     const join = (v: string | string[] | undefined) => ([] as string[]).concat(v ?? []).join(L.sep)
-    const split = (v: string) => v.split(L.sep.trim()).map((x) => x.trim()).filter(Boolean)
+    const split = (v: string) =>
+      v
+        .split(L.sep.trim())
+        .map((x) => x.trim())
+        .filter(Boolean)
     const icon = (txt: string, label: string, fn: () => void, disabled = false) =>
       h('button', { class: 'ico', type: 'button', title: label, 'aria-label': label, disabled: disabled || undefined, onClick: fn }, txt)
 
-    const header = h('div', { class: 'row' },
+    const header = h(
+      'div',
+      { class: 'row' },
       h('span', { class: 'num' }, String(i + 1)),
-      h('input', { class: 'title', value: s.title ?? '', placeholder: L.stepTitle, 'aria-label': L.stepTitle, onInput: (e: Event) => ((s.title = val(e)), this.changed()) }),
+      h('input', {
+        class: 'title',
+        value: s.title ?? '',
+        placeholder: L.stepTitle,
+        'aria-label': L.stepTitle,
+        onInput: (e: Event) => ((s.title = val(e)), this.changed()),
+      }),
       icon('▶', L.tryFrom, () => this.preview(i)),
       icon('↑', L.up, () => this.move(i, -1), i === 0),
       icon('↓', L.down, () => this.move(i, 1), i === this.steps.length - 1),
       icon('×', L.remove, () => (this.steps.splice(i, 1), this.render(), this.changed())),
     )
-    const desc = h('textarea', { class: 'desc', value: s.description ?? '', placeholder: L.stepDesc, 'aria-label': L.stepDesc, rows: 2, onInput: (e: Event) => ((s.description = val(e)), this.changed()) })
+    const desc = h('textarea', {
+      class: 'desc',
+      value: s.description ?? '',
+      placeholder: L.stepDesc,
+      'aria-label': L.stepDesc,
+      rows: 2,
+      onInput: (e: Event) => ((s.description = val(e)), this.changed()),
+    })
 
     let target: Node
     if (s.element !== undefined) {
@@ -459,25 +609,72 @@ export class TourBuilder {
       }
       refresh()
       badge.addEventListener('click', () => this.flash(s.element ?? ''))
-      target = h('div', { class: 'row' },
-        h('input', { class: 'sel', value: s.element, 'aria-label': L.selector, onInput: (e: Event) => ((s.element = val(e)), refresh(), this.changed()) }),
+      target = h(
+        'div',
+        { class: 'row' },
+        h('input', {
+          class: 'sel',
+          value: s.element,
+          'aria-label': L.selector,
+          onInput: (e: Event) => ((s.element = val(e)), refresh(), this.changed()),
+        }),
         badge,
       )
     } else target = h('div', { class: 'muted' }, L.noTarget)
 
-    const opts = h('div', { class: 'opts' },
+    const opts = h(
+      'div',
+      { class: 'opts' },
       s.element !== undefined
-        ? h('label', { class: 'chk' }, h('input', { type: 'checkbox', checked: s.advanceOn === 'click', onChange: (e: Event) => ((s.advanceOn = (e.target as HTMLInputElement).checked ? 'click' : undefined), this.changed()) }), L.advance)
+        ? h(
+            'label',
+            { class: 'chk' },
+            h('input', {
+              type: 'checkbox',
+              checked: s.advanceOn === 'click',
+              onChange: (e: Event) => ((s.advanceOn = (e.target as HTMLInputElement).checked ? 'click' : undefined), this.changed()),
+            }),
+            L.advance,
+          )
         : null,
       s.element !== undefined
-        ? h('label', {}, L.side,
-            h('select', { onChange: (e: Event) => ((s.side = (val(e) || undefined) as Side | undefined), this.changed()) },
-              ...(['', 'top', 'bottom', 'left', 'right'] as const).map((v) => h('option', { value: v, selected: (s.side ?? '') === v || undefined }, v ? L[v] : L.auto))))
+        ? h(
+            'label',
+            {},
+            L.side,
+            h(
+              'select',
+              { onChange: (e: Event) => ((s.side = (val(e) || undefined) as Side | undefined), this.changed()) },
+              ...(['', 'top', 'bottom', 'left', 'right'] as const).map((v) =>
+                h('option', { value: v, selected: (s.side ?? '') === v || undefined }, v ? L[v] : L.auto),
+              ),
+            ),
+          )
         : null,
-      h('label', { class: 'wide' }, L.before, h('input', { class: 'sel', value: join(s.beforeClick), onInput: (e: Event) => ((s.beforeClick = split(val(e))), this.changed()) })),
-      h('label', { class: 'wide' }, L.after, h('input', { class: 'sel', value: join(s.afterClick), onInput: (e: Event) => ((s.afterClick = split(val(e))), this.changed()) })),
+      h(
+        'label',
+        { class: 'wide' },
+        L.before,
+        h('input', { class: 'sel', value: join(s.beforeClick), onInput: (e: Event) => ((s.beforeClick = split(val(e))), this.changed()) }),
+      ),
+      h(
+        'label',
+        { class: 'wide' },
+        L.after,
+        h('input', { class: 'sel', value: join(s.afterClick), onInput: (e: Event) => ((s.afterClick = split(val(e))), this.changed()) }),
+      ),
       s.route !== undefined || s.element !== undefined
-        ? h('label', { class: 'wide' }, L.route, h('input', { class: 'sel', value: s.route ?? '', placeholder: '/clients', onInput: (e: Event) => ((s.route = val(e) || undefined), this.changed()) }))
+        ? h(
+            'label',
+            { class: 'wide' },
+            L.route,
+            h('input', {
+              class: 'sel',
+              value: s.route ?? '',
+              placeholder: '/clients',
+              onInput: (e: Event) => ((s.route = val(e) || undefined), this.changed()),
+            }),
+          )
         : null,
     )
     return h('div', { class: 'card', 'data-i': i }, header, desc, target, opts)
@@ -559,7 +756,13 @@ export class TourBuilder {
       if (this.mode === 'pick') this.setMode('interact')
       return
     }
-    if (this.mode === 'pick' && !inPanel && e.key === 'ArrowUp' && this.hover?.parentElement && this.hover.parentElement !== document.documentElement) {
+    if (
+      this.mode === 'pick' &&
+      !inPanel &&
+      e.key === 'ArrowUp' &&
+      this.hover?.parentElement &&
+      this.hover.parentElement !== document.documentElement
+    ) {
       e.preventDefault()
       this.hover = this.hover.parentElement
       this.showHighlight(this.hover)
@@ -640,7 +843,11 @@ export class TourBuilder {
     this.previewing = true
     this.host.hidden = true
     this.hl.style.display = 'none'
-    const tour = new Tour({ ...this.o.tourOptions, theme: this.o.theme ?? this.o.tourOptions?.theme, steps: this.steps.map(clean) as Step[] })
+    const tour = new Tour({
+      ...this.o.tourOptions,
+      theme: this.o.theme ?? this.o.tourOptions?.theme,
+      steps: this.steps.map(clean) as Step[],
+    })
     const back = () => {
       this.previewing = false
       if (this.host) {

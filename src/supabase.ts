@@ -45,7 +45,10 @@ export interface SupabasePracticeOptions extends Omit<PracticeOptions, 'rest'> {
 export const liveFetch: typeof fetch = (...args) => globalThis.fetch(...args)
 
 class Bad extends Error {
-  constructor(message: string, public code = 'PGRST100') {
+  constructor(
+    message: string,
+    public code = 'PGRST100',
+  ) {
     super(message)
   }
 }
@@ -55,7 +58,8 @@ const res = (body: unknown, status = 200, headers: Record<string, string> = {}) 
     status,
     headers: { 'content-type': 'application/json; charset=utf-8', 'x-practice-mode': '1', ...headers },
   })
-const fail = (status: number, code: string, message: string, details: string | null = null) => res({ code, details, hint: null, message }, status)
+const fail = (status: number, code: string, message: string, details: string | null = null) =>
+  res({ code, details, hint: null, message }, status)
 
 /** UUID v4. `crypto.randomUUID` solo existe en contextos seguros (HTTPS/localhost) y navegadores recientes. */
 const uuid = (): string =>
@@ -80,8 +84,7 @@ function splitTop(s: string): string[] {
     if (!q && depth === 0 && c === ',') {
       out.push(cur)
       cur = ''
-    }
-    else cur += c
+    } else cur += c
   }
   if (cur.trim()) out.push(cur)
   return out
@@ -89,13 +92,21 @@ function splitTop(s: string): string[] {
 const unquote = (s: string) => (s.length > 1 && s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1).replace(/\\(.)/g, '$1') : s)
 const list = (v: string) => splitTop(v.replace(/^\(|\)$/g, '')).map((x) => unquote(x.trim()))
 
-const cmp = (a: unknown, b: unknown) => (typeof a === 'number' && typeof b === 'number' ? a - b : String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0)
+const cmp = (a: unknown, b: unknown) =>
+  typeof a === 'number' && typeof b === 'number' ? a - b : String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0
 const coerce = (cell: unknown, v: string): unknown => (typeof cell === 'number' ? Number(v) : typeof cell === 'boolean' ? v === 'true' : v)
 
 type Pred = (r: Row) => boolean
 
 function likeRe(pattern: string, ci: boolean) {
-  return new RegExp('^' + esc(pattern).replace(/\\\*|%/g, '.*').replace(/_/g, '.') + '$', ci ? 'is' : 's')
+  return new RegExp(
+    '^' +
+      esc(pattern)
+        .replace(/\\\*|%/g, '.*')
+        .replace(/_/g, '.') +
+      '$',
+    ci ? 'is' : 's',
+  )
 }
 
 /** One condition: `col` + `eq.5` / `not.in.(1,2)` / `ilike.*ana*`. */
@@ -112,16 +123,40 @@ function atom(col: string, expr: string): Pred {
   const has = (r: Row) => r[col] !== null && r[col] !== undefined
   let p: Pred
   switch (op) {
-    case 'eq': p = (r) => has(r) && r[col] === coerce(r[col], val); break
-    case 'neq': p = (r) => has(r) && r[col] !== coerce(r[col], val); break
-    case 'gt': p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) > 0; break
-    case 'gte': p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) >= 0; break
-    case 'lt': p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) < 0; break
-    case 'lte': p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) <= 0; break
-    case 'like': case 'ilike': { const re = likeRe(val, op === 'ilike'); p = (r) => has(r) && re.test(String(r[col])); break }
-    case 'is': p = val === 'null' ? (r) => !has(r) : (r) => r[col] === (val === 'true'); break
-    case 'in': { const l = list(val); p = (r) => has(r) && l.includes(String(r[col])); break }
-    default: throw new Bad(`Operator "${op}" is not supported in practice mode`)
+    case 'eq':
+      p = (r) => has(r) && r[col] === coerce(r[col], val)
+      break
+    case 'neq':
+      p = (r) => has(r) && r[col] !== coerce(r[col], val)
+      break
+    case 'gt':
+      p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) > 0
+      break
+    case 'gte':
+      p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) >= 0
+      break
+    case 'lt':
+      p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) < 0
+      break
+    case 'lte':
+      p = (r) => has(r) && cmp(r[col], coerce(r[col], val)) <= 0
+      break
+    case 'like':
+    case 'ilike': {
+      const re = likeRe(val, op === 'ilike')
+      p = (r) => has(r) && re.test(String(r[col]))
+      break
+    }
+    case 'is':
+      p = val === 'null' ? (r) => !has(r) : (r) => r[col] === (val === 'true')
+      break
+    case 'in': {
+      const l = list(val)
+      p = (r) => has(r) && l.includes(String(r[col]))
+      break
+    }
+    default:
+      throw new Bad(`Operator "${op}" is not supported in practice mode`)
   }
   return neg ? (r) => !p(r) : p
 }
@@ -130,7 +165,10 @@ function logic(kind: 'and' | 'or', inner: string): Pred {
   const parts = splitTop(inner).map((item) => {
     const t = item.trim()
     const m = /^(not\.)?(and|or)\((.*)\)$/s.exec(t)
-    if (m) { const q = logic(m[2] as 'and' | 'or', m[3]!); return m[1] ? (r: Row) => !q(r) : q }
+    if (m) {
+      const q = logic(m[2] as 'and' | 'or', m[3]!)
+      return m[1] ? (r: Row) => !q(r) : q
+    }
     const dot = t.indexOf('.')
     if (dot < 0) throw new Bad(`Invalid filter "${t}"`)
     return atom(t.slice(0, dot), t.slice(dot + 1))
@@ -180,22 +218,37 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
 
   function project(rows: Row[], select: string | null, table: string, db: Db): Row[] {
     if (!select || select.trim() === '*') return rows
-    const tokens = splitTop(select).map((t) => t.trim()).filter(Boolean)
+    const tokens = splitTop(select)
+      .map((t) => t.trim())
+      .filter(Boolean)
     const out: Row[] = []
     for (const row of rows) {
       const o2: Row = {}
       let drop = false
       for (const t of tokens) {
-        if (t === '*') { Object.assign(o2, row); continue }
+        if (t === '*') {
+          Object.assign(o2, row)
+          continue
+        }
         const em = /^(?:(\w+):)?(\w+)((?:![\w.]+)*)\((.*)\)$/s.exec(t)
         if (em) {
           const [, alias, name = '', hint = '', inner = ''] = em
           const rel = relations[table]?.[name]
-          if (!rel) throw new Bad(`Could not find a relationship between '${table}' and '${name}'. In practice mode declare it in "relations".`, 'PGRST200')
+          if (!rel)
+            throw new Bad(
+              `Could not find a relationship between '${table}' and '${name}'. In practice mode declare it in "relations".`,
+              'PGRST200',
+            )
           const target = db[rel.table] ?? []
           const to = rel.to ?? pk(rel.table)
-          const hit = rel.many ? target.filter((r) => String(r[to]) === String(row[rel.from])) : target.find((r) => String(r[to]) === String(row[rel.from]))
-          const val = rel.many ? project(hit as Row[], inner || '*', rel.table, db) : hit ? project([hit as Row], inner || '*', rel.table, db)[0]! : null
+          const hit = rel.many
+            ? target.filter((r) => String(r[to]) === String(row[rel.from]))
+            : target.find((r) => String(r[to]) === String(row[rel.from]))
+          const val = rel.many
+            ? project(hit as Row[], inner || '*', rel.table, db)
+            : hit
+              ? project([hit as Row], inner || '*', rel.table, db)[0]!
+              : null
           if (hint.includes('inner') && (rel.many ? !(val as Row[]).length : !val)) drop = true
           o2[alias ?? name] = val
           continue
@@ -239,7 +292,8 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
     const out = (data: Row[], status: number, extra: Record<string, string> = {}) => {
       const shaped = project(data, select, name, req.db)
       if (!single) return res(shaped, status, extra)
-      if (shaped.length !== 1) return fail(406, 'PGRST116', 'JSON object requested, multiple (or no) rows returned', `The result contains ${shaped.length} rows`)
+      if (shaped.length !== 1)
+        return fail(406, 'PGRST116', 'JSON object requested, multiple (or no) rows returned', `The result contains ${shaped.length} rows`)
       return res(shaped[0], status, extra)
     }
 
@@ -268,13 +322,20 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
         const made: Row[] = []
         for (const item of items as Row[]) {
           const row = { ...item }
-          const at = cols.every((c) => row[c] !== undefined) ? rows.findIndex((r) => cols.every((c) => String(r[c]) === String(row[c]))) : -1
+          const at = cols.every((c) => row[c] !== undefined)
+            ? rows.findIndex((r) => cols.every((c) => String(r[c]) === String(row[c])))
+            : -1
           if (at >= 0) {
             if (merge) {
               rows[at] = { ...rows[at], ...row }
               made.push(rows[at]!)
-            }
-            else if (!ignore) return fail(409, '23505', `duplicate key value violates unique constraint "${name}_pkey"`, `Key (${cols.join(', ')})=(${cols.map((c) => row[c]).join(', ')}) already exists.`)
+            } else if (!ignore)
+              return fail(
+                409,
+                '23505',
+                `duplicate key value violates unique constraint "${name}_pkey"`,
+                `Key (${cols.join(', ')})=(${cols.map((c) => row[c]).join(', ')}) already exists.`,
+              )
             continue
           }
           if (row[key] === undefined) row[key] = nextId(rows, key)

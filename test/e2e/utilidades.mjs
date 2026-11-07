@@ -16,8 +16,16 @@ export const S = (q) => `document.querySelector('[data-nexus-tours]')?.shadowRoo
 
 /** Espera a que terminen las transiciones/animaciones dentro de los shadow roots de la librería (Safari anima al insertar). */
 export const sinAnimaciones = (p) =>
-  p.waitForFunction(() => [...document.querySelectorAll('[data-nexus-tours],[data-nexus-checklist],[data-nexus-builder]')]
-    .every((h) => !h.shadowRoot || h.shadowRoot.getAnimations().every((a) => a.playState !== 'running')), null, { timeout: 3000 }).catch(() => {})
+  p
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll('[data-nexus-tours],[data-nexus-checklist],[data-nexus-builder]')].every(
+          (h) => !h.shadowRoot || h.shadowRoot.getAnimations().every((a) => a.playState !== 'running'),
+        ),
+      null,
+      { timeout: 3000 },
+    )
+    .catch(() => {})
 
 export const test = base.extend({
   /** Errores de JavaScript de las páginas: al final de cada prueba debe estar vacío. */

@@ -52,7 +52,11 @@ describe('createFixtures', () => {
   it('el email se deriva del nombre de la misma fila, sin acentos', () => {
     const { clientes } = createFixtures(esquema, { seed: 5 })
     for (const r of clientes) {
-      const esperado = String(r.nombre).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '.')
+      const esperado = String(r.nombre)
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '.')
       expect(r.email).toBe(`${esperado}@demo.mx`)
     }
   })

@@ -123,7 +123,11 @@ function localStore(): ChecklistStorage {
     const k = '__nexus_tours_probe__'
     localStorage.setItem(k, '1')
     localStorage.removeItem(k)
-    return { get: (key) => localStorage.getItem(key), set: (key, v) => localStorage.setItem(key, v), remove: (key) => localStorage.removeItem(key) }
+    return {
+      get: (key) => localStorage.getItem(key),
+      set: (key, v) => localStorage.setItem(key, v),
+      remove: (key) => localStorage.removeItem(key),
+    }
   } catch {
     return memoryStorage() // private mode, blocked storage…
   }
@@ -285,7 +289,8 @@ export class Checklist {
     host.setAttribute('data-nexus-checklist', '')
     if (this.o.className) host.className = this.o.className
     host.dataset.pos = this.o.position === 'bottom-start' ? 'start' : 'end'
-    for (const [k, v] of Object.entries(themeVars({ ...this.o.theme, ...(this.o.font ? { font: this.o.font } : {}) }))) host.style.setProperty(k, v)
+    for (const [k, v] of Object.entries(themeVars({ ...this.o.theme, ...(this.o.font ? { font: this.o.font } : {}) })))
+      host.style.setProperty(k, v)
     const d = this.o.dir ?? 'auto'
     host.dir = d === 'auto' ? (getComputedStyle(document.body).direction === 'rtl' ? 'rtl' : 'ltr') : d
     const shadow = host.attachShadow({ mode: 'open' })

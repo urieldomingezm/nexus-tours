@@ -64,10 +64,14 @@ describe('waitForElement', () => {
   it('un find() que lanza no rompe la espera', async () => {
     let n = 0
     const el = conTamano(document.body.appendChild(document.createElement('p')))
-    const r = await waitForElement(() => {
-      if (n++ < 3) throw new Error('selector inválido por ahora')
-      return el
-    }, 2000, { aborted: false })
+    const r = await waitForElement(
+      () => {
+        if (n++ < 3) throw new Error('selector inválido por ahora')
+        return el
+      },
+      2000,
+      { aborted: false },
+    )
     expect(r).toBe(el)
   })
 })

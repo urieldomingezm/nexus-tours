@@ -11,7 +11,11 @@ export function localStore(): PersistStorage {
     const k = '__nexus-tours__'
     localStorage.setItem(k, '1')
     localStorage.removeItem(k)
-    return { get: (key) => localStorage.getItem(key), set: (key, v) => localStorage.setItem(key, v), remove: (key) => localStorage.removeItem(key) }
+    return {
+      get: (key) => localStorage.getItem(key),
+      set: (key, v) => localStorage.setItem(key, v),
+      remove: (key) => localStorage.removeItem(key),
+    }
   } catch {
     return memoryStore()
   }

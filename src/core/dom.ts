@@ -72,7 +72,12 @@ export function adoptStyles(shadow: ShadowRoot, css: string, nonce?: string) {
 export const reduceMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** Element with class and `part` (for `::part()` styling). */
-export function part<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, partName?: string, text?: string): HTMLElementTagNameMap[K] {
+export function part<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  cls: string,
+  partName?: string,
+  text?: string,
+): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag)
   el.className = cls
   if (partName) el.setAttribute('part', partName)
