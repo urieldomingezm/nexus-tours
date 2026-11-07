@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>guiame — demo</title>
+  <style>
+    body{margin:0;font:16px/1.5 system-ui,sans-serif;background:#f5f4fa;color:#1c1b22}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#fff;border-bottom:1px solid #ddd}
+    main{max-width:760px;margin:24px auto;padding:0 16px}
+    button.act{font:inherit;font-weight:600;padding:9px 16px;border-radius:8px;border:0;background:#1c1b22;color:#fff;cursor:pointer}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden}
+    td,th{padding:10px 14px;text-align:left;border-bottom:1px solid #eee}
+    /* The classic trouble: a modal <dialog> that animates with transform and fills with async content */
+    dialog{border:0;border-radius:14px;padding:24px;width:min(420px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.3);
+      opacity:0;transform:translateY(40px) scale(.96);transition:opacity .35s,transform .35s}
+    dialog[open]{opacity:1;transform:none}
+    dialog::backdrop{background:rgba(0,0,0,.4)}
+    label{display:block;margin:12px 0 4px;font-weight:600}
+    input{width:100%;box-sizing:border-box;padding:9px;border:1px solid #bbb;border-radius:8px;font:inherit}
+    .row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+    #cargando{color:#777}
+    .spacer{height:900px}
+  </style>
+</head>
+<body>
+  <header><strong>Acme CRM</strong><button class="act" id="nuevo">New client</button></header>
+  <main>
+    <h1>Clients</h1>
+    <table id="tabla"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody id="filas"><tr><td>Globex</td><td>Active</td></tr></tbody></table>
+    <div class="spacer"></div>
+    <p id="pie">Bottom of the page</p>
+  </main>
+
+  <dialog id="modal">
+    <h2 style="margin-top:0">New client</h2>
+    <p id="cargando">Loading form…</p>
+    <form id="form" hidden method="dialog">
+      <label for="nombre">Name</label><input id="nombre" autocomplete="off" />
+      <div class="row"><button type="button" id="cancelar">Cancel</button><button class="act" id="guardar" type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <script type="module">
+    import { Tour } from '/src/index.ts'
+    const modal = document.getElementById('modal')
+    const form = document.getElementById('form')
+    function abrir() {
+      form.hidden = true
+      document.getElementById('cargando').hidden = false
+      modal.showModal()
+      setTimeout(() => { document.getElementById('cargando').hidden = true; form.hidden = false }, 600) // async content
+    }
+    document.getElementById('nuevo').addEventListener('click', abrir)
+    document.getElementById('cancelar').addEventListener('click', () => modal.close())
+    form.addEventListener('submit', () => {
+      const n = document.getElementById('nombre').value || 'New client'
+      document.getElementById('filas').insertAdjacentHTML('beforeend', `<tr><td>${n.replace(/</g,'&lt;')}</td><td>New</td></tr>`)
+    })
+
+    window.Guiame = { Tour }
+    window.makeTour = (kind = 'full', extra = {}) => {
+      const steps = {
+        full: [
+          { element: '#nuevo', title: 'Create a client', description: 'Everything starts here.' },
+          { before: () => abrir(), element: '#nombre', title: 'Name it', description: 'Type the client name.' },
+          { element: '#guardar', title: 'Save', description: 'Hit save.', after: () => modal.close() },
+          { element: '#tabla', title: 'Your list', description: 'The new client shows up here.', side: 'bottom' },
+        ],
+        missing: [
+          { element: '#nuevo', title: 'One' },
+          { element: '#no-existe', title: 'Ghost', waitTimeout: 300 },
+          { element: '#tabla', title: 'Three' },
+        ],
+        centered: [{ title: 'Welcome', description: 'No target: centered.' }, { element: '#pie', title: 'Footer', description: 'Scrolled into view.' }],
+      }[kind]
+      window.t = new Tour({ steps, ...extra })
+      window.ev = []
+      ;['start', 'step', 'missing', 'end', 'stop'].forEach((e) => window.t.on(e, (c) => window.ev.push(e + ':' + c.index)))
+      return true
+    }
+  </script>
+</body>
+</html>
