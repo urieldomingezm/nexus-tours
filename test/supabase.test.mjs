@@ -65,6 +65,14 @@ try {
   eq(await q(`const r = await sb.from('clients').insert({name:'Eli', status:'new'}).select().single(); return [r.data.id, r.data.name]`), [5, 'Eli'], 'insert + select: id autoincremental')
   eq(await q(`const r = await sb.from('clients').insert({name:'Fer'}); const c = await sb.from('clients').select('id',{count:'exact',head:true}); return [r.error, r.status, c.count]`), [null, 201, 6], 'insert sin select (minimal) y se ve en la lista')
   eq(await q(`const r = await sb.from('clients').insert([{name:'G1'},{name:'G2'}]).select('id'); return r.data.map(x=>x.id)`), [7, 8], 'insert múltiple')
+  // ---- valores por defecto de columnas
+  const d1 = await q(`const r = await sb.from('orders').insert({client_id: 2}).select().single(); return r.data`)
+  ok(d1.total === 0 && d1.status === 'pending' && d1.folio === 'P-4' && /^\d{4}-\d\d-\d\dT/.test(d1.created_at) && /^[0-9a-f-]{36}$/.test(d1.token), 'defaults: constante, función (folio con la fila actual), now() y uuid()')
+  const d2 = await q(`const r = await sb.from('orders').insert({client_id: 2, total: 9, status: null}).select().single(); return r.data`)
+  ok(d2.total === 9 && d2.status === null, 'defaults: lo que mandas (incluso null) manda sobre el default')
+  eq(await q(`const r = await sb.from('orders').insert([{client_id:1},{client_id:1}]).select('folio').order('id'); return r.data.map(x=>x.folio)`), ['P-6', 'P-7'], 'defaults: en inserciones múltiples la función ve las filas anteriores')
+  eq(await q(`const r = await sb.from('orders').upsert({id: 10, client_id: 1}).select('total, status').single(); return r.data`), { total: 100, status: undefined }, 'defaults: un upsert sobre fila existente NO pisa sus valores')
+  eq(await q(`const r = await sb.from('clients').insert({name:'SinDefaults'}).select().single(); return Object.keys(r.data).sort()`), ['id', 'name'], 'defaults: una tabla sin defaults no se toca')
   eq(await q(`const r = await sb.from('clients').insert({id:1, name:'Dup'}); return r.error.code`), '23505', 'id duplicado → 23505')
   eq(await q(`const r = await sb.from('clients').update({status:'vip'}).eq('id',1).select().single(); return r.data.status`), 'vip', 'update + select')
   eq(await q(`const r = await sb.from('clients').update({age:99}).in('id',[2,3]); const c = await sb.from('clients').select('age').in('id',[2,3]).order('id'); return [r.status, c.data]`), [204, [{ age: 99 }, { age: 99 }]], 'update sin select (204)')
@@ -73,7 +81,7 @@ try {
   eq(await q(`const r = await sb.from('clients').delete().eq('id',50).select('id'); const c = await sb.from('clients').select('id').eq('id',50); return [r.data, c.data]`), [[{ id: 50 }], []], 'delete + select')
 
   // ---- rpc y funciones
-  eq(await q(`const r = await sb.rpc('total_pedidos'); return r.data`), 225, 'rpc con handler')
+  eq(await q(`const r = await sb.rpc('total_pedidos'); return r.data`), 234, 'rpc con handler (225 originales + 9 del test de defaults)')
   eq(await q(`const r = await sb.rpc('echo',{a:1}); return r.data`), { a: 1 }, 'rpc recibe los argumentos')
   eq(await q(`const r = await sb.rpc('borrar_todo'); return [r.status, r.error?.code ?? r.error?.message?.slice(0,12)]`).then((x) => x[0]), 403, 'rpc sin handler: bloqueada (podría escribir)')
   eq(await q(`const r = await sb.functions.invoke('hola',{body:{nombre:'Uriel'}}); return r.data`), { saludo: 'hola Uriel' }, 'edge function con handler')

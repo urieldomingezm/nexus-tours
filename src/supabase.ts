@@ -30,6 +30,13 @@ export interface SupabasePracticeOptions extends Omit<PracticeOptions, 'rest'> {
   rpc?: Record<string, (ctx: { args: any; db: Db; req: PracticeRequest }) => unknown>
   /** `supabase.functions.invoke('name', …)` handlers. */
   functions?: Record<string, (ctx: { body: any; db: Db; req: PracticeRequest }) => unknown>
+  /**
+   * Column defaults for inserts, as `{ table: { column: value } }`. Applied only when the column is *omitted*
+   * (an explicit `null` stays `null`, like Postgres). A value can be a constant, a function `({ row, db, table }) => value`,
+   * or the Postgres-style strings `'now()'` (current ISO timestamp), `'gen_random_uuid()'` and `'uuid()'`.
+   * e.g. `{ orders: { status: 'pending', created_at: 'now()', folio: ({ db }) => 'P-' + (db.orders.length + 1) } }`
+   */
+  defaults?: Record<string, Record<string, unknown | ((ctx: { row: Row; db: Db; table: string }) => unknown)>>
   /** Real rpc names that are read-only and may reach your database during practice. */
   allowRpc?: string[]
 }
@@ -152,7 +159,7 @@ function sorter(order: string | null): ((a: Row, b: Row) => number) | null {
 }
 
 export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
-  const { url, primaryKeys = {}, relations = {}, rpc = {}, functions = {}, allowRpc = [], routes = [], allow, ...rest } = o
+  const { url, primaryKeys = {}, defaults = {}, relations = {}, rpc = {}, functions = {}, allowRpc = [], routes = [], allow, ...rest } = o
   const pk = (t: string) => primaryKeys[t] ?? 'id'
   const base = url ? esc(url.replace(/\/$/, '')) : ''
   const origin = url ? new URL(url).origin : null
@@ -187,6 +194,19 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
     return out
   }
 
+  const withDefaults = (t: string, row: Row, db: Db) => {
+    for (const [col, d] of Object.entries(defaults[t] ?? {})) {
+      if (row[col] !== undefined) continue
+      row[col] =
+        typeof d === 'function'
+          ? (d as (c: { row: Row; db: Db; table: string }) => unknown)({ row, db, table: t })
+          : d === 'now()'
+            ? new Date().toISOString()
+            : d === 'gen_random_uuid()' || d === 'uuid()'
+              ? crypto.randomUUID()
+              : d
+    }
+  }
   const nextId = (rows: Row[], key: string): unknown => {
     const ids = rows.map((r) => r[key])
     if (ids.some((i) => typeof i === 'string')) return globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
@@ -241,6 +261,7 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
             continue
           }
           if (row[key] === undefined) row[key] = nextId(rows, key)
+          withDefaults(name, row, req.db)
           rows.push(row)
           made.push(row)
         }
