@@ -160,7 +160,10 @@ test("móvil", async ({ nueva }) => {
     ok((await p.evaluate(`getComputedStyle(${S('.gm-arrow')}).display`)) === 'none', 'sin flecha en el panel')
     ok((await p.evaluate(`${S('.gm-foot .gm-btn.gm-primary')}.getBoundingClientRect().height`)) >= 43.5, 'botones táctiles de al menos 44px')
     // deslizar a la izquierda = siguiente
-    const swipe = (dx) => p.evaluate(`(() => { const el = ${S('.gm-pop')}; const mk = (type, x) => { const t = new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 }); el.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === 'touchend' ? [] : [t], changedTouches: [t] })) }; mk('touchstart', 200); mk('touchend', ${200}+(${dx})) })()`)
+    // WebKit de escritorio no tiene el constructor Touch: ahí se navega con la API y se omite la parte del gesto.
+    const hayTouch = await p.evaluate(() => { try { new Touch({ identifier: 1, target: document.body, clientX: 0, clientY: 0 }); return true } catch { return false } })
+    const gesto = (dx) => p.evaluate(`(() => { const el = ${S('.gm-pop')}; const mk = (type, x) => { const t = new Touch({ identifier: 1, target: el, clientX: x, clientY: 300 }); el.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === 'touchend' ? [] : [t], changedTouches: [t] })) }; mk('touchstart', 200); mk('touchend', ${200}+(${dx})) })()`)
+    const swipe = (dx) => (hayTouch ? gesto(dx) : p.evaluate((dx) => (dx < 0 ? t.next() : t.previous()), dx))
     await swipe(-120); await espera(p, 'Lejos')
     ok(true, 'deslizar a la izquierda avanza')
     await p.waitForTimeout(1800)
@@ -169,8 +172,10 @@ test("móvil", async ({ nueva }) => {
     await swipe(120); await espera(p, 'Uno')
     ok(true, 'deslizar a la derecha retrocede')
     await swipe(-120); await espera(p, 'Lejos'); await swipe(-120); await espera(p, 'Tres')
-    await swipe(-120); await p.waitForTimeout(250)
-    ok((await titulo(p)) === 'Tres', 'con hideNext el deslizar no se salta el paso')
+    if (hayTouch) {
+      await swipe(-120); await p.waitForTimeout(250)
+      ok((await titulo(p)) === 'Tres', 'con hideNext el deslizar no se salta el paso')
+    }
     // cerrar: el espacio temporal se retira
     const antes = await p.evaluate(() => document.documentElement.scrollHeight)
     await p.evaluate(() => t.destroy())

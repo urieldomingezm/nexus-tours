@@ -1,5 +1,5 @@
 // Núcleo del tour: modales, accesibilidad, estilos, modo práctica, wrappers, checklist, sitio y CDN.
-import { test as base, ok, expect, BASE } from './utilidades.mjs'
+import { test as base, ok, expect, BASE, sinAnimaciones } from './utilidades.mjs'
 
 const test = base.extend({
   nueva: async ({ nuevoContexto, vigilar }, use) => {
@@ -12,7 +12,8 @@ const test = base.extend({
     })
   },
 })
-const esperaTitulo = (p, t) => p.waitForFunction((t) => S('.gm-title')?.textContent === t, t, { timeout: 4000 })
+// Espera el título y que terminen las transiciones (los colores se leen ya asentados, también en Safari).
+const esperaTitulo = async (p, t) => { await p.waitForFunction((t) => S('.gm-title')?.textContent === t, t, { timeout: 4000 }); await sinAnimaciones(p) }
 
 test("flujo completo con modal <dialog> animado", async ({ nueva }) => {
   let p = await nueva()
@@ -154,6 +155,7 @@ test("aislamiento: la CSS de la página no rompe el tour (ni el tour a la págin
   await p.evaluate(() => t.start())
   await esperaTitulo(p, 'Create a client')
   await p.addStyleTag({ content: "button{all:unset !important;background:red !important;color:red !important;display:none !important} *{font-family:'Comic Sans MS' !important} p{color:lime !important;text-transform:uppercase !important}" })
+  await sinAnimaciones(p)
   const hostil = await p.evaluate(() => { const b = S('.gm-primary'); const cs = getComputedStyle(b); const ti = getComputedStyle(S('.gm-title')); return { bg: cs.backgroundColor, display: cs.display, font: ti.fontFamily, color: ti.color, tt: ti.textTransform } })
   ok(hostil.bg === 'rgb(66, 99, 235)' && hostil.display !== 'none', 'CSS hostil de la página (button/*/p con !important) no afecta al tour: ' + hostil.bg)
   ok(!hostil.font.includes('Comic') && hostil.tt === 'none', 'la tipografía y estilos globales de la página no se filtran al tour')

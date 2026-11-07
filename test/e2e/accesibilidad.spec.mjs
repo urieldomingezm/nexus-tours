@@ -2,11 +2,12 @@
 // popover del tour (escritorio, celular, bienvenida, modo práctica), temas, checklist y constructor.
 // Solo se analiza el DOM de la librería (no la página de prueba que la rodea).
 import AxeBuilder from '@axe-core/playwright'
-import { test, expect, BASE, S } from './utilidades.mjs'
+import { test, expect, BASE, S, sinAnimaciones } from './utilidades.mjs'
 
 const REGLAS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
 async function auditar(page, selector) {
+  await sinAnimaciones(page) // el contraste se mide con los colores finales, no a media transición
   const { violations } = await new AxeBuilder({ page }).include(selector).withTags(REGLAS).analyze()
   const resumen = violations.map((v) => `${v.id} (${v.impact}): ${v.help} → ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)
   expect(resumen, `violaciones de accesibilidad en ${selector}`).toEqual([])
