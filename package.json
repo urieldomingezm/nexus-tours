@@ -55,7 +55,10 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.map",
+    "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "scripts": {
@@ -113,5 +116,11 @@
     "react": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

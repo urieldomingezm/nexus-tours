@@ -1,0 +1,44 @@
+name: Publicar en npm
+
+# Se ejecuta al subir una etiqueta v* (p. ej. v0.1.0) o a mano desde la pestaña Actions.
+# Requiere el secreto NPM_TOKEN (token "Granular access" con permiso de publicar nexus-tours).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Pruebas
+        run: npm run build:site && npm run build:demo && npm test
+
+      - name: La etiqueta coincide con la versión
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+
+      - name: Publicar
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
