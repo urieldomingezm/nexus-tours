@@ -102,6 +102,58 @@ try {
     ok(true, 'until: avanza cuando la condición se cumple')
   }
 
+  // ================= aspecto: puntos, Omitir, bienvenida, pulso, confeti
+  {
+    const p = await nueva(); await abre(p)
+    await p.evaluate(() => {
+      window.t = new Tour({ celebrate: true, steps: [
+        { title: 'Bienvenido', description: 'Un recorrido corto', icon: '👋', image: 'javascript:alert(1)' },
+        { element: '#go', title: 'Pulsa', advanceOn: 'click' },
+        { element: '#other', title: 'Normal' },
+        { title: 'Listo', icon: '🎉' },
+      ] })
+      return t.start()
+    })
+    await espera(p, 'Bienvenido')
+    ok(await p.evaluate(`${S('.gm-pop')}.hasAttribute('data-welcome')`), 'paso sin elemento: aspecto de bienvenida')
+    ok((await p.evaluate(`${S('.gm-pop')}.getBoundingClientRect().width`)) > 400, 'la bienvenida es más ancha')
+    ok((await p.evaluate(`${S('.gm-icon')}.textContent`)) === '👋', 'muestra el icono')
+    ok(await p.evaluate(`!${S('.gm-img')}`), 'una imagen con javascript: se rechaza')
+    ok((await p.evaluate(`${S('.gm-dots')}.children.length`)) === 4 && (await p.evaluate(`${S('.gm-dot[data-state=current]')}`)) !== null, '4 puntos de progreso, uno activo')
+    ok(await p.evaluate(`!!${S('.gm-skip')} && !${S('.gm-x')}`), 'hay "Skip" y no hay × mientras exista Skip')
+    ok(await p.evaluate(`${S('.gm-progress')}.classList.contains('gm-sr')`), 'el texto "1 / 4" queda solo para lectores de pantalla')
+    await p.evaluate(`${S('.gm-primary')}.click()`); await espera(p, 'Pulsa'); await p.waitForTimeout(300)
+    ok(await p.evaluate(`${S('.gm-ring')}.hasAttribute('data-pulse')`), 'paso interactivo: el recuadro pulsa')
+    ok(await p.evaluate(`!${S('.gm-pop')}.hasAttribute('data-welcome')`), 'paso con elemento: ya no es bienvenida')
+    await p.evaluate(`${S('.gm-primary')}.click()`); await espera(p, 'Normal'); await p.waitForTimeout(100)
+    ok(await p.evaluate(`!${S('.gm-ring')}.hasAttribute('data-pulse')`), 'paso normal: sin pulso')
+    await p.evaluate(`${S('.gm-primary')}.click()`); await espera(p, 'Listo')
+    ok(await p.evaluate(`!${S('.gm-skip')} && !!${S('.gm-x')}`), 'último paso: sin Skip, con ×')
+    ok(!(await p.evaluate(() => !!document.querySelector('[data-nexus-confetti]'))), 'sin confeti antes de terminar')
+    await p.evaluate(`${S('.gm-primary')}.click()`); await p.waitForTimeout(300)
+    ok(await p.evaluate(() => !!document.querySelector('[data-nexus-confetti]')), 'celebrate: confeti al terminar')
+    await p.waitForTimeout(3000)
+    ok(await p.evaluate(() => !document.querySelector('[data-nexus-confetti]')), 'el confeti se retira solo')
+    // omitir cierra sin celebrar
+    await p.evaluate(() => { window.t = new Tour({ celebrate: true, steps: [{ element: '#go', title: 'Uno' }, { element: '#other', title: 'Dos' }] }); return t.start() })
+    await espera(p, 'Uno'); await p.evaluate(`${S('.gm-skip')}.click()`); await p.waitForTimeout(250)
+    ok(await p.evaluate(() => !t.active && !document.querySelector('[data-nexus-confetti]')), 'Skip cierra el tour sin confeti')
+    // opciones
+    await p.evaluate(() => { window.t = new Tour({ progress: 'text', skip: false, steps: [{ element: '#go', title: 'Uno' }, { element: '#other', title: 'Dos' }] }); return t.start() })
+    await espera(p, 'Uno')
+    ok(await p.evaluate(`!${S('.gm-dots')} && ${S('.gm-progress')}.textContent === '1 / 2' && !${S('.gm-progress')}.classList.contains('gm-sr')`), "progress:'text' muestra '1 / 2' y no hay puntos")
+    ok(await p.evaluate(`!${S('.gm-skip')} && !!${S('.gm-x')}`), 'skip:false deja la ×')
+    await p.evaluate(() => t.destroy())
+    await p.evaluate(() => { window.t = new Tour({ steps: Array.from({ length: 12 }, (_, i) => ({ element: '#go', title: 'P' + i })) }); return t.start() })
+    await espera(p, 'P0')
+    ok(await p.evaluate(`!!${S('.gm-bar')} && !${S('.gm-dots')}`), 'más de 10 pasos: barra de progreso en vez de puntos')
+    await p.evaluate(() => t.destroy())
+    const r = await nueva({ reducedMotion: 'reduce' }); await abre(r)
+    await r.evaluate(() => { window.t = new Tour({ celebrate: true, steps: [{ element: '#go', title: 'Solo' }] }); return t.start() })
+    await espera(r, 'Solo'); await r.evaluate(`${S('.gm-primary')}.click()`); await r.waitForTimeout(300)
+    ok(await r.evaluate(() => !document.querySelector('[data-nexus-confetti]')), 'movimiento reducido: no hay confeti')
+  }
+
   // ================= móvil
   {
     const p = await nueva({ viewport: { width: 390, height: 700 }, hasTouch: true, isMobile: true }); await abre(p)

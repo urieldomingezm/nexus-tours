@@ -38,6 +38,10 @@ export interface Step {
   hint?: string
   /** With `advanceOn`: hide "Next" so the user has to do the action. Esc / × still close the tour. */
   hideNext?: boolean
+  /** Big emoji / short text above the title (nice for welcome and goodbye steps). */
+  icon?: string
+  /** Image (https://, /path, data:image/…) above the title. */
+  image?: string
   /** Route this step lives on (needs the tour's `router`): the tour navigates there first. E.g. "/clients". */
   route?: string
 }
@@ -99,6 +103,8 @@ export interface Labels {
   practice: string
   /** "Don't show again" link (needs `persist.dontShowAgain`). */
   never: string
+  /** Quiet "Skip" button that closes the tour. */
+  skip: string
 }
 
 export interface Theme {
@@ -163,6 +169,14 @@ export interface TourOptions {
   arrow?: boolean
   /** Text direction. 'auto' follows the page. Default 'auto'. */
   dir?: 'ltr' | 'rtl' | 'auto'
+  /** Progress indicator: 'dots' (default; a thin bar when there are more than 10 steps), 'text' ("2 / 5") or 'both'. */
+  progress?: 'dots' | 'text' | 'both'
+  /** Show the quiet "Skip" button. Default true. */
+  skip?: boolean
+  /** Show the × corner button. Default: only when there is no Skip button. */
+  closeButton?: boolean
+  /** Light confetti when the user reaches the end. Default false. */
+  celebrate?: boolean
   /** Phone layout: a bottom sheet with big buttons, swipe to move, safe-area aware. 'auto' = narrow screens. Default 'auto'. */
   mobile?: 'auto' | 'always' | 'never'
   /** Width (px) up to which 'auto' uses the bottom sheet. Default 600. */
