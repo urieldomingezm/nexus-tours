@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>XHR práctica</title></head>
+<body>
+<button id="a">A</button>
+<script type="module">
+  import axios from 'axios'
+  import { Tour } from 'nexus-tours'
+
+  window.axios = axios
+  window.events = []
+  window.mk = () => new Tour({
+    steps: [{ element: '#a', title: 't' }],
+    practice: {
+      data: { clients: [{ id: 1, name: 'Ana' }, { id: 2, name: 'Bruno' }] },
+      rest: { clients: '/api/clients' },
+      routes: [{ url: '/api/ping', respond: () => ({ pong: true }) }],
+      latency: 0,
+      banner: false,
+      onBlocked: (i) => events.push('blocked:' + i.method),
+    },
+  })
+  window.ready = true
+</script>
+</body></html>
