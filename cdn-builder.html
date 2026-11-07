@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Builder por CDN</title></head>
+<body>
+<button id="a">Botón A</button>
+<script src="/dist/nexus-tours.all.iife.js"></script>
+<script src="/dist/builder.iife.js"></script>
+<script>
+  window.b = new NexusToursBuilder.TourBuilder({ storage: null, lang: 'es' }).open()
+  window.ready = true
+</script>
+</body></html>
