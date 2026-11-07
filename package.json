@@ -64,6 +64,7 @@
     "test": "node test/tour.test.mjs && node test/supabase.test.mjs && node test/xhr.test.mjs && node test/ux.test.mjs && node test/builder.test.mjs && node test/demo.test.mjs",
     "build:site": "vite build --mode site",
     "build:demo": "vite build --mode demo",
+    "prepublishOnly": "npm run build",
     "dev:site": "vite --mode site-dev site"
   },
   "keywords": [
@@ -78,7 +79,7 @@
   "license": "MIT",
   "author": {
     "name": "Angel Uriel Domínguez Medina (DevMedina)",
-    "url": "https://cv-uriel-nine.vercel.app"
+    "url": "https://devmedina.is-a.dev/"
   },
   "homepage": "https://github.com/urieldomingezm/nexus-tours#readme",
   "repository": {

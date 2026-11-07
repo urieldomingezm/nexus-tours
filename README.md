@@ -5,7 +5,7 @@
 **Tours guiados que no se rompen con modales.**
 Sin dependencias · ~12 KB gzip · TypeScript · accesible · wrappers para Vue y React
 
-Hecho por [**DevMedina**](https://cv-uriel-nine.vercel.app) (Angel Uriel Domínguez Medina) · rama de librerías de **Nexus** · Licencia MIT
+Hecho por [**DevMedina**](https://devmedina.is-a.dev/) (Angel Uriel Domínguez Medina) · rama de librerías de **Nexus** · Licencia MIT
 
 </div>
 
@@ -562,7 +562,7 @@ La suite (Playwright) cubre el núcleo, el adaptador Supabase contra `supabase-j
 ## 11. Autoría, licencia y derechos de autor
 
 **Autor y titular de los derechos:** Angel Uriel Domínguez Medina, bajo la marca **DevMedina**.
-Portafolio: <https://cv-uriel-nine.vercel.app> · GitHub: [@urieldomingezm](https://github.com/urieldomingezm)
+Portafolio: <https://devmedina.is-a.dev/> · GitHub: [@urieldomingezm](https://github.com/urieldomingezm)
 
 ```
 Copyright © 2026 Angel Uriel Domínguez Medina (DevMedina). Todos los derechos de autor reservados
