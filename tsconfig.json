@@ -15,6 +15,9 @@
       "nexus-tours": [
         "./src/index.ts"
       ],
+      "nexus-tours/supabase": [
+        "./src/supabase.ts"
+      ],
       "nexus-tours/checklist": [
         "./src/checklist.ts"
       ]
