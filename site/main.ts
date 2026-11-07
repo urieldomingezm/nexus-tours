@@ -2,6 +2,7 @@ import { Tour } from 'nexus-tours'
 import { createFixtures, fake } from 'nexus-tours/fixtures'
 import { themes, autoTheme } from 'nexus-tours/themes'
 import { Checklist } from 'nexus-tours/checklist'
+import { TourBuilder } from 'nexus-tours/builder'
 
 type Lang = 'es' | 'en'
 const T: Record<string, [string, string]> = {
@@ -33,6 +34,7 @@ const T: Record<string, [string, string]> = {
   ck_b: ['Conoce tu lista', 'Meet your list'], ck_c: ['Prueba el modo práctica', 'Try practice mode'], ck_cd: ['Actívalo en el panel', 'Turn it on in the panel'],
   ck_complete: ['¡Listo! Ya viste todo.', 'All done! You have seen everything.'], ck_start: ['Empezar', 'Start'], ck_review: ['Repetir', 'Replay'], ck_reset: ['Reiniciar', 'Reset'], ck_hide: ['Ocultar', 'Hide'],
   ck_open: ['Abrir checklist', 'Open checklist'], ck_close: ['Cerrar', 'Close'], ck_completed: ['completado', 'completed'], ck_pending: ['pendiente', 'pending'],
+  builder: ['🛠 Constructor visual', '🛠 Visual builder'],
   skip: ['Omitir', 'Skip'],
   next: ['Siguiente', 'Next'], previous: ['Atrás', 'Back'], done: ['Listo', 'Done'], close: ['Cerrar tour', 'Close tour'], practiceLbl: ['Modo práctica · nada se guarda', 'Practice mode · nothing is saved'],
 }
@@ -140,6 +142,12 @@ function mountChecklist() {
   }).mount()
   void checklist.ready.then(() => checklist!.open())
 }
+let builder: TourBuilder | null = null
+$('builder').addEventListener('click', () => {
+  builder?.destroy()
+  const { theme, font, dir, ...tourOptions } = common()
+  builder = new TourBuilder({ id: 'site-demo', lang, theme, tourOptions: { ...tourOptions, theme, font, dir } }).open()
+})
 $('checklist').addEventListener('change', mountChecklist)
 for (const id of ['theme', 'font', 'arrow', 'rtl', 'practice']) $(id).addEventListener('change', () => checklist && mountChecklist())
 $('start').addEventListener('click', startTour)

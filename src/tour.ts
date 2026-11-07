@@ -28,6 +28,17 @@ function resolveRef(ref: TargetRef | undefined): Element | null {
   return ref
 }
 
+/** Clicks the first element of each selector (for `beforeClick` / `afterClick`). */
+function clickAll(sel: string | string[] | undefined) {
+  for (const s of ([] as string[]).concat(sel ?? [])) {
+    try {
+      ;(document.querySelector(s) as HTMLElement | null)?.click()
+    } catch {
+      /* invalid selector: ignore */
+    }
+  }
+}
+
 function isModalDialog(d: Element): boolean {
   try {
     return d.matches(':modal')
@@ -245,6 +256,7 @@ export class Tour implements TourApi {
     const ctx = this.ctx()
     this.shown = null
     try {
+      clickAll(step.afterClick)
       await step.after?.(ctx)
     } catch (e) {
       console.error('[guiame] after()', e)
@@ -285,6 +297,8 @@ export class Tour implements TourApi {
       }
       if (runBefore) {
         try {
+          const now = step.element !== undefined ? resolveRef(step.element) : null
+          if (!now || !isVisible(now)) clickAll(step.beforeClick)
           await step.before?.({ index: i, step, element: null, tour: this })
         } catch (e) {
           console.error('[guiame] before()', e)

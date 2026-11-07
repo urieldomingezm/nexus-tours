@@ -38,6 +38,10 @@ export interface Step {
   hint?: string
   /** With `advanceOn`: hide "Next" so the user has to do the action. Esc / × still close the tour. */
   hideNext?: boolean
+  /** Selector(s) to click before the step if its element isn't visible yet (e.g. the button that opens the modal). Serializable alternative to `before`. */
+  beforeClick?: string | string[]
+  /** Selector(s) to click when leaving the step (e.g. a modal's close button). Serializable alternative to `after`. */
+  afterClick?: string | string[]
   /** Big emoji / short text above the title (nice for welcome and goodbye steps). */
   icon?: string
   /** Image (https://, /path, data:image/…) above the title. */

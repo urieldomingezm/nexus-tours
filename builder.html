@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Builder</title>
+<style>body{font-family:system-ui;margin:0;padding:24px}button{padding:8px 12px;margin:4px}dialog{padding:20px;border:1px solid #ccc;border-radius:8px}</style></head>
+<body>
+<header><button id="nuevo">Nuevo cliente</button> <button id="r:3a9f" class="css-1x2y3z btn-export">Exportar</button></header>
+<div data-testid="stats" class="card"><span class="svc-4f8a9b12">Total</span> <em>clientes</em></div>
+<ul><li><a href="/a">A</a></li><li><a href="/b">B</a></li><li><a href="/c">C</a></li></ul>
+<section><p>uno</p><p>dos</p><p>tres</p></section>
+<dialog id="dlg"><h2>Nuevo</h2><input id="nombre" name="nombre" placeholder="Nombre"><button id="guardar" type="button">Guardar</button> <button id="cancelar" type="button">Cancelar</button></dialog>
+<script type="module">
+  import { TourBuilder, bestSelector } from 'nexus-tours/builder'
+  import { Tour } from 'nexus-tours'
+  window.Tour = Tour
+  window.TourBuilder = TourBuilder
+  window.bestSelector = bestSelector
+  window.hits = { exportar: 0, nuevo: 0 }
+  const dlg = document.getElementById('dlg')
+  document.getElementById('nuevo').addEventListener('click', () => { hits.nuevo++; dlg.showModal() })
+  document.getElementById('cancelar').addEventListener('click', () => dlg.close())
+  document.querySelector('.btn-export').addEventListener('click', () => hits.exportar++)
+  window.ready = true
+</script>
+</body></html>

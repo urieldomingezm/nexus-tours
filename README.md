@@ -244,6 +244,40 @@ router: { current: () => location.pathname + location.search, go: (p) => navigat
 
 **Multi-page sites** (WordPress, PHP, static): use `router: 'location'` plus `persist`. Before leaving the page the tour saves the step; call `tour.startIfNeeded()` on every page load and it continues where it was.
 
+## Visual builder (no code)
+
+Let anyone build a tour by **clicking on your page**. Import it only where it's needed (~8 KB gzip).
+
+```ts
+import { TourBuilder } from 'nexus-tours/builder'
+
+new TourBuilder({
+  id: 'welcome',                      // names the saved draft (localStorage by default)
+  lang: 'es',                         // 'es' | 'en' (default: the browser's)
+  steps: savedSteps,                  // start from a saved tour
+  onSave: (json) => api.saveTour(json),   // adds a "Save" button: your API, Supabase…
+}).open()
+```
+
+A panel appears on your page:
+
+1. **Pick element** (default): move over the page, the element under the cursor is outlined with its selector; click it to add a step. `↑` picks the container. The page does *not* react to those clicks.
+2. **Interact**: use your page normally (open a modal, switch tabs). Your clicks are recorded and replayed (`beforeClick`) before the next step, so a step *inside a modal* opens it by itself.
+3. Write a title and description, optionally tick "Advance on click", change the side, or add a `route`. The selector badge tells you if it finds 1 element ✓, none or several ✗.
+4. **Try it** (or ▶ on any step to start from there), then **Copy JSON** / **Copy code** / **Save**.
+
+The JSON is exactly what a tour takes:
+
+```ts
+new Tour({ steps: json.steps })     // { version: 1, steps: [...] } → use json.steps as it is
+```
+
+- Selectors are chosen to **survive redeploys**: `data-tour` / `data-testid`, real ids, `name`, `aria-label`, stable classes, and only then a path with `:nth-child`. Generated ids and classes (`css-1x2y3z`, `r:3a9f`, hashes) are ignored. `bestSelector(element)` is exported if you want it elsewhere.
+- Works with native `<dialog>` modals (the panel moves inside the open modal so it stays clickable) and `Esc` doesn't close the modal underneath.
+- Per account / per company: save the JSON in your database with `onSave` and load it back with `steps` (or `builder.load(json)`).
+- By CDN: load `nexus-tours.all.iife.js` and then `builder.iife.js`; use `new NexusToursBuilder.TourBuilder().open()`.
+- Only show it to admins (e.g. `if (user.isAdmin) new TourBuilder(...).open()`): it's an authoring tool, not for your end users.
+
 ## Practice mode with Supabase
 
 If your app talks to Supabase (`supabase-js`, or any PostgREST client), `supabasePractice()` answers `from()`, `rpc()` and `functions.invoke()` from example data while the tour runs. Your real database is never touched.
@@ -310,7 +344,7 @@ Or as an ES module:
 
 - Pin the version (`@0.1.0`) in production, and add [`integrity` (SRI)](https://www.srihash.org/) if you want the browser to verify the file.
 - `unpkg.com/nexus-tours@0.1` also works (the `unpkg`/`jsdelivr` fields in `package.json` point to the global file).
-- The per-feature files (`nexus-tours.js` ~12 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
+- The per-feature files (`nexus-tours.js` ~12 KB, `builder.js` ~8 KB, `checklist.js`, `themes.js`, `fixtures.js`) are still there if you want to load only part of it.
 - **Publishing:** CDNs serve what is on npm (or a *public* GitHub repo). While this repo is private there is no public URL yet; `npm publish` is what turns on the links above.
 
 ## Onboarding checklist
@@ -401,6 +435,8 @@ interface Step {
   waitTimeout?: number
   onMissing?: 'skip' | 'stop'
   allowTargetClick?: boolean           // let the user click the highlighted element
+  beforeClick?: string | string[]      // click these first if the element isn't visible (open the modal)
+  afterClick?: string | string[]       // click these when leaving the step (close the modal)
   padding?: number
   advanceOn?: 'click' | 'input' | … | { event?, target?, when?, until?, delay? }   // move on when the user acts
   hint?: string                        // call to action under the description
@@ -420,7 +456,7 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 
 - v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. ✅ Supabase/PostgREST adapter. Next: XHR (axios).
 - ✅ Vue/React wrappers · ✅ themes · ✅ RTL · ✅ arrow · ✅ docs site · ✅ phone layout · ✅ `advanceOn` · ✅ saved progress · ✅ page changes.
-- Next: XHR interception (axios), live demo of the Supabase adapter on the docs site.
+- ✅ Visual builder. Next: XHR interception (axios), live demo of the Supabase adapter on the docs site.
 
 ## Develop
 
