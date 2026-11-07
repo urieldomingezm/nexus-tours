@@ -31,6 +31,8 @@ export interface Step {
   padding?: number
 }
 
+import type { PracticeOptions } from './practice'
+
 export interface Labels {
   next: string
   previous: string
@@ -38,6 +40,8 @@ export interface Labels {
   close: string
   /** Supports {current} and {total}. */
   progress: string
+  /** Text of the practice-mode pill. */
+  practice: string
 }
 
 export interface Theme {
@@ -92,6 +96,8 @@ export interface TourOptions {
   fonts?: FontFace[]
   /** Extra CSS applied *inside* the tour (it is isolated in a shadow root). Target the `.gm-*` parts. */
   css?: string
+  /** Practice mode: answer `fetch` with example data while the tour runs (and block real writes). */
+  practice?: PracticeOptions
   /** Class added to the host element, handy to scope `::part()` rules from your own stylesheet. */
   className?: string
 }
@@ -107,5 +113,7 @@ export interface TourApi {
   destroy(): void
   readonly index: number
   readonly active: boolean
+  /** The practice-mode data while the tour runs (undefined otherwise). */
+  readonly practiceData: Record<string, Record<string, unknown>[]> | undefined
   on(event: TourEvent, fn: (ctx: StepContext) => void): () => void
 }

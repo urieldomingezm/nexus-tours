@@ -104,6 +104,33 @@ const data = createFixtures(
 
 Generators: `id uuid firstName lastName name company email phone int float bool pick words date`.
 
+## Practice mode
+
+Let new users click around on example data. While the tour runs, `fetch` is answered from memory; real writes never leave the browser.
+
+```ts
+import { Tour } from 'nexus-tours'
+import { createFixtures, fake } from 'nexus-tours/fixtures'
+
+new Tour({
+  steps,
+  practice: {
+    data: createFixtures({ clients: { count: 6, fields: { id: fake.id(), name: fake.name(), status: fake.pick(['Active', 'Pending']) } } }, { seed: 1 }),
+    rest: { clients: '/api/clients' },       // GET/POST list, GET/PATCH/PUT/DELETE /api/clients/:id, ?field=value filters
+    routes: [{ method: 'GET', url: '/api/clients/:id/summary', respond: ({ params, db }) => ({ id: params.id, total: db.clients.length }) }],
+    onStart: () => reloadClients(),           // refresh your UI so it fetches the example data
+    onEnd: () => reloadClients(),             // …and the real data when the tour ends
+    onBlocked: ({ method, url }) => console.warn('blocked', method, url),
+  },
+}).start()
+```
+
+- **Safe by default:** POST/PUT/PATCH/DELETE that no route handles are answered with `403 { error: "practice-mode" }` and never hit the network (`blockWrites: false` to disable). Unhandled GETs go through.
+- **Your data is never mutated:** the tour works on a copy and discards it when it ends; `fetch` is restored.
+- **Visible:** a "Practice mode" pill (`::part(banner)`, text in `labels.practice`, hide with `banner: false`).
+- `latency` simulates network delay (default 120 ms). `tour.practiceData` exposes the live in-memory tables.
+- Scope: `fetch` only for now (no `XMLHttpRequest`/WebSocket). Supabase/PostgREST adapter planned.
+
 ## API
 
 ```ts
@@ -142,7 +169,7 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 
 ## Roadmap
 
-- v0.2 — **practice mode**: ✅ example data (`nexus-tours/fixtures`) · ⏳ request interception while the tour runs · ⏳ "practice mode" banner and cleanup.
+- v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. Next: XHR (axios), Supabase/PostgREST adapter.
 - Vue and React wrappers, themes, RTL.
 
 ## Develop
