@@ -27,7 +27,7 @@
   <header><strong>Acme CRM</strong><button class="act" id="nuevo">New client</button></header>
   <main>
     <h1>Clients</h1>
-    <table id="tabla"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody id="filas"><tr><td>Globex</td><td>Active</td></tr></tbody></table>
+    <table id="tabla"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody id="filas"></tbody></table>
     <div class="spacer"></div>
     <p id="pie">Bottom of the page</p>
   </main>
@@ -54,10 +54,34 @@
     }
     document.getElementById('nuevo').addEventListener('click', abrir)
     document.getElementById('cancelar').addEventListener('click', () => modal.close())
-    form.addEventListener('submit', () => {
-      const n = document.getElementById('nombre').value || 'New client'
-      document.getElementById('filas').insertAdjacentHTML('beforeend', `<tr><td>${n.replace(/</g,'&lt;')}</td><td>New</td></tr>`)
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+    async function load() {
+      try {
+        const rows = await (await fetch('/api/clients')).json()
+        document.getElementById('filas').innerHTML = rows.map((r) => `<tr><td>${esc(r.name)}</td><td>${esc(r.status ?? 'New')}</td></tr>`).join('')
+      } catch { document.getElementById('filas').innerHTML = '<tr><td colspan="2">Could not load</td></tr>' }
+    }
+    window.load = load
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const name = document.getElementById('nombre').value || 'New client'
+      await fetch('/api/clients', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) })
+      modal.close()
+      await load()
     })
+    load()
+    // Practice-mode config used by the tests: example data, CRUD over /api/clients, refresh the UI on start/end
+    window.practiceCfg = (extra = {}) => ({
+      data: createFixtures({ clients: { count: 4, fields: { id: fake.id(), name: fake.name(), status: fake.pick(['Active', 'Pending']) } } }, { seed: 3, locale: 'en' }),
+      rest: { clients: '/api/clients' },
+      routes: [{ method: 'GET', url: '/api/clients/:id/summary', respond: ({ params, db }) => ({ id: params.id, total: db.clients.length }) }],
+      latency: 10,
+      onStart: () => { window.practiceEv.push('start'); load() },
+      onEnd: () => { window.practiceEv.push('end'); load() },
+      onBlocked: (i) => window.practiceEv.push('blocked:' + i.method),
+      ...extra,
+    })
+    window.practiceEv = []
 
     window.Guiame = { Tour, createFixtures, fake }
     window.makeTour = (kind = 'full', extra = {}) => {

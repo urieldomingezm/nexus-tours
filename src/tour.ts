@@ -1,5 +1,6 @@
 import { CSS } from './styles'
 import type { Labels, Side, Step, StepContext, TargetRef, Theme, TourApi, TourEvent, TourOptions } from './types'
+import { PracticeSession } from './practice'
 import { isVisible, waitForElement } from './wait'
 
 const DEFAULT_LABELS: Labels = {
@@ -8,6 +9,7 @@ const DEFAULT_LABELS: Labels = {
   done: 'Done',
   close: 'Close tour',
   progress: '{current} / {total}',
+  practice: 'Practice mode · nothing is saved',
 }
 
 const GAP = 12
@@ -59,6 +61,7 @@ export class Tour implements TourApi {
   private pop!: HTMLElement
   private live!: HTMLElement
   private raf = 0
+  private session: PracticeSession | null = null
   private previousFocus: Element | null = null
 
   constructor(options: TourOptions) {
@@ -80,6 +83,9 @@ export class Tour implements TourApi {
   }
   get active() {
     return this._active
+  }
+  get practiceData() {
+    return this.session?.db
   }
 
   on(event: TourEvent, fn: (ctx: StepContext) => void) {
@@ -109,6 +115,10 @@ export class Tour implements TourApi {
     this._active = true
     this.previousFocus = document.activeElement
     this.build()
+    if (this.opts.practice) {
+      this.session = new PracticeSession(this.opts.practice)
+      this.session.start()
+    }
     document.addEventListener('keydown', this.onKey, true)
     this.emit('start')
     this.tick()
@@ -277,6 +287,13 @@ export class Tour implements TourApi {
     this.live.setAttribute('aria-live', 'polite')
 
     shadow.append(this.backdrop, this.ring, this.pop, this.live)
+    if (this.opts.practice && this.opts.practice.banner !== false) {
+      const b = document.createElement('div')
+      b.className = 'gm-banner'
+      b.setAttribute('part', 'banner')
+      b.textContent = this.labels.practice
+      shadow.appendChild(b)
+    }
     this.root = host
     this.shadow = shadow
   }
@@ -532,6 +549,8 @@ export class Tour implements TourApi {
     this.busy = false
     cancelAnimationFrame(this.raf)
     document.removeEventListener('keydown', this.onKey, true)
+    this.session?.stop()
+    this.session = null
     if (this.root) {
       try {
         if ('hidePopover' in this.root && this.root.matches(':popover-open')) this.root.hidePopover()

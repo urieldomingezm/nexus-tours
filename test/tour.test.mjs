@@ -208,10 +208,88 @@ try {
   ok(fx.a.tareas[0].id === 100 && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$/.test(fx.a.tareas[0].uuid), 'fixtures: id con inicio propio y uuid v4 válido')
   ok(typeof fx.en === 'string' && fx.en !== fx.a.clientes[0].nombre, 'fixtures: locale en genera nombres en inglés (' + fx.en + ')')
 
+  // ---------- modo práctica: fetch con datos de ejemplo, escrituras bloqueadas, limpieza
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1000, height: 700 } })
+    p = await ctx.newPage()
+    p.on('pageerror', (e) => { console.log('pageerror', e.message); fallos++ })
+    const real = [{ id: 1, name: 'Globex', status: 'Active' }]
+    const red = []
+    await p.route('**/api/**', async (route) => {
+      const r = route.request(); const u = new URL(r.url())
+      red.push(r.method() + ' ' + u.pathname)
+      if (u.pathname === '/api/clients' && r.method() === 'GET') return route.fulfill({ json: real })
+      if (u.pathname === '/api/clients' && r.method() === 'POST') { real.push({ id: 99, ...JSON.parse(r.postData()) }); return route.fulfill({ status: 201, json: {} }) }
+      if (u.pathname === '/api/ping') return route.fulfill({ json: { pong: true } })
+      return route.fulfill({ status: 404, json: {} })
+    })
+    await p.addInitScript(() => { window.S = (q) => document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector(q) })
+    await p.goto(base); await p.waitForFunction(() => window.makeTour)
+    await p.waitForFunction(() => document.getElementById('filas').textContent.includes('Globex'))
+    await p.evaluate(() => { window.__f0 = window.fetch })
+    ok(true, 'práctica: la tabla muestra los datos reales antes del tour (Globex)')
+
+    await p.evaluate(() => { makeTour('full', { practice: practiceCfg() }); t.start() })
+    await esperaTitulo(p, 'Create a client')
+    await p.waitForFunction(() => document.getElementById('filas').textContent.includes('Pending') || document.getElementById('filas').textContent.includes('Active'))
+    ok(await p.evaluate(() => !document.getElementById('filas').textContent.includes('Globex') && document.querySelectorAll('#filas tr').length === 4), 'práctica: la UI carga los 4 clientes de ejemplo en lugar de los reales')
+    ok((await p.locator('.gm-banner').textContent()).includes('Practice mode'), 'aviso visual "modo práctica"')
+    ok(await p.evaluate(() => window.fetch !== window.__f0), 'fetch está interceptado durante el tour')
+
+    // guardar un cliente desde la app: no llega al backend real
+    const antes = red.length
+    await p.evaluate(() => { document.getElementById('nombre').value = 'Zed Práctica'; document.getElementById('form').requestSubmit() })
+    await p.waitForFunction(() => document.getElementById('filas').textContent.includes('Zed Práctica'))
+    ok(!red.slice(antes).some((x) => x.startsWith('POST')), 'POST a /api/clients se atiende en memoria (no llega al backend real)')
+    ok(await p.evaluate(() => t.practiceData.clients.some((c) => c.name === 'Zed Práctica' && c.id === 5)), 'la fila nueva queda en los datos de práctica con id autoincremental')
+    ok(real.length === 1, 'el backend real no cambió')
+
+    // CRUD, ruta con :params, escritura sin ruta bloqueada, lectura sin ruta pasa
+    const r = await p.evaluate(async () => {
+      const j = async (res) => ({ s: res.status, b: res.status === 204 ? null : await res.json() })
+      const out = {}
+      out.item = await j(await fetch('/api/clients/2'))
+      out.patch = await j(await fetch('/api/clients/2', { method: 'PATCH', body: JSON.stringify({ status: 'Hecho' }) }))
+      out.item2 = await j(await fetch(new Request('/api/clients/2')))
+      out.sum = await j(await fetch('/api/clients/3/summary'))
+      out.del = await j(await fetch('/api/clients/1', { method: 'DELETE' }))
+      out.nf = await j(await fetch('/api/clients/1'))
+      out.filtro = await j(await fetch('/api/clients?status=Hecho'))
+      out.bloq = await j(await fetch('/api/otra-cosa', { method: 'POST', body: '{}' }))
+      out.lee = await j(await fetch('/api/ping'))
+      return out
+    })
+    ok(r.item.s === 200 && r.item.b.id === 2, 'GET /api/clients/:id')
+    ok(r.patch.b.status === 'Hecho' && r.item2.b.status === 'Hecho', 'PATCH actualiza (y fetch acepta objetos Request)')
+    ok(r.sum.b.id === '3' && r.sum.b.total === 5, 'ruta personalizada con :id y acceso a db')
+    ok(r.del.s === 204 && r.nf.s === 404, 'DELETE devuelve 204 y luego 404')
+    ok(r.filtro.b.length === 1 && r.filtro.b[0].id === 2, 'filtro por query (?status=Hecho)')
+    ok(r.bloq.s === 403 && r.bloq.b.error === 'practice-mode', 'escritura sin ruta: bloqueada con 403')
+    ok(!red.includes('POST /api/otra-cosa'), 'la escritura bloqueada nunca salió a la red')
+    ok(r.lee.s === 200 && r.lee.b.pong === true && red.includes('GET /api/ping'), 'lectura sin ruta pasa a la red real')
+    ok((await p.evaluate(() => practiceEv)).includes('blocked:POST'), 'onBlocked se llamó')
+
+    // terminar el tour: se restaura todo y la UI vuelve a los datos reales
+    await p.evaluate(() => t.stop())
+    await p.waitForFunction(() => document.getElementById('filas').textContent.includes('Globex'))
+    ok(await p.evaluate(() => window.fetch === window.__f0), 'al terminar se restaura fetch')
+    ok(await p.evaluate(() => !document.querySelector('[data-nexus-tours]') && t.practiceData === undefined), 'se elimina el aviso y los datos de práctica')
+    ok(await p.evaluate(() => practiceEv.filter((e) => e === 'start' || e === 'end').join()) === 'start,end', 'onStart / onEnd en orden')
+    ok(real.length === 1 && real[0].name === 'Globex', 'al final los datos reales siguen intactos')
+
+    // la lista de ejemplo original no se muta (se copia) y reusar el tour funciona
+    await p.evaluate(() => { const cfg = practiceCfg(); window.cfg = cfg; makeTour('full', { practice: cfg }); t.start() })
+    await esperaTitulo(p, 'Create a client')
+    await p.evaluate(() => fetch('/api/clients', { method: 'POST', body: JSON.stringify({ name: 'X' }) }))
+    ok(await p.evaluate(() => cfg.data.clients.length === 4 && t.practiceData.clients.length === 5), 'los datos que pasas no se mutan (el tour trabaja con una copia)')
+    await p.evaluate(() => t.stop())
+    await ctx.close()
+  }
+
   // ---------- tamaño
   const { gzipSync } = await import('node:zlib')
   const { readFileSync } = await import('node:fs')
-  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 8, `núcleo ${kb.toFixed(2)} KB gzip (< 8 KB)`); const kf = gzipSync(readFileSync('dist/fixtures.js')).length / 1024; ok(kf < 4, `fixtures ${kf.toFixed(2)} KB gzip (< 4 KB)`) } catch { console.log('(sin dist: omito tamaño)') }
+  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 8.5, `núcleo ${kb.toFixed(2)} KB gzip (< 8.5 KB)`); const kf = gzipSync(readFileSync('dist/fixtures.js')).length / 1024; ok(kf < 4, `fixtures ${kf.toFixed(2)} KB gzip (< 4 KB)`) } catch { console.log('(sin dist: omito tamaño)') }
 } finally {
   await browser.close()
   try { process.kill(-server.pid) } catch {}
