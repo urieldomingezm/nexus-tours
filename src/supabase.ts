@@ -77,7 +77,10 @@ function splitTop(s: string): string[] {
     if (c === '"') q = !q
     if (!q && c === '(') depth++
     if (!q && c === ')') depth--
-    if (!q && depth === 0 && c === ',') (out.push(cur), (cur = ''))
+    if (!q && depth === 0 && c === ',') {
+      out.push(cur)
+      cur = ''
+    }
     else cur += c
   }
   if (cur.trim()) out.push(cur)
@@ -99,7 +102,10 @@ function likeRe(pattern: string, ci: boolean) {
 function atom(col: string, expr: string): Pred {
   let neg = false
   let s = expr
-  if (s.startsWith('not.')) ((neg = true), (s = s.slice(4)))
+  if (s.startsWith('not.')) {
+    neg = true
+    s = s.slice(4)
+  }
   const i = s.indexOf('.')
   const op = i < 0 ? s : s.slice(0, i)
   const val = i < 0 ? '' : s.slice(i + 1)
@@ -264,7 +270,10 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
           const row = { ...item }
           const at = cols.every((c) => row[c] !== undefined) ? rows.findIndex((r) => cols.every((c) => String(r[c]) === String(row[c]))) : -1
           if (at >= 0) {
-            if (merge) (rows[at] = { ...rows[at], ...row }, made.push(rows[at]!))
+            if (merge) {
+              rows[at] = { ...rows[at], ...row }
+              made.push(rows[at]!)
+            }
             else if (!ignore) return fail(409, '23505', `duplicate key value violates unique constraint "${name}_pkey"`, `Key (${cols.join(', ')})=(${cols.map((c) => row[c]).join(', ')}) already exists.`)
             continue
           }
@@ -280,7 +289,10 @@ export function supabasePractice(o: SupabasePracticeOptions): PracticeOptions {
         const match = predicate(sp)
         const hit: Row[] = []
         rows.forEach((r, i) => {
-          if (match(r)) (rows[i] = { ...r, ...(req.body as Row) }, hit.push(rows[i]!))
+          if (match(r)) {
+            rows[i] = { ...r, ...(req.body as Row) }
+            hit.push(rows[i]!)
+          }
         })
         return wantsRep ? out(hit, 200) : res(undefined, 204)
       }

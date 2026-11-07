@@ -150,7 +150,6 @@ test("aislamiento: la CSS de la página no rompe el tour (ni el tour a la págin
   let p
   p = await nueva()
   const estilosAntes = await p.evaluate(() => document.head.querySelectorAll('style').length)
-  const nuevoAntes = await p.evaluate(() => getComputedStyle(document.getElementById('nuevo')).backgroundColor + getComputedStyle(document.querySelector('h1')).fontFamily)
   await p.evaluate(() => makeTour('full'))
   await p.evaluate(() => t.start())
   await esperaTitulo(p, 'Create a client')
