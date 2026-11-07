@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>CDN sin bundler</title></head>
+<body>
+<button id="a">Botón A</button>
+<!-- Sin npm ni bundler: un solo <script> -->
+<script src="/dist/nexus-tours.all.iife.js"></script>
+<script>
+  window.t = new NexusTours.Tour({
+    theme: NexusTours.themes.mint,
+    steps: [{ element: '#a', title: 'Hola', description: 'Funciona por <script>' }],
+  })
+  window.ck = new NexusTours.Checklist({ id: 'cdn', storage: null, items: [{ id: 'x', title: 'Item', tour: [{ element: '#a', title: 'X' }] }] }).mount()
+  window.data = NexusTours.createFixtures({ u: { count: 3, fields: { name: NexusTours.fake.name() } } }, { seed: 1 })
+</script>
+</body></html>

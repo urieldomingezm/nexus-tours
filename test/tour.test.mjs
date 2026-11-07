@@ -494,10 +494,23 @@ try {
     ok(errs.length === 0, 'sitio: sin errores en consola ' + errs.join('|'))
   }
 
+  // ---------- CDN: un solo <script>, sin bundler
+  {
+    const c = await nueva()
+    const errs = []; c.on('pageerror', (e) => errs.push(String(e)))
+    await c.goto(base + 'cdn.html'); await c.waitForFunction(() => window.t && window.ck)
+    ok(await c.evaluate(() => typeof NexusTours.Tour === 'function' && typeof NexusTours.Checklist === 'function' && !!NexusTours.themes.mint && NexusTours.createFixtures && !!NexusTours.fake), 'cdn: el global NexusTours trae Tour, Checklist, themes y fixtures')
+    ok(await c.evaluate(() => window.data.u.length === 3), 'cdn: fixtures generan datos')
+    await c.evaluate(() => t.start()); await c.waitForSelector('[data-nexus-tours]', { state: 'attached' })
+    ok(await c.evaluate(() => !!document.querySelector('[data-nexus-tours]')), 'cdn: el tour arranca desde el script')
+    ok(await c.evaluate(() => !!document.querySelector('[data-nexus-checklist]')), 'cdn: el checklist se monta')
+    ok(errs.length === 0, 'cdn: sin errores ' + errs.join('|'))
+  }
+
   // ---------- tamaño
   const { gzipSync } = await import('node:zlib')
   const { readFileSync } = await import('node:fs')
-  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 9, `núcleo ${kb.toFixed(2)} KB gzip (< 9 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2], ['checklist', 5]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
+  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 9, `núcleo ${kb.toFixed(2)} KB gzip (< 9 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2], ['checklist', 5], ['nexus-tours.all', 14]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
 } finally {
   await browser.close()
   try { process.kill(-server.pid) } catch {}

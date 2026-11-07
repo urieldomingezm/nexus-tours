@@ -5,12 +5,18 @@
   "type": "module",
   "main": "./dist/nexus-tours.umd.cjs",
   "module": "./dist/nexus-tours.js",
+  "unpkg": "./dist/nexus-tours.all.iife.js",
+  "jsdelivr": "./dist/nexus-tours.all.iife.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/nexus-tours.js",
       "require": "./dist/nexus-tours.umd.cjs"
+    },
+    "./all": {
+      "types": "./dist/global.d.ts",
+      "import": "./dist/nexus-tours.all.js"
     },
     "./fixtures": {
       "types": "./dist/fixtures.d.ts",
@@ -44,7 +50,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode core && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
+    "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
     "test": "node test/tour.test.mjs",
     "build:site": "vite build --mode site",
     "dev:site": "vite --mode site-dev site"
