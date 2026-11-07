@@ -38,6 +38,11 @@
       "import": "./dist/react.js",
       "require": "./dist/react.cjs"
     },
+    "./supabase": {
+      "types": "./dist/supabase.d.ts",
+      "import": "./dist/supabase.js",
+      "require": "./dist/supabase.cjs"
+    },
     "./checklist": {
       "types": "./dist/checklist.d.ts",
       "import": "./dist/checklist.js",
@@ -50,8 +55,8 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
-    "test": "node test/tour.test.mjs",
+    "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode supabase && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
+    "test": "node test/tour.test.mjs && node test/supabase.test.mjs",
     "build:site": "vite build --mode site",
     "dev:site": "vite --mode site-dev site"
   },
@@ -66,6 +71,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@supabase/supabase-js": "^2.119.0",
     "@types/react": "^19.3.0",
     "playwright": "^1.65.0",
     "react": "^19.3.1",

@@ -153,6 +153,44 @@ npm run dev          # then open /site/index.html
 npm run build:site   # → site-dist/ (deploy to Vercel/Netlify/GitHub Pages)
 ```
 
+## Practice mode with Supabase
+
+If your app talks to Supabase (`supabase-js`, or any PostgREST client), `supabasePractice()` answers `from()`, `rpc()` and `functions.invoke()` from example data while the tour runs. Your real database is never touched.
+
+```ts
+import { Tour } from 'nexus-tours'
+import { createFixtures, fake } from 'nexus-tours/fixtures'
+import { supabasePractice } from 'nexus-tours/supabase'     // ~3.7 KB
+
+new Tour({
+  steps,
+  practice: supabasePractice({
+    url: 'https://xxxx.supabase.co',                          // optional: only this project is intercepted
+    data: createFixtures({
+      clients: { count: 8, fields: { id: fake.id(), name: fake.name(), email: fake.email(), status: fake.pick(['active', 'new']) } },
+      orders:  { count: 20, fields: { id: fake.id(), client_id: fake.int(1, 8), total: fake.int(20, 500) } },
+    }, { seed: 7 }),
+    relations: {                                              // only if you use joins
+      orders:  { clients: { table: 'clients', from: 'client_id' } },
+      clients: { orders: { table: 'orders', from: 'id', to: 'client_id', many: true } },
+    },
+    rpc: { total_orders: ({ db }) => db.orders.reduce((s, o) => s + o.total, 0) },
+    functions: { 'send-invoice': () => ({ ok: true }) },      // fake edge function
+    onStart: () => app.reload(), onEnd: () => app.reload(),   // refresh your UI so it shows the example data
+  }),
+})
+```
+
+**What it understands** (tested against the real `supabase-js`): `eq neq gt gte lt lte like ilike is in not or and`, `order` (nulls like Postgres), `limit` / `range`, `select('a, b')` and aliases, `single()` / `maybeSingle()`, `count` and `head`, `insert` (one or many, auto id), `update`, `delete`, `upsert` (`onConflict`), unique-key errors (`23505`), `.select()` after writes, joins declared in `relations` (`!inner` too), `rpc()` and edge functions.
+
+**Safety rules**
+- Writes only change the in-memory copy; **a new tour starts from the original data again**.
+- A table you did not seed is **not** answered: reads reach your real backend, writes get a `403`.
+- `rpc()` without a handler is blocked (it could write). If one is read-only and safe, list it in `allowRpc: ['name']`.
+- `/auth/v1/*` goes through so the user's session keeps working. Storage uploads are blocked.
+- Not supported (it says so with a `400` instead of guessing): full-text search, array/JSON operators, aggregates, nested filters inside joins, realtime.
+- The patch is on `window.fetch`, so it covers any client that calls the current `fetch`. If you pass a custom `fetch` to `createClient`, use `global: { fetch: liveFetch }` (exported from the same module) so it follows the patch.
+
 ## Use it from a CDN (no npm, no bundler)
 
 For plain websites (WordPress, static HTML, PHP...), one `<script>` is enough. The file includes **everything** (tours, checklist, themes, fixtures, practice mode) in ~12 KB gzip and exposes a single global, `NexusTours`.
@@ -279,9 +317,9 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 
 ## Roadmap
 
-- v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. Next: XHR (axios), Supabase/PostgREST adapter.
+- v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. ✅ Supabase/PostgREST adapter. Next: XHR (axios).
 - ✅ Vue/React wrappers · ✅ themes · ✅ RTL · ✅ arrow · ✅ docs site.
-- Next: Supabase/PostgREST adapter for practice mode, XHR interception.
+- Next: XHR interception (axios), live demo of the Supabase adapter on the docs site.
 
 ## Develop
 

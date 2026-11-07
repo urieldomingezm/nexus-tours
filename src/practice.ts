@@ -8,6 +8,8 @@ export type Db = Record<string, Row[]>
 export interface PracticeRequest {
   method: string
   url: URL
+  /** Request headers (e.g. `Prefer`, `Accept`). */
+  headers: Headers
   /** Parsed JSON body (or the raw text / undefined). */
   body: unknown
   /** `:name` segments of a string route. */
@@ -36,6 +38,8 @@ export interface PracticeOptions {
   latency?: number
   /** Block POST/PUT/PATCH/DELETE that no route handles. Default true. */
   blockWrites?: boolean
+  /** Let matching writes through to the real backend instead of blocking them (e.g. sign-in/token refresh). */
+  allow?: (req: { method: string; url: URL }) => boolean
   /** Show the "practice mode" pill. Default true. */
   banner?: boolean
   /** Called right after interception starts (refresh your UI so it loads the example data). */
@@ -45,6 +49,9 @@ export interface PracticeOptions {
   /** Called when a write was blocked. */
   onBlocked?: (info: { method: string; url: string }) => void
 }
+
+/** Return from a route's `respond` to say "not mine": the request continues to the next route (or the real backend). */
+export const PASS: unique symbol = Symbol.for('nexus-tours.pass') as never
 
 const WRITE = /^(POST|PUT|PATCH|DELETE)$/i
 const json = (body: unknown, status = 200) =>
@@ -104,19 +111,25 @@ export class PracticeSession {
       }
     }
 
-    const res = await this.route(method, url, body)
+    let headers: Headers
+    try {
+      headers = new Headers(init?.headers ?? (isReq ? (input as Request).headers : undefined))
+    } catch {
+      headers = new Headers()
+    }
+    const res = await this.route(method, url, body, headers)
     if (res) {
       await sleep(this.o.latency ?? 120)
       return res
     }
-    if (WRITE.test(method) && this.o.blockWrites !== false) {
+    if (WRITE.test(method) && this.o.blockWrites !== false && !this.o.allow?.({ method, url })) {
       this.o.onBlocked?.({ method, url: url.href })
       return json({ error: 'practice-mode', message: 'Writes are disabled while the tour runs in practice mode.' }, 403)
     }
     return original(input as RequestInfo, init)
   }
 
-  private async route(method: string, url: URL, body: unknown): Promise<Response | null> {
+  private async route(method: string, url: URL, body: unknown, headers: Headers): Promise<Response | null> {
     for (const r of this.o.routes ?? []) {
       const methods = r.method === undefined ? null : ([] as string[]).concat(r.method).map((m) => m.toUpperCase())
       if (methods && !methods.includes(method)) continue
@@ -124,7 +137,8 @@ export class PracticeSession {
       if (typeof r.url === 'string') params = pathRegex(r.url).exec(url.pathname)?.groups ?? (pathRegex(r.url).test(url.pathname) ? {} : null)
       else if (r.url.test(url.href)) params = {}
       if (!params) continue
-      const out = await r.respond({ method, url, body, params: { ...params }, db: this.db })
+      const out = await r.respond({ method, url, headers, body, params: { ...params }, db: this.db })
+      if (out === PASS) continue
       return out instanceof Response ? out : json(out ?? {})
     }
     for (const [table, cfg] of Object.entries(this.o.rest ?? {})) {

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Supabase práctica</title></head>
+<body>
+<button id="a">A</button>
+<script type="module">
+  import { createClient } from '@supabase/supabase-js'
+  import { Tour } from 'nexus-tours'
+  import { createFixtures, fake } from 'nexus-tours/fixtures'
+  import { supabasePractice, liveFetch } from 'nexus-tours/supabase'
+
+  const URL_ = 'https://practice-test.supabase.co'
+  // dos clientes creados ANTES del tour: uno con fetch por defecto y otro con liveFetch
+  window.sbDefault = createClient(URL_, 'anon-key', { auth: { persistSession: false, autoRefreshToken: false } })
+  window.sbLive = createClient(URL_, 'anon-key', { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: liveFetch } })
+
+  const data = {
+    clients: [
+      { id: 1, name: 'Ana Pérez', status: 'active', age: 30, email: 'ana@x.com', deleted_at: null },
+      { id: 2, name: 'Bruno Díaz', status: 'pending', age: 25, email: 'bruno@x.com', deleted_at: null },
+      { id: 3, name: 'Carla Ruiz', status: 'active', age: 41, email: 'carla@y.com', deleted_at: '2026-01-01' },
+      { id: 4, name: 'Dani Soto', status: 'new', age: null, email: 'dani@y.com', deleted_at: null },
+    ],
+    orders: [
+      { id: 10, client_id: 1, total: 100 },
+      { id: 11, client_id: 1, total: 50 },
+      { id: 12, client_id: 2, total: 75 },
+    ],
+  }
+  window.mk = () => new Tour({
+    steps: [{ element: '#a', title: 't' }],
+    practice: supabasePractice({
+      url: URL_,
+      data,
+      latency: 0,
+      banner: false,
+      relations: {
+        orders: { clients: { table: 'clients', from: 'client_id' } },
+        clients: { orders: { table: 'orders', from: 'id', to: 'client_id', many: true } },
+      },
+      rpc: { total_pedidos: ({ db }) => db.orders.reduce((s, o) => s + o.total, 0), echo: ({ args }) => args },
+      functions: { hola: ({ body }) => ({ saludo: 'hola ' + body.nombre }) },
+    }),
+  })
+  window.ready = true
+</script>
+</body></html>
