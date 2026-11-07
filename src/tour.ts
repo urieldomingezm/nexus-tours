@@ -460,7 +460,10 @@ export class Tour implements TourApi {
       rs.height = `${hole.h}px`
       rs.pointerEvents = step.allowTargetClick ? 'none' : 'auto'
       const { x, y, w, h } = hole
-      this.backdrop.style.clipPath = `path(evenodd,"M0 0H${vw}V${vh}H0Z M${x} ${y}H${x + w}V${y + h}H${x}Z")`
+      // The hole follows the ring's border radius so rounded themes don't show square corners.
+      const r = Math.max(0, Math.min(parseFloat(getComputedStyle(this.ring).borderTopLeftRadius) || 0, w / 2, h / 2))
+      const d = `M${x + r} ${y}H${x + w - r}A${r} ${r} 0 0 1 ${x + w} ${y + r}V${y + h - r}A${r} ${r} 0 0 1 ${x + w - r} ${y + h}H${x + r}A${r} ${r} 0 0 1 ${x} ${y + h - r}V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
+      this.backdrop.style.clipPath = `path(evenodd,"M0 0H${vw}V${vh}H0Z ${d}")`
     } else {
       this.ring.style.display = 'none'
       this.backdrop.style.clipPath = ''
