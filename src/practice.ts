@@ -40,6 +40,8 @@ export interface PracticeOptions {
   blockWrites?: boolean
   /** Let matching writes through to the real backend instead of blocking them (e.g. sign-in/token refresh). */
   allow?: (req: { method: string; url: URL }) => boolean
+  /** Also intercept `XMLHttpRequest` (axios, jQuery, …). Default true. Synchronous XHR is never intercepted. */
+  xhr?: boolean
   /** Show the "practice mode" pill. Default true. */
   banner?: boolean
   /** Called right after interception starts (refresh your UI so it loads the example data). */
@@ -67,6 +69,7 @@ export class PracticeSession {
   db: Db
   private original: typeof fetch | null = null
   private patched: typeof fetch | null = null
+  private unpatchXhr: (() => void) | null = null
 
   constructor(private o: PracticeOptions) {
     this.db = JSON.parse(JSON.stringify(o.data ?? {})) as Db
@@ -78,6 +81,7 @@ export class PracticeSession {
     const original = this.original
     this.patched = (input: RequestInfo | URL, init?: RequestInit) => this.handle(original, input, init)
     window.fetch = this.patched
+    this.patchXhr()
     this.o.onStart?.()
   }
 
@@ -86,6 +90,8 @@ export class PracticeSession {
     // Only restore if nobody wrapped fetch on top of ours in the meantime.
     if (window.fetch === this.patched) window.fetch = this.original
     this.original = this.patched = null
+    this.unpatchXhr?.()
+    this.unpatchXhr = null
     this.db = {}
     this.o.onEnd?.()
   }
@@ -117,6 +123,12 @@ export class PracticeSession {
     } catch {
       headers = new Headers()
     }
+    const res = await this.decide(method, url, body, headers)
+    return res ?? original(input as RequestInfo, init)
+  }
+
+  /** The practice answer for a request, or `null` when it should go to the real backend. */
+  private async decide(method: string, url: URL, body: unknown, headers: Headers): Promise<Response | null> {
     const res = await this.route(method, url, body, headers)
     if (res) {
       await sleep(this.o.latency ?? 120)
@@ -126,7 +138,117 @@ export class PracticeSession {
       this.o.onBlocked?.({ method, url: url.href })
       return json({ error: 'practice-mode', message: 'Writes are disabled while the tour runs in practice mode.' }, 403)
     }
-    return original(input as RequestInfo, init)
+    return null
+  }
+
+  /** Patch `XMLHttpRequest` so axios & co. get the same answers as `fetch`. */
+  private patchXhr() {
+    if (typeof XMLHttpRequest === 'undefined' || this.o.xhr === false) return
+    const P = XMLHttpRequest.prototype
+    const orig = { open: P.open, send: P.send, set: P.setRequestHeader, abort: P.abort }
+    type Meta = { method: string; url: string; headers: Headers; sync: boolean; pending: boolean; aborted: boolean }
+    const meta = new WeakMap<XMLHttpRequest, Meta>()
+    const self = this
+    const fire = (x: XMLHttpRequest, type: string) => x.dispatchEvent(new Event(type))
+    const set = (x: XMLHttpRequest, props: Record<string, unknown>) =>
+      Object.defineProperties(x, Object.fromEntries(Object.entries(props).map(([k, value]) => [k, { value, configurable: true, writable: true }])))
+
+    P.open = function (this: XMLHttpRequest, method: string, url: string | URL, ...rest: unknown[]) {
+      meta.set(this, { method: String(method).toUpperCase(), url: String(url), headers: new Headers(), sync: rest[0] === false, pending: false, aborted: false })
+      return (orig.open as (...a: unknown[]) => void).call(this, method, url, ...rest)
+    } as typeof P.open
+    P.setRequestHeader = function (this: XMLHttpRequest, k: string, v: string) {
+      try {
+        meta.get(this)?.headers.append(k, v)
+      } catch {
+        /* invalid header: the real call throws below */
+      }
+      return orig.set.call(this, k, v)
+    }
+    P.abort = function (this: XMLHttpRequest) {
+      const m = meta.get(this)
+      if (m?.pending) {
+        m.pending = false
+        m.aborted = true
+        set(this, { readyState: 4, status: 0 })
+        fire(this, 'readystatechange')
+        fire(this, 'abort')
+        fire(this, 'loadend')
+        return
+      }
+      return orig.abort.call(this)
+    }
+    P.send = function (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null) {
+      const m = meta.get(this)
+      if (!m || m.sync || !self.original) return orig.send.call(this, body)
+      let url: URL
+      try {
+        url = new URL(m.url, location.href)
+      } catch {
+        return orig.send.call(this, body)
+      }
+      let parsed: unknown = typeof body === 'string' ? body : undefined
+      if (typeof body === 'string') {
+        try {
+          parsed = JSON.parse(body)
+        } catch {
+          /* keep raw text */
+        }
+      }
+      m.pending = true
+      const x = this
+      void self.decide(m.method, url, parsed, m.headers).then(
+        async (res) => {
+          if (!m.pending) return // aborted meanwhile
+          m.pending = false
+          if (!res) return orig.send.call(x, body)
+          const type = x.responseType
+          const text = await res.clone().text()
+          let value: unknown = text
+          if (type === 'json') {
+            try {
+              value = JSON.parse(text)
+            } catch {
+              value = null
+            }
+          } else if (type === 'arraybuffer') value = await res.clone().arrayBuffer()
+          else if (type === 'blob') value = await res.clone().blob()
+          if (m.aborted) return
+          const head = [...res.headers.entries()]
+          set(x, {
+            readyState: 2,
+            status: res.status,
+            statusText: res.statusText,
+            responseURL: url.href,
+            getResponseHeader: (n: string) => res.headers.get(n),
+            getAllResponseHeaders: () => head.map(([k, v]) => `${k}: ${v}\r\n`).join(''),
+          })
+          fire(x, 'readystatechange')
+          set(x, { readyState: 4, response: value, responseText: type === '' || type === 'text' ? text : undefined })
+          fire(x, 'readystatechange')
+          fire(x, 'load')
+          fire(x, 'loadend')
+        },
+        () => {
+          if (m.pending) {
+            m.pending = false
+            orig.send.call(x, body)
+          }
+        },
+      )
+    }
+
+    this.unpatchXhr = () => {
+      // Only restore what nobody else wrapped on top of ours.
+      if (P.send === sendPatched) P.send = orig.send
+      if (P.open === openPatched) P.open = orig.open
+      if (P.setRequestHeader === setPatched) P.setRequestHeader = orig.set
+      if (P.abort === abortPatched) P.abort = orig.abort
+    }
+    const sendPatched = P.send
+    const openPatched = P.open
+    const setPatched = P.setRequestHeader
+    const abortPatched = P.abort
   }
 
   private async route(method: string, url: URL, body: unknown, headers: Headers): Promise<Response | null> {

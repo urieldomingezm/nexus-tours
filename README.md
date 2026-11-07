@@ -454,9 +454,9 @@ Theming through CSS variables: `--gm-accent`, `--gm-bg`, `--gm-fg`, `--gm-muted`
 
 ## Roadmap
 
-- v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. ✅ Supabase/PostgREST adapter. Next: XHR (axios).
+- v0.2 — **practice mode**: ✅ example data · ✅ `fetch` interception + blocked writes · ✅ banner and cleanup. ✅ Supabase/PostgREST adapter. ✅ `XMLHttpRequest` interception (axios, jQuery).
 - ✅ Vue/React wrappers · ✅ themes · ✅ RTL · ✅ arrow · ✅ docs site · ✅ phone layout · ✅ `advanceOn` · ✅ saved progress · ✅ page changes.
-- ✅ Visual builder. Next: XHR interception (axios), live demo of the Supabase adapter on the docs site.
+- ✅ Visual builder. ✅ XHR interception (axios). Next: live demo of the Supabase adapter on the docs site.
 
 ## Develop
 
@@ -471,3 +471,11 @@ npm test         # builds are needed first: npm run build
 ## License
 
 MIT
+
+
+### XHR / axios
+
+Practice mode answers `XMLHttpRequest` the same way it answers `fetch`, so axios, jQuery and friends see the example data and
+get their writes blocked too. Nothing to configure; turn it off with `practice: { xhr: false }`. Synchronous XHR is never intercepted.
+Requests nobody handles (reads) go to the real server; `abort()`, `responseType` (`json`, `blob`, `arraybuffer`), response headers and
+the `readystatechange`/`load`/`loadend` events behave like the real thing.

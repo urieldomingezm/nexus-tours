@@ -510,7 +510,7 @@ try {
   // ---------- tamaño
   const { gzipSync } = await import('node:zlib')
   const { readFileSync } = await import('node:fs')
-  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 13, `núcleo ${kb.toFixed(2)} KB gzip (< 13 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2], ['checklist', 5], ['supabase', 4.5], ['builder', 10], ['nexus-tours.all', 22]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
+  try { const kb = gzipSync(readFileSync('dist/nexus-tours.js')).length / 1024; ok(kb < 14, `núcleo ${kb.toFixed(2)} KB gzip (< 14 KB)`); for (const [f, max] of [['fixtures', 4], ['themes', 1.5], ['vue', 2], ['react', 2], ['checklist', 5], ['supabase', 4.5], ['builder', 10], ['nexus-tours.all', 23]]) { const k = gzipSync(readFileSync(`dist/${f}.js`)).length / 1024; ok(k < max, `${f} ${k.toFixed(2)} KB gzip (< ${max} KB)`) } } catch { console.log('(sin dist: omito tamaño)') }
 } finally {
   await browser.close()
   try { process.kill(-server.pid) } catch {}
