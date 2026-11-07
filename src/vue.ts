@@ -87,7 +87,10 @@ export const NexusTour = defineComponent({
     })
     const sync = (open: boolean) => (open ? void api.start(props.startAt) : api.stop())
     onMounted(() => props.modelValue && sync(true))
-    watch(() => props.modelValue, (open) => open !== api.active.value && sync(open))
+    watch(
+      () => props.modelValue,
+      (open) => open !== api.active.value && sync(open),
+    )
     return () => slots.default?.({ start: api.start, stop: api.stop, active: api.active.value })
   },
 })

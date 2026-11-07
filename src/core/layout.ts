@@ -50,7 +50,13 @@ export function pickSide(side: Side, h: Rect, pw: number, ph: number, v: Viewpor
 }
 
 /** Floating popover position next to the hole (kept inside the screen), or centered when there is no target. */
-export function placePopover(hole: Rect | null, side: Side, pw: number, ph: number, v: Viewport): { x: number; y: number; side: Placement | 'center' } {
+export function placePopover(
+  hole: Rect | null,
+  side: Side,
+  pw: number,
+  ph: number,
+  v: Viewport,
+): { x: number; y: number; side: Placement | 'center' } {
   if (!hole) return { x: (v.vw - pw) / 2 - v.ox, y: (v.vh - ph) / 2 - v.oy, side: 'center' }
   const s = pickSide(side, hole, pw, ph, v)
   let x: number
@@ -65,7 +71,14 @@ export function placePopover(hole: Rect | null, side: Side, pw: number, ph: numb
 }
 
 /** Arrow offsets (CSS values) so it points at the middle of the hole without leaving the popover's corners. */
-export function arrowStyle(side: Placement, h: Rect, px: number, py: number, pw: number, ph: number): { top: string; bottom: string; left: string; right: string } {
+export function arrowStyle(
+  side: Placement,
+  h: Rect,
+  px: number,
+  py: number,
+  pw: number,
+  ph: number,
+): { top: string; bottom: string; left: string; right: string } {
   const clamp = (v: number, max: number) => Math.min(Math.max(v, 14), Math.max(14, max - 26))
   const st = { top: '', bottom: '', left: '', right: '' }
   if (side === 'bottom') [st.top, st.left] = ['-6px', `${clamp(h.x + h.w / 2 - px - 6, pw)}px`]

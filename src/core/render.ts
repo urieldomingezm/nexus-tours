@@ -65,7 +65,10 @@ function applyTheme(host: HTMLElement, opts: TourOptions) {
 function injectFonts(opts: TourOptions) {
   for (const f of opts.fonts ?? []) {
     const key = `${f.family}|${f.src}|${f.weight ?? ''}|${f.style ?? ''}`
-    if (Array.from(document.querySelectorAll('style[data-nexus-tours-font]')).some((n) => (n as HTMLElement).dataset.nexusToursFont === key)) continue
+    if (
+      Array.from(document.querySelectorAll('style[data-nexus-tours-font]')).some((n) => (n as HTMLElement).dataset.nexusToursFont === key)
+    )
+      continue
     const s = document.createElement('style')
     s.dataset.nexusToursFont = key
     if (opts.nonce) s.nonce = opts.nonce
@@ -82,10 +85,19 @@ export interface PopoverActions {
   dismiss: () => void
 }
 
-const progressText = (labels: Labels, i: number, total: number) => labels.progress.replace('{current}', String(i + 1)).replace('{total}', String(total))
+const progressText = (labels: Labels, i: number, total: number) =>
+  labels.progress.replace('{current}', String(i + 1)).replace('{total}', String(total))
 
 /** Fills the popover for step `i`. Returns the arrow element (or null when `arrow: false`). */
-export function renderPopover(pop: HTMLElement, live: HTMLElement, step: Step, i: number, opts: TourOptions, labels: Labels, act: PopoverActions): HTMLElement | null {
+export function renderPopover(
+  pop: HTMLElement,
+  live: HTMLElement,
+  step: Step,
+  i: number,
+  opts: TourOptions,
+  labels: Labels,
+  act: PopoverActions,
+): HTMLElement | null {
   const total = opts.steps.length
   const showProgress = opts.showProgress ?? true
   const id = `gm-${Math.random().toString(36).slice(2, 8)}`
@@ -161,9 +173,11 @@ export function renderPopover(pop: HTMLElement, live: HTMLElement, step: Step, i
 
   const foot = part('div', 'gm-foot', 'footer')
   if (skip) foot.appendChild(button(labels.skip, 'gm-skip', 'skip', act.stop))
-  if (showProgress && total > 1) foot.appendChild(part('span', prog === 'dots' ? 'gm-progress gm-sr' : 'gm-progress', 'progress', progressText(labels, i, total)))
+  if (showProgress && total > 1)
+    foot.appendChild(part('span', prog === 'dots' ? 'gm-progress gm-sr' : 'gm-progress', 'progress', progressText(labels, i, total)))
   if (i > 0) foot.appendChild(button(labels.previous, 'gm-btn', 'button button-secondary', act.previous))
-  if (!(step.hideNext && step.advanceOn)) foot.appendChild(button(last ? labels.done : labels.next, 'gm-btn gm-primary', 'button button-primary', act.next))
+  if (!(step.hideNext && step.advanceOn))
+    foot.appendChild(button(last ? labels.done : labels.next, 'gm-btn gm-primary', 'button button-primary', act.next))
   pop.appendChild(foot)
   if (opts.persist?.dontShowAgain) pop.appendChild(button(labels.never, 'gm-never', 'never', act.dismiss))
 

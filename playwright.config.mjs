@@ -13,7 +13,12 @@ const servidores = [
   { command: 'npx vite --port 5199 --strictPort', url: 'http://localhost:5199/', reuseExistingServer: !CI, timeout: 60_000 },
 ]
 if (existsSync('demo-dist/index.html')) {
-  servidores.push({ command: 'npx vite preview --mode demo --port 5195 --strictPort', url: 'http://localhost:5195/', reuseExistingServer: !CI, timeout: 60_000 })
+  servidores.push({
+    command: 'npx vite preview --mode demo --port 5195 --strictPort',
+    url: 'http://localhost:5195/',
+    reuseExistingServer: !CI,
+    timeout: 60_000,
+  })
 }
 
 export default defineConfig({

@@ -3,7 +3,15 @@ import { fileURLToPath } from 'node:url'
 
 const src = (f) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 const ALIAS = {
-  'nexus-tours/builder': src('builder.ts'), 'nexus-tours/supabase': src('supabase.ts'), 'nexus-tours/checklist': src('checklist.ts'), 'nexus-tours/fixtures': src('fixtures.ts'), 'nexus-tours/themes': src('themes.ts'), 'nexus-tours/vue': src('vue.ts'), 'nexus-tours/react': src('react.ts'), 'nexus-tours': src('index.ts') }
+  'nexus-tours/builder': src('builder.ts'),
+  'nexus-tours/supabase': src('supabase.ts'),
+  'nexus-tours/checklist': src('checklist.ts'),
+  'nexus-tours/fixtures': src('fixtures.ts'),
+  'nexus-tours/themes': src('themes.ts'),
+  'nexus-tours/vue': src('vue.ts'),
+  'nexus-tours/react': src('react.ts'),
+  'nexus-tours': src('index.ts'),
+}
 
 // Library builds (one per mode). `vite build` = core. See "build" in package.json.
 const LIBS = {
@@ -11,11 +19,36 @@ const LIBS = {
   core: { entry: 'src/index.ts', name: 'NexusTours', fileName: 'nexus-tours', formats: ['es', 'umd'], external: [] },
   fixtures: { entry: 'src/fixtures.ts', name: 'NexusToursFixtures', fileName: 'fixtures', formats: ['es', 'umd'], external: [] },
   themes: { entry: 'src/themes.ts', name: 'NexusToursThemes', fileName: 'themes', formats: ['es', 'umd'], external: [] },
-  builder: { entry: 'src/builder.ts', name: 'NexusToursBuilder', fileName: 'builder', formats: ['es', 'cjs', 'iife'], external: ['nexus-tours'], globals: { 'nexus-tours': 'NexusTours' } },
+  builder: {
+    entry: 'src/builder.ts',
+    name: 'NexusToursBuilder',
+    fileName: 'builder',
+    formats: ['es', 'cjs', 'iife'],
+    external: ['nexus-tours'],
+    globals: { 'nexus-tours': 'NexusTours' },
+  },
   supabase: { entry: 'src/supabase.ts', name: 'NexusToursSupabase', fileName: 'supabase', formats: ['es', 'cjs'], external: [] },
-  checklist: { entry: 'src/checklist.ts', name: 'NexusToursChecklist', fileName: 'checklist', formats: ['es', 'cjs'], external: ['nexus-tours'] },
-  vue: { entry: 'src/vue.ts', name: 'NexusToursVue', fileName: 'vue', formats: ['es', 'cjs'], external: ['nexus-tours', 'nexus-tours/checklist', 'vue'] },
-  react: { entry: 'src/react.ts', name: 'NexusToursReact', fileName: 'react', formats: ['es', 'cjs'], external: ['nexus-tours', 'nexus-tours/checklist', 'react'] },
+  checklist: {
+    entry: 'src/checklist.ts',
+    name: 'NexusToursChecklist',
+    fileName: 'checklist',
+    formats: ['es', 'cjs'],
+    external: ['nexus-tours'],
+  },
+  vue: {
+    entry: 'src/vue.ts',
+    name: 'NexusToursVue',
+    fileName: 'vue',
+    formats: ['es', 'cjs'],
+    external: ['nexus-tours', 'nexus-tours/checklist', 'vue'],
+  },
+  react: {
+    entry: 'src/react.ts',
+    name: 'NexusToursReact',
+    fileName: 'react',
+    formats: ['es', 'cjs'],
+    external: ['nexus-tours', 'nexus-tours/checklist', 'react'],
+  },
 }
 
 export default defineConfig(({ mode, command }) => {
@@ -32,7 +65,7 @@ export default defineConfig(({ mode, command }) => {
   if (mode === 'demo') {
     return {
       root: 'demo',
-      base: process.env.DEMO_BASE || './',   // p. ej. DEMO_BASE=/demos/nexus-tours/ si va dentro de otro sitio
+      base: process.env.DEMO_BASE || './', // p. ej. DEMO_BASE=/demos/nexus-tours/ si va dentro de otro sitio
       resolve: { alias: ALIAS },
       build: { outDir: '../demo-dist', emptyOutDir: true, target: 'es2020' },
     }

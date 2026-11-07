@@ -9,3 +9,4 @@ package-lock.json
 site/
 demo/
 CHANGELOG.md
+*.md

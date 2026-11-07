@@ -70,7 +70,11 @@ describe('almacenamiento', () => {
 
 describe('themeVars', () => {
   it('convierte el tema en variables CSS y omite lo indefinido', () => {
-    expect(themeVars({ accent: '#f00', radius: '4px', zIndex: 10 })).toEqual({ '--gm-accent': '#f00', '--gm-radius': '4px', '--gm-z': '10' })
+    expect(themeVars({ accent: '#f00', radius: '4px', zIndex: 10 })).toEqual({
+      '--gm-accent': '#f00',
+      '--gm-radius': '4px',
+      '--gm-z': '10',
+    })
     expect(themeVars()).toEqual({})
   })
   it("font: 'inherit' toma la fuente del body", () => {

@@ -23,7 +23,12 @@ const iniciar = (o: PracticeOptions) => {
 const json = async (r: Response) => (r.status === 204 ? null : r.json())
 
 describe('PracticeSession (fetch)', () => {
-  const datos = () => ({ clients: [{ id: 1, name: 'Ana', status: 'a' }, { id: 2, name: 'Bruno', status: 'b' }] })
+  const datos = () => ({
+    clients: [
+      { id: 1, name: 'Ana', status: 'a' },
+      { id: 2, name: 'Bruno', status: 'b' },
+    ],
+  })
 
   it('CRUD automático con rest', async () => {
     iniciar({ data: datos(), rest: { clients: '/api/clients' } })
@@ -33,7 +38,9 @@ describe('PracticeSession (fetch)', () => {
     expect(creado.status).toBe(201)
     expect(creado.headers.get('x-practice-mode')).toBe('1')
     expect(await json(await fetch('/api/clients/3'))).toMatchObject({ id: 3, name: 'Eli' })
-    expect(await json(await fetch('/api/clients/1', { method: 'PATCH', body: JSON.stringify({ name: 'Ana B' }) }))).toMatchObject({ name: 'Ana B' })
+    expect(await json(await fetch('/api/clients/1', { method: 'PATCH', body: JSON.stringify({ name: 'Ana B' }) }))).toMatchObject({
+      name: 'Ana B',
+    })
     expect((await fetch('/api/clients/2', { method: 'DELETE' })).status).toBe(204)
     expect((await fetch('/api/clients/2')).status).toBe(404)
     expect(real).not.toHaveBeenCalled()
@@ -154,11 +161,19 @@ describe('supabasePractice (PostgREST sin cliente)', () => {
 
   it('insert con defaults, conflicto 23505 y upsert', async () => {
     iniciar(opciones())
-    const ins = await rest('orders?select=*', { method: 'POST', headers: { prefer: 'return=representation' }, body: JSON.stringify({ client_id: 3 }) })
+    const ins = await rest('orders?select=*', {
+      method: 'POST',
+      headers: { prefer: 'return=representation' },
+      body: JSON.stringify({ client_id: 3 }),
+    })
     expect(await ins.json()).toEqual([{ id: 11, client_id: 3, status: 'pending', folio: 'P-2' }])
     const dup = await rest('clients', { method: 'POST', body: JSON.stringify({ id: 1, name: 'Dup' }) })
     expect((await dup.json()).code).toBe('23505')
-    const up = await rest('clients?select=name,age', { method: 'POST', headers: { prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify({ id: 1, name: 'Ana 2' }) })
+    const up = await rest('clients?select=name,age', {
+      method: 'POST',
+      headers: { prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ id: 1, name: 'Ana 2' }),
+    })
     expect(await up.json()).toEqual([{ name: 'Ana 2', age: 30 }])
   })
 
@@ -182,7 +197,11 @@ describe('supabasePractice sin crypto.randomUUID (HTTP sin TLS, navegadores viej
     Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true })
     try {
       iniciar(supabasePractice({ data: { t: [{ id: 'a' }] }, defaults: { t: { token: 'uuid()' } } }))
-      const r = await fetch('https://x.supabase.co/rest/v1/t?select=*', { method: 'POST', headers: { prefer: 'return=representation' }, body: '{}' })
+      const r = await fetch('https://x.supabase.co/rest/v1/t?select=*', {
+        method: 'POST',
+        headers: { prefer: 'return=representation' },
+        body: '{}',
+      })
       const [fila] = await r.json()
       const v4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
       expect(fila.id).toMatch(v4)
