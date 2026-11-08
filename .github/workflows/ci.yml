@@ -10,39 +10,84 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  calidad:
+    name: Tipos, unitarias, build y tamaño
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
       - run: npm ci
 
-      - name: Typecheck
-        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
 
-      - name: Build (core, fixtures, themes, vue, react + types)
+      - name: Formato
+        run: npm run format:check
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Pruebas unitarias + cobertura
+        run: npm run test:coverage
+
+      - name: Build (librería + tipos)
         run: npm run build
 
-      - name: Build docs site
-        run: npm run build:site
+      - name: Tamaño (gzip)
+        run: npm run size
 
-      - name: Build demo (portfolio)
-        run: npm run build:demo
+      - name: Build del sitio y la demo
+        run: npm run build:site && npm run build:demo
 
-      - name: Upload demo
+      - name: Subir cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage
+          retention-days: 7
+
+      - name: Subir demo
         uses: actions/upload-artifact@v4
         with:
           name: demo-portafolio
           path: demo-dist
 
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+  e2e:
+    name: E2E (${{ matrix.navegador }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        navegador: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
 
-      - name: Tests
-        run: npm test
+      - name: Build (CDN y demo los necesitan)
+        run: npm run build && npm run build:demo
+
+      - name: Instalar ${{ matrix.navegador }}
+        run: npx playwright install --with-deps ${{ matrix.navegador }}
+
+      - name: Pruebas de punta a punta
+        run: npx playwright test --project=${{ matrix.navegador }}
+
+      - name: Subir reporte
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-${{ matrix.navegador }}
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
