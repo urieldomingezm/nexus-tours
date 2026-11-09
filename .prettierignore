@@ -10,3 +10,4 @@ site/
 demo/
 CHANGELOG.md
 *.md
+.base/

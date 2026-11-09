@@ -67,6 +67,29 @@ jobs:
           name: demo-portafolio
           path: demo-dist
 
+  tamano:
+    name: Tamaño vs rama base
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: .base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Compilar la rama base
+        working-directory: .base
+        run: npm ci && npm run build
+      - name: Compilar este PR
+        run: npm ci && npm run build
+      - name: Comparar (tabla en el resumen del job)
+        run: node scripts/tamano.mjs --base .base
+
   paquete:
     name: Paquete publicado (tipos, Node, Vite, webpack)
     runs-on: ubuntu-latest
