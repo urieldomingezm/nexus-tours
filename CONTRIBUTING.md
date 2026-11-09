@@ -26,7 +26,7 @@ npm run api:check      # ¿cambió la API pública?
 - **Pruebas.** Toda corrección lleva una prueba que fallaba antes. Lógica pura → `test/unit/` (Vitest). Comportamiento en el navegador → `test/e2e/` (Playwright). Las pruebas de punta a punta usan `ok()` / `eq()` de `test/e2e/utilidades.mjs`, que no detienen la prueba al fallar.
 - **Accesibilidad.** Si cambias lo que dibuja la librería, `test/e2e/accesibilidad.spec.mjs` lo audita con axe-core (WCAG 2.2 AA). Agrega el caso nuevo ahí.
 - **API pública.** `api/nexus-tours.api.md` es el contrato. Si tu cambio lo modifica, corre `npm run build && npm run api` y súbelo con el PR; el CI falla si no coincide. Antes de la 1.0 se permiten cambios incompatibles en versiones menores, pero siempre se anotan en el CHANGELOG.
-- **Tamaño.** El núcleo debe quedar por debajo de 14 KB gzip. El CI deja en el resumen una tabla con el cambio contra `main`.
+- **Tamaño.** Se mide minificado + gzip (lo que descarga el usuario). El núcleo debe quedar por debajo de 13 KB. El CI deja en el resumen una tabla con el cambio contra `main`.
 - **Paquete.** `npm run check:paquete` instala el paquete empaquetado en un proyecto limpio y lo prueba con Node (ESM y CJS), TypeScript (bundler y node16), Vite y webpack.
 
 ## Estilo

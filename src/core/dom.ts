@@ -27,9 +27,20 @@ function isModalDialog(d: Element): boolean {
   }
 }
 
-/** Closest ancestor that acts as a modal: native <dialog>, aria-modal or role=dialog. */
-export function modalHost(el: Element | null): HTMLElement | null {
-  const own = el?.closest('dialog[open], [aria-modal="true"], [role="dialog"], [role="alertdialog"]')
+/**
+ * Containers that act as modals: native <dialog>, ARIA dialogs (Headless UI, Radix, MUI, Element Plus, Ant Design,
+ * Quasar, PrimeVue…) and the ones some frameworks leave without a role (Bootstrap modal/offcanvas, Vuetify overlays).
+ */
+const MODALS = 'dialog[open],[aria-modal="true"],[role="dialog"],[role="alertdialog"],.modal.show,.offcanvas.show,.offcanvas.showing,.v-overlay__content'
+
+/** Closest ancestor that acts as a modal. `extra` adds your own selector (option `modalSelector`). */
+export function modalHost(el: Element | null, extra?: string): HTMLElement | null {
+  let own: Element | null | undefined = null
+  try {
+    own = el?.closest(extra ? `${MODALS},${extra}` : MODALS)
+  } catch {
+    own = el?.closest(MODALS) // invalid custom selector: ignore it
+  }
   if (own instanceof HTMLElement) return own
   // A modal <dialog> makes everything outside it inert: stay inside the open one.
   const open = Array.from(document.querySelectorAll('dialog[open]')).filter(isModalDialog)
