@@ -2,24 +2,7 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
-## [Sin publicar]
-
-### Corregido
-- Accesibilidad del checklist: el nombre accesible del lanzador y de cada paso sale del texto visible (WCAG 2.5.3) y la barra de progreso tiene nombre y valor en texto.
-- Contraste de las insignias "encontrado / no encontrado" del constructor visual (WCAG AA).
-- Adaptador Supabase: `'uuid()'` / `'gen_random_uuid()'` y los ids de texto funcionan sin `crypto.randomUUID` (páginas en HTTP sin TLS, navegadores viejos).
-
-### Cambiado
-- Los mensajes de error en consola usan el prefijo `[nexus-tours]`.
-- Organización interna: `tour.ts` se dividió en módulos (`src/core/`). La API pública no cambia.
-
-### Interno
-- Pruebas de punta a punta con Playwright Test en Chromium, Firefox y WebKit.
-- Pruebas unitarias con Vitest y piso de cobertura.
-- Auditoría de accesibilidad con axe-core y prueba de navegadores sin Popover API ni `adoptedStyleSheets`.
-- ESLint + Prettier y límites de tamaño en el CI.
-
-## [0.1.0] — 2026-11-07
+## [0.1.0] — 2026-11-08
 
 Primera versión pública.
 
@@ -38,3 +21,8 @@ Primera versión pública.
 ### Extras
 - Checklist de primeros pasos (`nexus-tours/checklist`), constructor visual sin código (`nexus-tours/builder`), wrappers de Vue y React.
 - Build por CDN (`nexus-tours.all.iife.js`, global `NexusTours`).
+
+### Calidad
+- Pruebas en Chromium, Firefox y WebKit; pruebas unitarias con piso de cobertura; auditoría de accesibilidad con axe-core (WCAG 2.2 AA); prueba de navegadores sin Popover API ni `adoptedStyleSheets`.
+- Accesibilidad del checklist (nombre desde el texto visible, barra de progreso con nombre) y contraste de las insignias del constructor.
+- Adaptador Supabase: UUID sin `crypto.randomUUID` (HTTP sin TLS, navegadores viejos).
