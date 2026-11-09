@@ -604,7 +604,7 @@ test('detalles visuales: flecha, RTL, tamaños', async ({ nueva }) => {
     await p.evaluate(
       () => Object.keys(Guiame.themes).join() === 'light,dark,ocean,sunset,mint,rose,mono,bootstrap,tailwind,shadcn,daisyui,vuetify,mui',
     ),
-    'temas disponibles: 7 propios + 6 de frameworks',
+    'temas disponibles: 7 propios + 7 de librerías',
   )
 })
 

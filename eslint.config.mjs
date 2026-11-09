@@ -49,6 +49,8 @@ export default tseslint.config(
         Tour: 'readonly',
         TourBuilder: 'readonly',
         themes: 'readonly',
+        host: 'readonly',
+        Swal: 'readonly',
         bestSelector: 'readonly',
         make: 'readonly',
         mk: 'readonly',
