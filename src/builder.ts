@@ -5,7 +5,7 @@
 import { Tour, themeVars } from 'nexus-tours'
 import type { Side, Step, Theme, TourOptions } from 'nexus-tours'
 
-export type JSONStep = Omit<Step, 'element' | 'before' | 'after' | 'advanceOn' | 'allowTargetClick'> & {
+export type JSONStep = Omit<Step, 'element' | 'before' | 'after' | 'advanceOn' | 'allowTargetClick' | 'content'> & {
   element?: string
   advanceOn?: 'click'
 }
