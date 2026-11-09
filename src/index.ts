@@ -18,6 +18,8 @@ export type {
   TourApi,
   Theme,
   FontFace,
+  StopReason,
+  TourAnalyticsEvent,
 } from './types'
 export type { PracticeOptions, PracticeRoute, PracticeRequest, Db, Row } from './practice'
 export { PASS } from './practice'

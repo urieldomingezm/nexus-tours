@@ -31,6 +31,9 @@ La mayoría de las librerías de tours fallan cuando el elemento a explicar vive
    - [Checklist de primeros pasos](#410-checklist-de-primeros-pasos)
    - [Constructor visual (sin código)](#411-constructor-visual-sin-código)
    - [Vue y React](#412-vue-y-react)
+   - [Analítica y eventos](#413-analítica-y-eventos)
+   - [Contenido enriquecido](#414-contenido-enriquecido)
+   - [Renderizado en servidor (Nuxt, Next)](#415-renderizado-en-servidor-nuxt-next)
 5. [Referencia de la API](#5-referencia-de-la-api)
 6. [Accesibilidad](#6-accesibilidad)
 7. [Tamaños y compatibilidad](#7-tamaños-y-compatibilidad)
@@ -451,6 +454,55 @@ const { start, stop, active, index } = useTour({ steps })
 
 Ambos pesan ~1 KB, importan el núcleo como dependencia par (`nexus-tours`) y limpian al desmontar. El de React es seguro con StrictMode. Eventos: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) o `@start @step @missing @end @stop` (Vue).
 
+### 4.13 Analítica y eventos
+
+Dale un `id` a cada paso y al tour. `onEvent` recibe un objeto plano por cada evento, listo para mandarlo a tu herramienta de analítica (Google Analytics, PostHog, Mixpanel, tu API…):
+
+```ts
+const tour = new Tour({
+  id: 'bienvenida',
+  onEvent: (e) => posthog.capture(`tour_${e.type}`, e),
+  steps: [
+    { id: 'hola', title: 'Bienvenido' },
+    { id: 'crear', element: '#nuevo', title: 'Crea tu primer cliente' },
+  ],
+})
+// e = { type: 'next', tourId: 'bienvenida', index: 0, total: 2, stepId: 'hola', title: 'Bienvenido',
+//       elapsed: 5230 /* ms desde el inicio */, stepElapsed: 4100 /* ms en este paso */ }
+```
+
+| Evento | Cuándo |
+|---|---|
+| `start` | Empieza el tour |
+| `step` | Se muestra un paso |
+| `next` / `previous` | El usuario (o tu código) avanza o retrocede; se dispara antes de moverse |
+| `missing` | El elemento de un paso nunca apareció |
+| `end` | Terminó el último paso |
+| `stop` | Se cerró antes del final; `reason` dice cómo: `skip` (Omitir), `close` (×), `esc`, `backdrop` (clic en el fondo), `dismiss` ("No volver a mostrar"), `missing` o `api` (tu código llamó `stop()`) |
+
+Con eso puedes medir en qué paso abandona la gente y cuánto tarda en cada uno. Los mismos eventos están en `tour.on('stop', (ctx) => ctx.reason)` y en los wrappers (`@next`, `@stop` en Vue; `onNext`, `onStop` en React). Los ids también sirven para navegar: `tour.goTo('crear')` y `tour.start('crear')`.
+
+### 4.14 Contenido enriquecido
+
+`title`, `description` y `hint` siempre son texto: nunca se interpretan como HTML, así que no hay riesgo de inyección aunque vengan de tu base de datos. Para listas, enlaces o videos usa `content` y crea los nodos tú mismo:
+
+```ts
+{
+  title: 'Atajos',
+  content: () => {
+    const ul = document.createElement('ul')
+    for (const t of ['Ctrl + K: buscar', 'Ctrl + N: nuevo']) ul.append(Object.assign(document.createElement('li'), { textContent: t }))
+    return ul
+  },
+}
+```
+
+Si `content` devuelve un string, se muestra como texto. El contenido forma parte de la descripción accesible del paso y vive dentro del shadow root: dale estilo en línea o con la opción `css` (`.gm-content ul { … }`).
+
+### 4.15 Renderizado en servidor (Nuxt, Next)
+
+Puedes importar la librería y crear tours en el servidor sin errores: `start()` y `startIfNeeded()` no hacen nada cuando no hay `document`. Arranca el tour en el cliente (`onMounted` en Vue, `useEffect` en React).
+
 ---
 
 ## 5. Referencia de la API
@@ -458,6 +510,8 @@ Ambos pesan ~1 KB, importan el núcleo como dependencia par (`nexus-tours`) y li
 ```ts
 new Tour({
   steps: Step[],
+  id?: string,                   // nombre del tour para la analítica (por defecto persist.id)
+  onEvent?: (e: TourAnalyticsEvent) => void,
   waitTimeout?: number,          // por defecto 5000 ms
   onMissing?: 'skip' | 'stop',   // por defecto 'skip'
   closeOnBackdrop?: boolean,     // por defecto false
@@ -477,9 +531,11 @@ new Tour({
 })
 
 interface Step {
+  id?: string                          // para analítica y goTo('id')
   element?: string | Element | (() => Element | null)   // omítelo para un paso centrado
   title?: string
-  description?: string
+  description?: string                 // texto plano
+  content?(ctx): Node | string         // contenido enriquecido (nodos que tú creas)
   side?: 'auto' | 'top' | 'bottom' | 'left' | 'right'
   before?(ctx): void | Promise<void>   // corre antes de buscar el elemento
   after?(ctx): void | Promise<void>    // corre al salir del paso
@@ -496,12 +552,19 @@ interface Step {
   route?: string                       // requiere el router del tour
 }
 
-tour.start(index?)  tour.startIfNeeded()  tour.status()  tour.reset()
-tour.next()  tour.previous()  tour.goTo(i)  tour.stop()  tour.destroy()
-tour.on('start' | 'step' | 'missing' | 'end' | 'stop', ctx => …)   // devuelve una función para cancelar
+tour.start(índice | id?)  tour.startIfNeeded()  tour.status()  tour.reset()
+tour.next()  tour.previous()  tour.goTo(índice | id)  tour.stop()  tour.destroy()
+tour.on('start' | 'step' | 'next' | 'previous' | 'missing' | 'end' | 'stop', ctx => …)   // devuelve una función para cancelar
+// ctx = { index, total, step, element, tour, reason? }   (reason solo en 'stop')
 ```
 
 Puntos de entrada: `nexus-tours`, `nexus-tours/all` (todo junto), `/fixtures`, `/themes`, `/checklist`, `/builder`, `/supabase`, `/vue`, `/react`.
+
+La referencia completa, generada de los tipos, se construye con `npm run docs:api`, y [`api/nexus-tours.api.md`](api/nexus-tours.api.md) resume toda la API pública en un solo archivo.
+
+**Estabilidad.** Mientras la versión sea 0.x, una versión menor (0.2.0) puede traer cambios incompatibles, siempre anotados en el [CHANGELOG](CHANGELOG.md), y un parche (0.1.1) nunca los trae. Desde la 1.0 se sigue SemVer estricto. El CI compara la API pública en cada cambio, así que nada cambia por accidente.
+
+**Funciona con** TypeScript en cualquier modo de resolución (`bundler`, `node16` ESM y CJS, `node`), `import` y `require` en Node, Vite, webpack, Nuxt y Next. El CI lo comprueba en cada cambio instalando el paquete empaquetado en un proyecto limpio.
 
 ---
 
@@ -579,6 +642,9 @@ npm test               # unitarias + punta a punta (requiere npm run build y npm
 | `npm run test:e2e:chromium` | Solo Chromium (más rápido mientras desarrollas); también `npx playwright test ux --project=webkit`, etc. |
 | `npm run lint` · `npm run format` | ESLint y Prettier (`format:check` solo verifica) |
 | `npm run typecheck` · `npm run size` | Tipos de TypeScript y límites de tamaño gzip de cada archivo (`scripts/tamano.mjs`) |
+| `npm run api` · `npm run api:check` | Regenera / verifica el reporte de la API pública (`api/nexus-tours.api.md`) |
+| `npm run check:paquete` | Are The Types Wrong + el paquete empaquetado probado con Node (ESM/CJS), TypeScript (bundler/node16), Vite y webpack |
+| `npm run docs:api` | Referencia de la API con TypeDoc en `site-dist/api` (después de `npm run build:site`) |
 
 Las pruebas de punta a punta (`test/e2e/`) cubren el núcleo, el adaptador Supabase contra `supabase-js` real, la interceptación de XHR con axios real, los pasos interactivos / móvil / páginas, el constructor visual, la demo, la accesibilidad (axe-core) y los navegadores sin APIs recientes. Si una falla, `npx playwright show-trace test-results/…/trace.zip` muestra la grabación paso a paso.
 
@@ -596,7 +662,9 @@ El CI (GitHub Actions) corre en cada PR: lint, formato, tipos, unitarias con cob
 - ✅ Checklist · ✅ constructor visual · ✅ demo de portafolio
 - ✅ Valores por defecto de columnas en el adaptador Supabase (`defaults`)
 - ✅ Demo publicada en `devmedina.is-a.dev/demos/nexus-tours/`
-- ⏭ Demo en vivo del adaptador Supabase en el sitio de docs · publicación en npm
+- ✅ Publicada en npm · ✅ pruebas en Chromium, Firefox y WebKit · ✅ auditoría de accesibilidad
+- ✅ Analítica (`onEvent`, motivos de cierre), ids de paso, contenido enriquecido, SSR
+- ⏭ Demo en vivo del adaptador Supabase en el sitio de docs · probarla dentro de Nexus · 1.0
 
 ## 11. Autoría, licencia y derechos de autor
 
@@ -629,7 +697,7 @@ El código es MIT, pero **«DevMedina»**, el logotipo «DM» y el nombre «Nexu
 
 ### Contribuciones
 
-Si envías código a este repositorio, se entiende que lo haces bajo la misma licencia MIT y que tienes derecho a hacerlo.
+Si envías código a este repositorio, se entiende que lo haces bajo la misma licencia MIT y que tienes derecho a hacerlo. Lee [CONTRIBUTING.md](CONTRIBUTING.md) para preparar el entorno y [SECURITY.md](SECURITY.md) para reportar vulnerabilidades en privado.
 
 ### Componentes de terceros
 
