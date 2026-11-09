@@ -218,6 +218,7 @@ interface TourOptions {
     keyboard?: boolean;
     showProgress?: boolean;
     padding?: number;
+    modalSelector?: string;
     container?: HTMLElement;
     nonce?: string;
     theme?: Theme;
@@ -467,6 +468,12 @@ const themes: {
     readonly mint: Theme;
     readonly rose: Theme;
     readonly mono: Theme;
+    readonly bootstrap: Theme;
+    readonly tailwind: Theme;
+    readonly shadcn: Theme;
+    readonly daisyui: Theme;
+    readonly vuetify: Theme;
+    readonly mui: Theme;
 };
 
 function themeVars(theme?: Theme): Record<string, string>;
@@ -530,6 +537,7 @@ interface TourOptions {
     keyboard?: boolean;
     showProgress?: boolean;
     padding?: number;
+    modalSelector?: string;
     container?: HTMLElement;
     nonce?: string;
     theme?: Theme;
@@ -613,6 +621,10 @@ interface TableSchema {
 ```ts
 function autoTheme(): Theme;
 
+const bootstrap: Theme;
+
+const daisyui: Theme;
+
 const dark: Theme;
 
 const light: Theme;
@@ -621,11 +633,17 @@ const mint: Theme;
 
 const mono: Theme;
 
+const mui: Theme;
+
 const ocean: Theme;
 
 const rose: Theme;
 
+const shadcn: Theme;
+
 const sunset: Theme;
+
+const tailwind: Theme;
 
 const themes: {
     readonly light: Theme;
@@ -635,7 +653,15 @@ const themes: {
     readonly mint: Theme;
     readonly rose: Theme;
     readonly mono: Theme;
+    readonly bootstrap: Theme;
+    readonly tailwind: Theme;
+    readonly shadcn: Theme;
+    readonly daisyui: Theme;
+    readonly vuetify: Theme;
+    readonly mui: Theme;
 };
+
+const vuetify: Theme;
 ```
 
 ## `nexus-tours/vue`

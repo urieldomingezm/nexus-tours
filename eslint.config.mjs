@@ -48,6 +48,7 @@ export default tseslint.config(
         NexusTours: 'readonly',
         Tour: 'readonly',
         TourBuilder: 'readonly',
+        themes: 'readonly',
         bestSelector: 'readonly',
         make: 'readonly',
         mk: 'readonly',

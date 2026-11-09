@@ -201,6 +201,11 @@ export interface TourOptions {
   /** Show "2 / 5". Default true. */
   showProgress?: boolean
   padding?: number
+  /**
+   * Extra CSS selector for modal containers of your UI library, when they trap focus but have no `role="dialog"`.
+   * The tour mounts inside them so it stays clickable. Already detected: <dialog>, ARIA dialogs, Bootstrap modal/offcanvas, Vuetify overlays.
+   */
+  modalSelector?: string
   /** Where to mount when the target is not inside a modal <dialog>. Default document.body. */
   container?: HTMLElement
   /** CSP nonce for fallback <style> tags (only used in browsers without constructable stylesheets). */
