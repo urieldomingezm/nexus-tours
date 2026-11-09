@@ -209,7 +209,7 @@ export interface TourOptions {
   theme?: Theme
   /** Shortcut for `theme.font`. */
   font?: string
-  /** Web fonts to load for the tour (injects @font-face once into the page). */
+  /** Web fonts to load for the tour (injects an `@font-face` rule once into the page). */
   fonts?: FontFace[]
   /** Extra CSS applied *inside* the tour (it is isolated in a shadow root). Target the `.gm-*` parts. */
   css?: string
