@@ -618,7 +618,10 @@ export class Tour implements TourApi {
     } else if (modal && isVisible(modal)) {
       // Closing the tour must not drop focus outside an open modal (Esc / Tab would stop working there).
       modal.focus({ preventScroll: true })
-      if (!modal.contains(document.activeElement)) modal.querySelector<HTMLElement>('input,select,textarea,button,[href],[tabindex]:not([tabindex="-1"])')?.focus({ preventScroll: true })
+      if (!modal.contains(document.activeElement))
+        modal
+          .querySelector<HTMLElement>('input,select,textarea,button,[href],[tabindex]:not([tabindex="-1"])')
+          ?.focus({ preventScroll: true })
     }
   }
 }
