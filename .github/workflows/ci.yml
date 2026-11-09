@@ -40,6 +40,9 @@ jobs:
       - name: Tamaño (gzip)
         run: npm run size
 
+      - name: La API pública coincide con api/nexus-tours.api.md
+        run: npm run api:check
+
       - name: Build del sitio y la demo
         run: npm run build:site && npm run build:demo
 

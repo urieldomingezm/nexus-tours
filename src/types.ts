@@ -246,7 +246,8 @@ export interface TourOptions {
 export type TourEvent = 'start' | 'step' | 'next' | 'previous' | 'missing' | 'end' | 'stop'
 
 export interface TourApi {
-  start(index?: number): Promise<void>
+  /** Starts at a step index or `id` (default: the first step). */
+  start(step?: number | string): Promise<void>
   next(): Promise<void>
   previous(): Promise<void>
   /** Go to a step by index or by its `id`. */

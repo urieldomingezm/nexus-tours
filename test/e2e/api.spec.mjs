@@ -124,6 +124,10 @@ test('goTo por id, id inexistente avisa sin romper', async ({ nueva }) => {
   )
   await p.evaluate(() => t.goTo(0))
   await espera(p, 'Hola')
+  await p.evaluate(() => t.stop())
+  await p.evaluate(() => t.start('crear'))
+  await espera(p, 'Crear')
+  ok((await p.evaluate(() => t.index)) === 1, "start('crear') empieza en ese paso")
 })
 
 test('onEvent: un objeto listo para analítica en cada evento', async ({ nueva }) => {

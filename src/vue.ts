@@ -17,7 +17,7 @@ export function useTour(options: UseTourOptions | (() => UseTourOptions), handle
   const active = ref(false)
   const index = ref(-1)
 
-  async function start(at = 0) {
+  async function start(at: number | string = 0) {
     const prev = tour.value
     tour.value = null // so the old tour's "stop" is ignored below
     prev?.destroy()
@@ -75,7 +75,7 @@ export const NexusTour = defineComponent({
     steps: { type: Array as PropType<Step[]>, required: true },
     options: { type: Object as PropType<Omit<TourOptions, 'steps'>>, default: () => ({}) },
     modelValue: { type: Boolean, default: false },
-    startAt: { type: Number, default: 0 },
+    startAt: { type: [Number, String], default: 0 },
   },
   emits: ['update:modelValue', 'start', 'step', 'next', 'previous', 'missing', 'end', 'stop'],
   setup(props, { emit, slots }) {

@@ -20,7 +20,7 @@ export function useTour(options: UseTourOptions, handlers: TourHandlers = {}) {
   const [active, setActive] = useState(false)
   const [index, setIndex] = useState(-1)
 
-  const start = useCallback(async (at = 0) => {
+  const start = useCallback(async (at: number | string = 0) => {
     const prev = ref.current
     ref.current = null // so the old tour's "stop" is ignored below
     prev?.destroy()
@@ -72,7 +72,8 @@ export interface NexusTourProps extends Omit<TourOptions, 'steps'> {
   open: boolean
   /** Called with false when the tour ends or is closed. */
   onOpenChange?: (open: boolean) => void
-  startAt?: number
+  /** Step index or `id` to start at. */
+  startAt?: number | string
   onStart?: (ctx: StepContext) => void
   onStep?: (ctx: StepContext) => void
   onNext?: (ctx: StepContext) => void

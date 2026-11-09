@@ -97,7 +97,7 @@ export class Tour implements TourApi {
     return this.session?.db
   }
 
-  on(event: TourEvent, fn: (ctx: StepContext) => void) {
+  on(event: TourEvent, fn: (ctx: StepContext) => void): () => void {
     let set = this.listeners.get(event)
     if (!set) this.listeners.set(event, (set = new Set()))
     set.add(fn)
@@ -175,10 +175,15 @@ export class Tour implements TourApi {
 
   // ---------------------------------------------------------------- lifecycle
 
-  async start(index = 0) {
+  async start(step: number | string = 0) {
     // SSR (Nuxt, Next…): there is no DOM to show a tour in.
     if (typeof document === 'undefined') return
     if (this._active || !this.opts.steps.length) return
+    const index = this.resolveIndex(step)
+    if (index < 0) {
+      console.warn(`[nexus-tours] start(): no step with id "${step}"`)
+      return
+    }
     this._active = true
     this.startedAt = Date.now()
     this.stepAt = 0
