@@ -1,0 +1,21 @@
+name: Proponer una mejora
+description: Una función nueva o un cambio en la API.
+labels: [mejora]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: ¿Qué problema resuelve?
+      description: Cuéntanos el caso real antes de la solución.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta
+      description: Cómo te imaginas usarla (un ejemplo de código ayuda mucho).
+      render: ts
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas que probaste

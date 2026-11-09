@@ -2,6 +2,26 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [Sin publicar]
+
+### Agregado
+- `Step.id`, `goTo('id')` y `start('id')`.
+- Eventos `next` y `previous`; `stop` trae `ctx.reason` (`skip`, `close`, `esc`, `backdrop`, `dismiss`, `missing`, `api`); `ctx.total`.
+- Opciones `id` y `onEvent` para analítica: un objeto serializable por evento, con tiempos (`elapsed`, `stepElapsed`).
+- `Step.content` para contenido enriquecido (nodos propios o texto, nunca HTML).
+- Los wrappers de Vue y React reenvían `next` / `previous` (`@next`, `onNext`…); `startAt` acepta un id.
+
+### Corregido
+- Tipos correctos en todos los modos de TypeScript: `node16` (ESM y CJS con `.d.cts`) y `node` (subrutas con `typesVersions`).
+- SSR: `start()` y `startIfNeeded()` no hacen nada sin `document` (Nuxt, Next).
+- `previous()` en el primer paso ya no vuelve a mostrar el paso (ni corre su `after`).
+- `on()` devuelve `() => void` en los tipos.
+
+### Interno
+- Reporte de la API pública (`api/nexus-tours.api.md`) verificado en el CI; referencia con TypeDoc.
+- El CI prueba el paquete empaquetado con Node, TypeScript, Vite y webpack, y compara el tamaño contra `main`.
+- CONTRIBUTING, SECURITY, plantillas de issues y PRs, Dependabot.
+
 ## [0.1.0] — 2026-11-08
 
 Primera versión pública.
