@@ -1,7 +1,17 @@
 // Pruebas unitarias (lógica pura, sin navegador real): npm run test:unit
 import { defineConfig } from 'vitest/config'
+import { fileURLToPath } from 'node:url'
+
+const src = (f) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 
 export default defineConfig({
+  // Los wrappers importan 'nexus-tours/…': en las pruebas apuntan al código fuente, no a dist/.
+  resolve: {
+    alias: {
+      'nexus-tours/checklist': src('checklist.ts'),
+      'nexus-tours': src('index.ts'),
+    },
+  },
   test: {
     include: ['test/unit/**/*.test.ts'],
     environment: 'happy-dom',

@@ -4,18 +4,37 @@ export type TargetRef = string | Element | (() => Element | null | undefined)
 export interface StepContext {
   /** Index of the current step. */
   index: number
+  /** Number of steps in the tour. */
+  total: number
   /** The step being shown. */
   step: Step
   /** The resolved target element, when the step has one. */
   element: Element | null
   tour: TourApi
+  /** Only on `stop`: why the tour was closed before the end. */
+  reason?: StopReason
 }
 
+/**
+ * Why a tour closed before its last step:
+ * `skip` (Skip button), `close` (× button), `esc`, `backdrop`, `dismiss` ("Don't show again"),
+ * `missing` (a target never appeared and the step has `onMissing: 'stop'`), `api` (your code called `stop()`).
+ */
+export type StopReason = 'skip' | 'close' | 'esc' | 'backdrop' | 'dismiss' | 'missing' | 'api'
+
 export interface Step {
+  /** Stable name for analytics and `goTo('id')`. Survives reordering steps. */
+  id?: string
   /** CSS selector, element or function returning the element. Omit for a centered step. */
   element?: TargetRef
   title?: string
+  /** Plain text (never parsed as HTML). */
   description?: string
+  /**
+   * Rich content under the description: return a DOM node you built (a list, a link, a video…) or a string (shown as text).
+   * The node is rendered inside the tour's shadow root, so style it inline or with the `css` option.
+   */
+  content?: (ctx: StepContext) => Node | string | null | undefined
   side?: Side
   /** Runs before the target is searched. Open the modal, switch tabs, etc. May be async. */
   before?: (ctx: StepContext) => void | Promise<void>
@@ -139,8 +158,35 @@ export interface FontFace {
   style?: 'normal' | 'italic'
 }
 
+/** One entry per tour event, ready to send to your analytics. */
+export interface TourAnalyticsEvent {
+  type: TourEvent
+  /** `id` option, or `persist.id`. */
+  tourId?: string
+  /** Step index (-1 before the first step). */
+  index: number
+  total: number
+  /** The step's `id`, when it has one. */
+  stepId?: string
+  /** The step's title. */
+  title?: string
+  /** Only on `stop`. */
+  reason?: StopReason
+  /** ms since the tour started. */
+  elapsed: number
+  /** ms since the current step was shown. */
+  stepElapsed: number
+}
+
 export interface TourOptions {
   steps: Step[]
+  /** Name of the tour for analytics (`onEvent`). Default: `persist.id`. */
+  id?: string
+  /**
+   * Called for every event (start, step, next, previous, missing, end, stop) with a plain object you can send to
+   * your analytics as is. Errors thrown here are caught and logged.
+   */
+  onEvent?: (event: TourAnalyticsEvent) => void
   labels?: Partial<Labels>
   /** Default max wait for each target, in ms. Default 5000. */
   waitTimeout?: number
@@ -193,13 +239,18 @@ export interface TourOptions {
   className?: string
 }
 
-export type TourEvent = 'start' | 'step' | 'missing' | 'end' | 'stop'
+/**
+ * `start` · `step` (a step is shown) · `next` / `previous` (the user or your code moved; fired before moving) ·
+ * `missing` (a target never appeared) · `end` (finished the last step) · `stop` (closed before the end; see `reason`).
+ */
+export type TourEvent = 'start' | 'step' | 'next' | 'previous' | 'missing' | 'end' | 'stop'
 
 export interface TourApi {
   start(index?: number): Promise<void>
   next(): Promise<void>
   previous(): Promise<void>
-  goTo(index: number): Promise<void>
+  /** Go to a step by index or by its `id`. */
+  goTo(step: number | string): Promise<void>
   stop(): void
   destroy(): void
   readonly index: number
