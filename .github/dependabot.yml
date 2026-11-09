@@ -1,0 +1,27 @@
+# Actualizaciones automáticas: un PR por semana con las dependencias de desarrollo agrupadas.
+# La librería no tiene dependencias en tiempo de ejecución.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    groups:
+      desarrollo-menores:
+        dependency-type: development
+        update-types: [minor, patch]
+    commit-message:
+      prefix: 'Dependencias'
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      acciones:
+        patterns: ['*']
+    commit-message:
+      prefix: 'CI'

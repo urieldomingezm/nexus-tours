@@ -11,6 +11,7 @@ export const CSS = `
 .gm-pop:focus{outline:none}
 .gm-title{margin:0 0 6px;font-size:16px;font-weight:700}
 .gm-desc{margin:0;color:var(--gm-muted,#4a4958)}
+.gm-content{margin:8px 0 0;color:var(--gm-muted,#4a4958)}.gm-content :is(img,video){max-width:100%;height:auto;border-radius:calc(var(--gm-radius,12px) - 4px)}.gm-content a{color:var(--gm-accent,#4263eb)}
 .gm-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:14px}
 .gm-progress{margin-inline-end:auto;font-size:13px;color:var(--gm-muted,#4a4958)}
 .gm-btn{font:inherit;font-weight:600;font-size:.93em;line-height:1.2;border-radius:calc(var(--gm-radius,10px) - 2px);border:1px solid var(--gm-border,transparent);background:rgba(66,99,235,.1);background:color-mix(in srgb,var(--gm-accent,#4263eb) 11%,transparent);color:var(--gm-fg,#1c1b22);padding:8px 15px;cursor:pointer;transition:background .15s,filter .15s,transform .05s}

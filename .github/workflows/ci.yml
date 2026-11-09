@@ -40,8 +40,11 @@ jobs:
       - name: Tamaño (gzip)
         run: npm run size
 
-      - name: Build del sitio y la demo
-        run: npm run build:site && npm run build:demo
+      - name: La API pública coincide con api/nexus-tours.api.md
+        run: npm run api:check
+
+      - name: Build del sitio, referencia de API (TypeDoc) y demo
+        run: npm run build:site && npm run docs:api && npm run build:demo
 
       - name: Subir cobertura
         if: always()
@@ -51,11 +54,56 @@ jobs:
           path: coverage
           retention-days: 7
 
+      - name: Subir sitio con referencia de API
+        uses: actions/upload-artifact@v4
+        with:
+          name: sitio
+          path: site-dist
+          retention-days: 7
+
       - name: Subir demo
         uses: actions/upload-artifact@v4
         with:
           name: demo-portafolio
           path: demo-dist
+
+  tamano:
+    name: Tamaño vs rama base
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: .base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Compilar la rama base
+        working-directory: .base
+        run: npm ci && npm run build
+      - name: Compilar este PR
+        run: npm ci && npm run build
+      - name: Comparar (tabla en el resumen del job)
+        run: node scripts/tamano.mjs --base .base
+
+  paquete:
+    name: Paquete publicado (tipos, Node, Vite, webpack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Are The Types Wrong + proyectos de prueba
+        run: npm run check:paquete
 
   e2e:
     name: E2E (${{ matrix.navegador }})

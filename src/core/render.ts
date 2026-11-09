@@ -1,7 +1,7 @@
 // Construcción del DOM del tour: host con shadow root y contenido del popover de cada paso.
 import { CSS } from '../styles'
 import { themeVars } from '../theme'
-import type { Labels, Step, Theme, TourOptions } from '../types'
+import type { Labels, Step, StepContext, Theme, TourOptions } from '../types'
 import { adoptStyles, part } from './dom'
 
 export const DEFAULT_LABELS: Labels = {
@@ -81,7 +81,8 @@ function injectFonts(opts: TourOptions) {
 export interface PopoverActions {
   next: () => void
   previous: () => void
-  stop: () => void
+  skip: () => void
+  close: () => void
   dismiss: () => void
 }
 
@@ -97,6 +98,7 @@ export function renderPopover(
   opts: TourOptions,
   labels: Labels,
   act: PopoverActions,
+  ctx: StepContext,
 ): HTMLElement | null {
   const total = opts.steps.length
   const showProgress = opts.showProgress ?? true
@@ -156,6 +158,21 @@ export function renderPopover(
     pop.appendChild(d)
     pop.setAttribute('aria-describedby', d.id)
   }
+  if (step.content) {
+    let c: Node | string | null | undefined = null
+    try {
+      c = step.content(ctx)
+    } catch (e) {
+      console.error('[nexus-tours] content()', e)
+    }
+    if (c !== null && c !== undefined && c !== '') {
+      const box = part('div', 'gm-content', 'content')
+      box.id = `${id}-c`
+      box.append(c) // a string is inserted as text, never as HTML
+      pop.appendChild(box)
+      pop.setAttribute('aria-describedby', [pop.getAttribute('aria-describedby'), box.id].filter(Boolean).join(' '))
+    }
+  }
   if (step.hint) {
     const h = part('p', 'gm-hint', 'hint', step.hint)
     h.id = `${id}-h`
@@ -166,13 +183,13 @@ export function renderPopover(
   const last = i === total - 1
   const skip = opts.skip !== false && total > 1 && !last
   if (opts.closeButton ?? !skip) {
-    const x = button('×', 'gm-btn gm-x', 'close', act.stop)
+    const x = button('×', 'gm-btn gm-x', 'close', act.close)
     x.setAttribute('aria-label', labels.close)
     pop.appendChild(x)
   }
 
   const foot = part('div', 'gm-foot', 'footer')
-  if (skip) foot.appendChild(button(labels.skip, 'gm-skip', 'skip', act.stop))
+  if (skip) foot.appendChild(button(labels.skip, 'gm-skip', 'skip', act.skip))
   if (showProgress && total > 1)
     foot.appendChild(part('span', prog === 'dots' ? 'gm-progress gm-sr' : 'gm-progress', 'progress', progressText(labels, i, total)))
   if (i > 0) foot.appendChild(button(labels.previous, 'gm-btn', 'button button-secondary', act.previous))

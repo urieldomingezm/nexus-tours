@@ -1,5 +1,6 @@
 // Límites de tamaño (gzip) de cada archivo publicado. Requiere `npm run build`.
-// Uso: npm run size     (falla si algún archivo pasa su límite)
+// Uso: npm run size                          (falla si algún archivo pasa su límite)
+//      node scripts/tamano.mjs --base <dir>  (además compara contra otra compilación, p. ej. la de main)
 import { gzipSync } from 'node:zlib'
 import { readFileSync, existsSync, appendFileSync } from 'node:fs'
 
@@ -20,21 +21,31 @@ if (!existsSync('dist/nexus-tours.js')) {
   process.exit(1)
 }
 
+const i = process.argv.indexOf('--base')
+const base = i > 0 ? process.argv[i + 1] : null
+const gz = (ruta) => (existsSync(ruta) ? gzipSync(readFileSync(ruta)).length / 1024 : null)
+
 let fallos = 0
 const filas = []
 for (const [archivo, max] of Object.entries(LIMITES)) {
-  const kb = gzipSync(readFileSync(`dist/${archivo}.js`)).length / 1024
+  const kb = gz(`dist/${archivo}.js`)
   const ok = kb < max
   if (!ok) fallos++
-  filas.push(`| ${archivo}.js | ${kb.toFixed(2)} KB | ${max} KB | ${ok ? '✅' : '❌'} |`)
-  console.log(`${ok ? '✓' : '✗'} ${archivo}.js  ${kb.toFixed(2)} KB gzip (límite ${max} KB)`)
+  let cambio = ''
+  if (base) {
+    const antes = gz(`${base}/dist/${archivo}.js`)
+    const d = antes === null ? null : Math.round((kb - antes) * 1024)
+    cambio = d === null ? 'nuevo' : `${d > 0 ? '+' : ''}${d} B`
+  }
+  filas.push(`| ${archivo}.js | ${kb.toFixed(2)} KB | ${base ? `${cambio} | ` : ''}${max} KB | ${ok ? '✅' : '❌'} |`)
+  console.log(`${ok ? '✓' : '✗'} ${archivo}.js  ${kb.toFixed(2)} KB gzip${base ? ` (${cambio} vs base)` : ''} (límite ${max} KB)`)
 }
 
 // En GitHub Actions deja la tabla en el resumen del job.
 if (process.env.GITHUB_STEP_SUMMARY) {
-  appendFileSync(
-    process.env.GITHUB_STEP_SUMMARY,
-    ['### Tamaño (gzip)', '', '| Archivo | Tamaño | Límite | |', '|---|---|---|---|', ...filas, ''].join('\n'),
-  )
+  const cabecera = base
+    ? ['| Archivo | Tamaño | Cambio vs base | Límite | |', '|---|---|---|---|---|']
+    : ['| Archivo | Tamaño | Límite | |', '|---|---|---|---|']
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, ['### Tamaño (gzip)', '', ...cabecera, ...filas, ''].join('\n'))
 }
 process.exit(fallos ? 1 : 0)

@@ -1,6 +1,6 @@
 // Tour: ciclo de vida, navegación entre pasos, espera de objetivos y seguimiento en cada frame.
 // El DOM, la posición, el teclado y el progreso guardado viven en ./core/*.
-import type { AdvanceOn, Labels, Router, Step, StepContext, TourApi, TourEvent, TourOptions, TourStatus } from './types'
+import type { AdvanceOn, Labels, Router, Step, StepContext, StopReason, TourApi, TourEvent, TourOptions, TourStatus } from './types'
 import { PracticeSession } from './practice'
 import { isVisible, waitForElement } from './wait'
 import { confetti } from './confetti'
@@ -41,6 +41,8 @@ export class Tour implements TourApi {
   private untilFn: (() => void) | null = null
   private spacer: HTMLElement | null = null
   private onKey: (e: KeyboardEvent) => void
+  private startedAt = 0
+  private stepAt = 0
 
   constructor(options: TourOptions) {
     this.opts = {
@@ -81,7 +83,7 @@ export class Tour implements TourApi {
       },
       next: () => void self.next(),
       previous: () => void self.previous(),
-      stop: () => self.stop(),
+      stop: () => self.close('esc'),
     })
   }
 
@@ -95,15 +97,16 @@ export class Tour implements TourApi {
     return this.session?.db
   }
 
-  on(event: TourEvent, fn: (ctx: StepContext) => void) {
+  on(event: TourEvent, fn: (ctx: StepContext) => void): () => void {
     let set = this.listeners.get(event)
     if (!set) this.listeners.set(event, (set = new Set()))
     set.add(fn)
     return () => void set!.delete(fn)
   }
 
-  private emit(event: TourEvent) {
+  private emit(event: TourEvent, reason?: StopReason) {
     const ctx = this.ctx()
+    if (reason) ctx.reason = reason
     this.listeners.get(event)?.forEach((fn) => {
       try {
         fn(ctx)
@@ -111,10 +114,40 @@ export class Tour implements TourApi {
         console.error('[nexus-tours]', e)
       }
     })
+    const track = this.opts.onEvent
+    if (track) {
+      const now = Date.now()
+      try {
+        track({
+          type: event,
+          tourId: this.opts.id ?? this.opts.persist?.id,
+          index: this._index,
+          total: this.opts.steps.length,
+          stepId: ctx.step?.id,
+          title: ctx.step?.title,
+          reason,
+          elapsed: now - this.startedAt,
+          stepElapsed: this.stepAt ? now - this.stepAt : 0,
+        })
+      } catch (e) {
+        console.error('[nexus-tours] onEvent()', e)
+      }
+    }
   }
 
   private ctx(): StepContext {
-    return { index: this._index, step: this.opts.steps[this._index] as Step, element: this.target, tour: this }
+    return {
+      index: this._index,
+      total: this.opts.steps.length,
+      step: this.opts.steps[this._index] as Step,
+      element: this.target,
+      tour: this,
+    }
+  }
+
+  /** Step index from an index or a step `id` (-1 when the id doesn't exist). */
+  private resolveIndex(step: number | string): number {
+    return typeof step === 'number' ? step : this.opts.steps.findIndex((s) => s.id === step)
   }
 
   /** The current step only moves on with the user's action. */
@@ -129,7 +162,7 @@ export class Tour implements TourApi {
   }
 
   async startIfNeeded() {
-    if (this._active || !this.opts.steps.length) return false
+    if (typeof document === 'undefined' || this._active || !this.opts.steps.length) return false
     const s = await this.progress.load()
     if (s && s.status !== 'in-progress') return false
     await this.start(Math.min(Math.max(0, s?.index ?? 0), this.opts.steps.length - 1))
@@ -142,9 +175,18 @@ export class Tour implements TourApi {
 
   // ---------------------------------------------------------------- lifecycle
 
-  async start(index = 0) {
+  async start(step: number | string = 0) {
+    // SSR (Nuxt, Next…): there is no DOM to show a tour in.
+    if (typeof document === 'undefined') return
     if (this._active || !this.opts.steps.length) return
+    const index = this.resolveIndex(step)
+    if (index < 0) {
+      console.warn(`[nexus-tours] start(): no step with id "${step}"`)
+      return
+    }
     this._active = true
+    this.startedAt = Date.now()
+    this.stepAt = 0
     this.previousFocus = document.activeElement
     if (this.progress.enabled) {
       this.progress.saved = await this.progress.load()
@@ -162,16 +204,29 @@ export class Tour implements TourApi {
   }
 
   async next() {
+    if (!this._active) return
+    this.emit('next')
     this.dir = 1
-    return this.goTo(this._index + 1)
+    return this.move(this._index + 1)
   }
 
   async previous() {
+    if (!this._active || this._index <= 0) return
+    this.emit('previous')
     this.dir = -1
-    return this.goTo(Math.max(0, this._index - 1))
+    return this.move(this._index - 1)
   }
 
-  async goTo(index: number) {
+  async goTo(step: number | string) {
+    const index = this.resolveIndex(step)
+    if (index < 0) {
+      console.warn(`[nexus-tours] goTo(): no step with id "${step}"`)
+      return
+    }
+    return this.move(index)
+  }
+
+  private async move(index: number) {
     if (!this._active) return
     if (index !== this._index) this.dir = index > this._index ? 1 : -1
     const my = ++this.nav
@@ -183,8 +238,12 @@ export class Tour implements TourApi {
   }
 
   stop() {
+    this.close('api')
+  }
+
+  private close(reason: StopReason) {
     if (!this._active) return
-    this.emit('stop')
+    this.emit('stop', reason)
     void this.leave()
     this.teardown()
   }
@@ -252,7 +311,7 @@ export class Tour implements TourApi {
         try {
           const now = step.element !== undefined ? resolveRef(step.element) : null
           if (!now || !isVisible(now)) clickAll(step.beforeClick)
-          await step.before?.({ index: i, step, element: null, tour: this })
+          await step.before?.({ index: i, total: this.opts.steps.length, step, element: null, tour: this })
         } catch (e) {
           console.error('[nexus-tours] before()', e)
         }
@@ -269,21 +328,32 @@ export class Tour implements TourApi {
       this.target = el
       this.shown = step
       this.mount(el)
-      this.arrow = renderPopover(ui.pop, ui.live, step, i, this.opts, this.labels, {
-        next: () => void this.next(),
-        previous: () => void this.previous(),
-        stop: () => this.stop(),
-        dismiss: () => {
-          this.progress.write('dismissed', this._index, true)
-          this.stop()
+      this.arrow = renderPopover(
+        ui.pop,
+        ui.live,
+        step,
+        i,
+        this.opts,
+        this.labels,
+        {
+          next: () => void this.next(),
+          previous: () => void this.previous(),
+          skip: () => this.close('skip'),
+          close: () => this.close('close'),
+          dismiss: () => {
+            this.progress.write('dismissed', this._index, true)
+            this.close('dismiss')
+          },
         },
-      })
+        this.ctx(),
+      )
       this.reposition(true)
       if (el) {
         this.reveal(el) // after the first layout: on phones it needs the sheet's height
         this.reposition(true)
       }
       ui.pop.focus({ preventScroll: true })
+      this.stepAt = Date.now()
       this.emit('step')
       this.progress.write('in-progress', i)
       this.armAdvance(step)
@@ -296,7 +366,7 @@ export class Tour implements TourApi {
   private async missing(i: number, step: Step, my: number): Promise<void> {
     this.target = null
     this.emit('missing')
-    if ((step.onMissing ?? this.opts.onMissing) === 'stop') return this.stop()
+    if ((step.onMissing ?? this.opts.onMissing) === 'stop') return this.close('missing')
     let n = i + this.dir
     if (n < 0) {
       this.dir = 1
@@ -392,7 +462,7 @@ export class Tour implements TourApi {
 
   private build() {
     const ui = createShell(this.opts, this.labels)
-    ui.backdrop.addEventListener('click', () => this.opts.closeOnBackdrop && this.stop())
+    ui.backdrop.addEventListener('click', () => this.opts.closeOnBackdrop && this.close('backdrop'))
     // Phone: swipe the sheet sideways to move between steps.
     let sx = 0
     let sy = 0
@@ -522,6 +592,7 @@ export class Tour implements TourApi {
     this.target = null
     this.shown = null
     this._index = -1
+    this.stepAt = 0
     const prev = this.previousFocus
     this.previousFocus = null
     if (prev instanceof HTMLElement && prev.isConnected) prev.focus({ preventScroll: true })

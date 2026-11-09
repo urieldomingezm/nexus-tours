@@ -17,7 +17,7 @@ export function useTour(options: UseTourOptions | (() => UseTourOptions), handle
   const active = ref(false)
   const index = ref(-1)
 
-  async function start(at = 0) {
+  async function start(at: number | string = 0) {
     const prev = tour.value
     tour.value = null // so the old tour's "stop" is ignored below
     prev?.destroy()
@@ -32,6 +32,8 @@ export function useTour(options: UseTourOptions | (() => UseTourOptions), handle
     wrap('start', () => (active.value = true))
     wrap('step', () => (index.value = ctx(t)))
     wrap('missing')
+    wrap('next')
+    wrap('previous')
     const off = () => {
       active.value = false
       index.value = -1
@@ -56,7 +58,7 @@ export function useTour(options: UseTourOptions | (() => UseTourOptions), handle
     stop: () => tour.value?.stop(),
     next: () => tour.value?.next(),
     previous: () => tour.value?.previous(),
-    goTo: (i: number) => tour.value?.goTo(i),
+    goTo: (step: number | string) => tour.value?.goTo(step),
     active,
     index,
     tour,
@@ -73,14 +75,16 @@ export const NexusTour = defineComponent({
     steps: { type: Array as PropType<Step[]>, required: true },
     options: { type: Object as PropType<Omit<TourOptions, 'steps'>>, default: () => ({}) },
     modelValue: { type: Boolean, default: false },
-    startAt: { type: Number, default: 0 },
+    startAt: { type: [Number, String], default: 0 },
   },
-  emits: ['update:modelValue', 'start', 'step', 'missing', 'end', 'stop'],
+  emits: ['update:modelValue', 'start', 'step', 'next', 'previous', 'missing', 'end', 'stop'],
   setup(props, { emit, slots }) {
     const close = () => emit('update:modelValue', false)
     const api = useTour(() => ({ ...props.options, steps: props.steps }), {
       start: (c) => emit('start', c),
       step: (c) => emit('step', c),
+      next: (c) => emit('next', c),
+      previous: (c) => emit('previous', c),
       missing: (c) => emit('missing', c),
       end: (c) => (emit('end', c), close()),
       stop: (c) => (emit('stop', c), close()),

@@ -20,7 +20,7 @@ export function useTour(options: UseTourOptions, handlers: TourHandlers = {}) {
   const [active, setActive] = useState(false)
   const [index, setIndex] = useState(-1)
 
-  const start = useCallback(async (at = 0) => {
+  const start = useCallback(async (at: number | string = 0) => {
     const prev = ref.current
     ref.current = null // so the old tour's "stop" is ignored below
     prev?.destroy()
@@ -35,6 +35,8 @@ export function useTour(options: UseTourOptions, handlers: TourHandlers = {}) {
     wrap('start', () => setActive(true))
     wrap('step', () => setIndex(t.index))
     wrap('missing')
+    wrap('next')
+    wrap('previous')
     const off = () => {
       setActive(false)
       setIndex(-1)
@@ -58,7 +60,7 @@ export function useTour(options: UseTourOptions, handlers: TourHandlers = {}) {
     stop: useCallback(() => ref.current?.stop(), []),
     next: useCallback(() => ref.current?.next(), []),
     previous: useCallback(() => ref.current?.previous(), []),
-    goTo: useCallback((i: number) => ref.current?.goTo(i), []),
+    goTo: useCallback((step: number | string) => ref.current?.goTo(step), []),
     active,
     index,
   }
@@ -70,22 +72,28 @@ export interface NexusTourProps extends Omit<TourOptions, 'steps'> {
   open: boolean
   /** Called with false when the tour ends or is closed. */
   onOpenChange?: (open: boolean) => void
-  startAt?: number
+  /** Step index or `id` to start at. */
+  startAt?: number | string
   onStart?: (ctx: StepContext) => void
   onStep?: (ctx: StepContext) => void
+  onNext?: (ctx: StepContext) => void
+  onPrevious?: (ctx: StepContext) => void
   /** The target of a step never showed up (see `onMissing` option for what happens next). */
   onTargetMissing?: (ctx: StepContext) => void
   onEnd?: (ctx: StepContext) => void
+  /** Closed before the end; `ctx.reason` says how (skip, close, esc, backdrop, dismiss, missing, api). */
   onStop?: (ctx: StepContext) => void
   children?: ReactNode
 }
 
 /** `<NexusTour open={open} onOpenChange={setOpen} steps={steps} theme={…} />` — renders nothing. */
 export function NexusTour(props: NexusTourProps) {
-  const { open, onOpenChange, startAt = 0, onStart, onStep, onTargetMissing, onEnd, onStop, ...options } = props
+  const { open, onOpenChange, startAt = 0, onStart, onStep, onNext, onPrevious, onTargetMissing, onEnd, onStop, ...options } = props
   const api = useTour(options as UseTourOptions, {
     start: onStart,
     step: onStep,
+    next: onNext,
+    previous: onPrevious,
     missing: onTargetMissing,
     end: (c) => (onEnd?.(c), onOpenChange?.(false)),
     stop: (c) => (onStop?.(c), onOpenChange?.(false)),
