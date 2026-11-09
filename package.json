@@ -77,6 +77,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "size": "node scripts/tamano.mjs",
+    "api": "node scripts/api.mjs",
+    "api:check": "node scripts/api.mjs --check",
     "prepublishOnly": "npm run build",
     "demo:publicar": "node scripts/publicar-demo.mjs"
   },
