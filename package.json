@@ -8,51 +8,126 @@
   "unpkg": "./dist/nexus-tours.all.iife.js",
   "jsdelivr": "./dist/nexus-tours.all.iife.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "all": [
+        "./dist/global.d.ts"
+      ],
+      "fixtures": [
+        "./dist/fixtures.d.ts"
+      ],
+      "themes": [
+        "./dist/themes.d.ts"
+      ],
+      "vue": [
+        "./dist/vue.d.ts"
+      ],
+      "react": [
+        "./dist/react.d.ts"
+      ],
+      "builder": [
+        "./dist/builder.d.ts"
+      ],
+      "supabase": [
+        "./dist/supabase.d.ts"
+      ],
+      "checklist": [
+        "./dist/checklist.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/nexus-tours.js",
-      "require": "./dist/nexus-tours.umd.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/nexus-tours.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/nexus-tours.umd.cjs"
+      }
     },
     "./all": {
-      "types": "./dist/global.d.ts",
-      "import": "./dist/nexus-tours.all.js"
+      "import": {
+        "types": "./dist/global.d.ts",
+        "default": "./dist/nexus-tours.all.js"
+      },
+      "default": {
+        "types": "./dist/global.d.ts",
+        "default": "./dist/nexus-tours.all.js"
+      }
     },
     "./fixtures": {
-      "types": "./dist/fixtures.d.ts",
-      "import": "./dist/fixtures.js",
-      "require": "./dist/fixtures.umd.cjs"
+      "import": {
+        "types": "./dist/fixtures.d.ts",
+        "default": "./dist/fixtures.js"
+      },
+      "require": {
+        "types": "./dist/fixtures.d.cts",
+        "default": "./dist/fixtures.umd.cjs"
+      }
     },
     "./themes": {
-      "types": "./dist/themes.d.ts",
-      "import": "./dist/themes.js",
-      "require": "./dist/themes.umd.cjs"
+      "import": {
+        "types": "./dist/themes.d.ts",
+        "default": "./dist/themes.js"
+      },
+      "require": {
+        "types": "./dist/themes.d.cts",
+        "default": "./dist/themes.umd.cjs"
+      }
     },
     "./vue": {
-      "types": "./dist/vue.d.ts",
-      "import": "./dist/vue.js",
-      "require": "./dist/vue.cjs"
+      "import": {
+        "types": "./dist/vue.d.ts",
+        "default": "./dist/vue.js"
+      },
+      "require": {
+        "types": "./dist/vue.d.cts",
+        "default": "./dist/vue.cjs"
+      }
     },
     "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
     },
     "./builder": {
-      "types": "./dist/builder.d.ts",
-      "import": "./dist/builder.js",
-      "require": "./dist/builder.cjs"
+      "import": {
+        "types": "./dist/builder.d.ts",
+        "default": "./dist/builder.js"
+      },
+      "require": {
+        "types": "./dist/builder.d.cts",
+        "default": "./dist/builder.cjs"
+      }
     },
     "./supabase": {
-      "types": "./dist/supabase.d.ts",
-      "import": "./dist/supabase.js",
-      "require": "./dist/supabase.cjs"
+      "import": {
+        "types": "./dist/supabase.d.ts",
+        "default": "./dist/supabase.js"
+      },
+      "require": {
+        "types": "./dist/supabase.d.cts",
+        "default": "./dist/supabase.cjs"
+      }
     },
     "./checklist": {
-      "types": "./dist/checklist.d.ts",
-      "import": "./dist/checklist.js",
-      "require": "./dist/checklist.cjs"
-    }
+      "import": {
+        "types": "./dist/checklist.d.ts",
+        "default": "./dist/checklist.js"
+      },
+      "require": {
+        "types": "./dist/checklist.d.cts",
+        "default": "./dist/checklist.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -63,7 +138,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode supabase && vite build --mode builder && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json",
+    "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode supabase && vite build --mode builder && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json && node scripts/tipos.mjs",
     "build:site": "vite build --mode site",
     "docs:api": "typedoc",
     "build:demo": "vite build --mode demo",
@@ -80,6 +155,7 @@
     "size": "node scripts/tamano.mjs",
     "api": "node scripts/api.mjs",
     "api:check": "node scripts/api.mjs --check",
+    "check:paquete": "attw --pack . --ignore-rules cjs-resolves-to-esm && node scripts/probar-paquete.mjs",
     "prepublishOnly": "npm run build",
     "demo:publicar": "node scripts/publicar-demo.mjs"
   },
@@ -106,6 +182,7 @@
     "url": "https://github.com/urieldomingezm/nexus-tours/issues"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.65.0",

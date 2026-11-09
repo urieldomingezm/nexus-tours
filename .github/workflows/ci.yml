@@ -67,6 +67,21 @@ jobs:
           name: demo-portafolio
           path: demo-dist
 
+  paquete:
+    name: Paquete publicado (tipos, Node, Vite, webpack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Are The Types Wrong + proyectos de prueba
+        run: npm run check:paquete
+
   e2e:
     name: E2E (${{ matrix.navegador }})
     runs-on: ubuntu-latest

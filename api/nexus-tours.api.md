@@ -163,7 +163,7 @@ class Tour implements TourApi {
     constructor(options: TourOptions);
     get index(): number;
     get active(): boolean;
-    get practiceData(): import("./practice").Db | undefined;
+    get practiceData(): import("./practice.js").Db | undefined;
     on(event: TourEvent, fn: (ctx: StepContext) => void): () => void;
     status(): Promise<TourStatus>;
     startIfNeeded(): Promise<boolean>;
@@ -475,7 +475,7 @@ class Tour implements TourApi {
     constructor(options: TourOptions);
     get index(): number;
     get active(): boolean;
-    get practiceData(): import("./practice").Db | undefined;
+    get practiceData(): import("./practice.js").Db | undefined;
     on(event: TourEvent, fn: (ctx: StepContext) => void): () => void;
     status(): Promise<TourStatus>;
     startIfNeeded(): Promise<boolean>;

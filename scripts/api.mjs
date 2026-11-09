@@ -10,8 +10,9 @@ const SALIDA = 'api/nexus-tours.api.md'
 const check = process.argv.includes('--check')
 
 const entradas = Object.entries(pkg.exports)
-  .filter(([, v]) => typeof v === 'object' && v.types)
-  .map(([ruta, v]) => ({ nombre: ruta === '.' ? pkg.name : `${pkg.name}/${ruta.slice(2)}`, archivo: v.types }))
+  .map(([ruta, v]) => [ruta, typeof v === 'object' ? (v.import?.types ?? v.types ?? v.default?.types) : null])
+  .filter(([, tipos]) => tipos)
+  .map(([ruta, tipos]) => ({ nombre: ruta === '.' ? pkg.name : `${pkg.name}/${ruta.slice(2)}`, archivo: tipos }))
 
 for (const e of entradas) {
   if (!existsSync(e.archivo)) {
