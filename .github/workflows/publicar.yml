@@ -31,17 +31,20 @@ jobs:
 
       - run: npm ci
 
-      - name: Tipos
-        run: npx tsc --noEmit
+      - name: Lint, formato y tipos
+        run: npm run lint && npm run format:check && npm run typecheck
 
-      - name: Compilar
-        run: npm run build
+      - name: Pruebas unitarias
+        run: npm run test:coverage
 
-      - name: Instalar Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Compilar y revisar tamaño
+        run: npm run build && npm run size && npm run build:site && npm run build:demo
 
-      - name: Pruebas
-        run: npm run build:site && npm run build:demo && npm test
+      - name: Instalar navegadores
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Pruebas de punta a punta (3 navegadores)
+        run: npm run test:e2e
 
       - name: La etiqueta coincide con la versión
         if: startsWith(github.ref, 'refs/tags/v')
