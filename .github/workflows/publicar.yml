@@ -38,7 +38,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Compilar y revisar tamaño
-        run: npm run build && npm run size && npm run api:check && npm run build:site && npm run build:demo
+        run: npm run build && npm run size && npm run api:check && npm run check:paquete && npm run build:site && npm run build:demo
 
       - name: Instalar navegadores
         run: npx playwright install --with-deps chromium firefox webkit
