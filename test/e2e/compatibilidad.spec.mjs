@@ -120,6 +120,8 @@ for (const [nombre, { vars, esperado }] of Object.entries(FRAMEWORKS)) {
     const color = await p.evaluate(
       () => getComputedStyle(document.querySelector('[data-nexus-tours]').shadowRoot.querySelector('.gm-primary')).backgroundColor,
     )
-    ok(color === esperado, `${nombre}: botón con el primario del framework (${color})`)
+    // Cada navegador serializa los decimales a su manera (WebKit: 276.966003): se comparan redondeados.
+    const norm = (c) => c.replace(/\d+\.\d+/g, (n) => String(Math.round(parseFloat(n) * 1000) / 1000))
+    ok(norm(color) === norm(esperado), `${nombre}: botón con el primario del framework (${color})`)
   })
 }
