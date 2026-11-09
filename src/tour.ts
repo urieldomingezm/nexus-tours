@@ -198,6 +198,7 @@ export class Tour implements TourApi {
       this.session.start()
     }
     document.addEventListener('keydown', this.onKey, true)
+    document.addEventListener('focusin', this.onFocusIn, true)
     this.emit('start')
     this.tick()
     await this.goTo(index)
@@ -481,10 +482,22 @@ export class Tour implements TourApi {
 
   private mount(target: Element | null) {
     const root = this.ui!.host
-    const host = modalHost(target) ?? this.opts.container ?? document.body
+    const host = modalHost(target, this.opts.modalSelector) ?? this.opts.container ?? document.body
     if (root.parentElement !== host) host.appendChild(root)
     // Re-showing puts the tour on top of anything opened after it (new dialogs, popovers).
     raise(root)
+  }
+
+  /**
+   * Modal libraries (Bootstrap, MUI, Vuetify…) focus their container when their open animation ends, taking focus
+   * away from the tour. If focus lands on an element that *contains* the tour, give it back. Focus moving to a field
+   * or button the user chose is left alone.
+   */
+  private onFocusIn = (e: FocusEvent) => {
+    const ui = this.ui
+    const to = e.target
+    if (!ui || !this.shown || !(to instanceof Element) || to === ui.host || !to.contains(ui.host)) return
+    ui.pop.focus({ preventScroll: true })
   }
 
   // ---------------------------------------------------------------- layout
@@ -578,12 +591,17 @@ export class Tour implements TourApi {
     this.busy = false
     cancelAnimationFrame(this.raf)
     document.removeEventListener('keydown', this.onKey, true)
+    document.removeEventListener('focusin', this.onFocusIn, true)
     this.clearAdvance()
     this.spacer?.remove()
     this.spacer = null
     this.session?.stop()
     this.session = null
+    // The modal the tour was living in (if it is still open): focus must stay inside it.
+    let modal: HTMLElement | null = null
     if (this.ui) {
+      const parent = this.ui.host.parentElement
+      if (parent && parent !== document.body && parent !== this.opts.container && parent.isConnected) modal = parent
       lower(this.ui.host)
       this.ui.host.remove()
       this.ui = null
@@ -595,7 +613,16 @@ export class Tour implements TourApi {
     this.stepAt = 0
     const prev = this.previousFocus
     this.previousFocus = null
-    if (prev instanceof HTMLElement && prev.isConnected) prev.focus({ preventScroll: true })
+    if (prev instanceof HTMLElement && prev.isConnected && prev !== document.body && (!modal || modal.contains(prev))) {
+      prev.focus({ preventScroll: true })
+    } else if (modal && isVisible(modal)) {
+      // Closing the tour must not drop focus outside an open modal (Esc / Tab would stop working there).
+      modal.focus({ preventScroll: true })
+      if (!modal.contains(document.activeElement))
+        modal
+          .querySelector<HTMLElement>('input,select,textarea,button,[href],[tabindex]:not([tabindex="-1"])')
+          ?.focus({ preventScroll: true })
+    }
   }
 }
 

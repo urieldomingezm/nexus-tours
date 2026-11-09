@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es" data-bs-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bootstrap 5</title>
+<!-- Página de prueba: componentes reales de Bootstrap 5 (CSS + JS) con nexus-tours. -->
+</head>
+<body>
+<nav class="navbar navbar-expand bg-body-tertiary px-3">
+  <span class="navbar-brand">Demo</span>
+  <div class="dropdown ms-auto">
+    <button id="menu" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Cuenta</button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><a id="perfil" class="dropdown-item" href="#">Perfil</a></li>
+      <li><a class="dropdown-item" href="#">Salir</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <button id="abrir" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal">Nuevo cliente</button>
+  <button id="panel" class="btn btn-secondary" data-bs-toggle="offcanvas" data-bs-target="#lateral">Filtros</button>
+
+  <ul class="nav nav-tabs mt-4" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t1" type="button" role="tab">General</button></li>
+    <li class="nav-item"><button id="tab2" class="nav-link" data-bs-toggle="tab" data-bs-target="#t2" type="button" role="tab">Avanzado</button></li>
+  </ul>
+  <div class="tab-content border border-top-0 p-3">
+    <div class="tab-pane fade show active" id="t1" role="tabpanel">Opciones generales</div>
+    <div class="tab-pane fade" id="t2" role="tabpanel"><button id="avanzado" class="btn btn-warning">Opción avanzada</button></div>
+  </div>
+
+  <div class="accordion mt-4" id="acordeon">
+    <div class="accordion-item">
+      <h2 class="accordion-header"><button id="acc" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#c1">Ayuda</button></h2>
+      <div id="c1" class="accordion-collapse collapse" data-bs-parent="#acordeon"><div class="accordion-body"><a id="soporte" href="#">Contactar soporte</a></div></div>
+    </div>
+  </div>
+</main>
+
+<div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal-titulo">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h1 class="modal-title fs-5" id="modal-titulo">Nuevo cliente</h1><button id="cerrar" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+      <div class="modal-body"><label class="form-label" for="nombre">Nombre</label><input id="nombre" class="form-control"></div>
+      <div class="modal-footer"><button id="guardar" class="btn btn-primary">Guardar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="lateral">
+  <div class="offcanvas-header"><h5 class="offcanvas-title">Filtros</h5><button class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button></div>
+  <div class="offcanvas-body"><select id="estado" class="form-select"><option>Activos</option><option>Todos</option></select></div>
+</div>
+
+<script type="module">
+  import 'bootstrap/dist/css/bootstrap.min.css'
+  import * as bootstrap from 'bootstrap'
+  import { Tour } from 'nexus-tours'
+  import { themes } from 'nexus-tours/themes'
+  window.bootstrap = bootstrap
+  window.Tour = Tour
+  window.themes = themes
+  window.ready = true
+</script>
+</body>
+</html>
