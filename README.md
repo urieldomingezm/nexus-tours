@@ -35,6 +35,7 @@ La mayoría de las librerías de tours fallan cuando el elemento a explicar vive
    - [Contenido enriquecido](#414-contenido-enriquecido)
    - [Renderizado en servidor (Nuxt, Next)](#415-renderizado-en-servidor-nuxt-next)
    - [Bootstrap, Tailwind y otros frameworks](#416-bootstrap-tailwind-y-otros-frameworks)
+   - [SweetAlert2](#417-sweetalert2)
 5. [Referencia de la API](#5-referencia-de-la-api)
 6. [Accesibilidad](#6-accesibilidad)
 7. [Tamaños y compatibilidad](#7-tamaños-y-compatibilidad)
@@ -525,6 +526,7 @@ new Tour({ steps, theme: { ...themes.tailwind, accent: 'var(--color-emerald-600)
 | `daisyui` | `--color-primary`, `--color-base-100`, `--radius-box`… | daisyUI 5; sigue el `data-theme` activo |
 | `vuetify` | `--v-theme-primary`, `--v-theme-surface`… | Vuetify 3, claro y oscuro |
 | `mui` | `--mui-palette-primary-main`… | Material UI con variables CSS (`cssVariables: true`) |
+| `sweetalert2` | `--swal2-confirm-button-background-color`, `--swal2-background`… | SweetAlert2 11, incluido su tema oscuro ([4.17](#417-sweetalert2)) |
 
 Si una variable no existe se usa el color por defecto de ese framework.
 
@@ -539,6 +541,29 @@ Con Bootstrap, abre y cierra sus componentes desde los pasos con `beforeClick` /
 ```ts
 { element: '#nombre', title: 'Nombre del cliente', beforeClick: '#btn-nuevo', afterClick: '#modal .btn-close' }
 ```
+
+### 4.17 SweetAlert2
+
+El tour puede guiar al usuario **dentro** de una alerta de SweetAlert2 (confirmaciones, alertas con campos, toasts) y seguir en la página cuando se cierra:
+
+```ts
+import { themes } from 'nexus-tours/themes'
+
+new Tour({
+  theme: themes.sweetalert2,                // mismo morado, fondo y bordes que tus alertas
+  steps: [
+    { element: '#eliminar', title: 'Eliminar un cliente' },
+    { element: '.swal2-title', title: 'Te pedimos confirmar', beforeClick: '#eliminar' },   // abre la alerta y espera su animación
+    { element: '.swal2-confirm', title: 'Confirma aquí', advanceOn: 'click', hideNext: true },
+    { element: '#lista', title: 'Listo, ya no aparece' },
+  ],
+})
+```
+
+- **Usa `advanceOn: 'click'`** en el paso del botón que cierra la alerta (confirmar, cancelar): el tour avanza en cuanto el usuario lo pulsa, también si confirma con Enter. Sin `advanceOn`, el tour espera a que el botón vuelva a aparecer (`waitTimeout`) antes de saltarse el paso.
+- **Abre la alerta con `beforeClick`** sobre el botón que la dispara. Si la abres desde `before`, no esperes la promesa: `before: () => { Swal.fire({…}) }`, sin `await`, porque `Swal.fire()` se resuelve hasta que la alerta se cierra.
+- **Teclado.** Mientras el foco está en el tour, Tab y las flechas son del tour, aunque SweetAlert2 también las escuche. Esc cierra solo el tour; la alerta sigue abierta y con el foco, y un segundo Esc la cierra. Enter dentro del campo de la alerta lo sigue manejando SweetAlert2.
+- **Lectores de pantalla.** SweetAlert2 pone `aria-hidden="true"` en todo lo que no es la alerta. El tour se lo quita a sí mismo (también `inert`, que usan otras librerías), así que nunca queda oculto.
 
 ---
 

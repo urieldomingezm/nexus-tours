@@ -30,6 +30,8 @@ export function createKeyHandler(t: KeyTarget) {
     }
 
     if (e.key === 'Tab' && (inPop || !origin || origin === document.body)) {
+      // Dialog libraries listen to Tab on their own container (SweetAlert2, focus traps): this one is the tour's.
+      e.stopPropagation()
       const items = Array.from(pop.querySelectorAll<HTMLButtonElement>('button')).filter((b) => !b.disabled)
       if (!items.length) return
       const first = items[0] as HTMLElement
@@ -52,10 +54,12 @@ export function createKeyHandler(t: KeyTarget) {
     const back = t.rtl ? 'ArrowRight' : 'ArrowLeft'
     if (e.key === fwd || (e.key === 'Enter' && !(origin instanceof HTMLButtonElement))) {
       e.preventDefault()
+      if (inPop) e.stopPropagation()
       if (t.locked) return
       t.next()
     } else if (e.key === back) {
       e.preventDefault()
+      if (inPop) e.stopPropagation()
       t.previous()
     }
   }
