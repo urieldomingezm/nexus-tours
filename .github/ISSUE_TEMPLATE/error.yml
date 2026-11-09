@@ -1,0 +1,44 @@
+name: Reportar un error
+description: Algo no funciona como dice la documentación.
+labels: [error]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Versión de nexus-tours
+      placeholder: '0.1.0'
+    validations:
+      required: true
+  - type: input
+    id: navegador
+    attributes:
+      label: Navegador y sistema
+      placeholder: Safari 18 en iOS, Chrome 140 en Windows…
+    validations:
+      required: true
+  - type: dropdown
+    id: entorno
+    attributes:
+      label: ¿Cómo lo usas?
+      options: [JavaScript / TypeScript, Vue, React, CDN (script), Otro]
+    validations:
+      required: true
+  - type: textarea
+    id: que-pasa
+    attributes:
+      label: ¿Qué pasa y qué esperabas?
+    validations:
+      required: true
+  - type: textarea
+    id: reproducir
+    attributes:
+      label: Cómo reproducirlo
+      description: El código mínimo del tour (pasos y opciones) y, si puedes, un enlace a StackBlitz o CodePen.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: consola
+    attributes:
+      label: Errores en la consola
+      render: text
