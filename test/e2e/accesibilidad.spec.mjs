@@ -97,7 +97,21 @@ test('tour: aviso de modo práctica y barra de progreso (más de 10 pasos)', asy
   await auditar(p, '[data-nexus-tours]')
 })
 
-for (const tema of ['light', 'dark', 'ocean', 'sunset', 'mint', 'rose', 'mono']) {
+for (const tema of [
+  'light',
+  'dark',
+  'ocean',
+  'sunset',
+  'mint',
+  'rose',
+  'mono',
+  'bootstrap',
+  'tailwind',
+  'shadcn',
+  'daisyui',
+  'vuetify',
+  'mui',
+]) {
   test(`tema ${tema}: contraste suficiente`, async ({ nuevoContexto, vigilar }) => {
     const p = await abrir(nuevoContexto, vigilar, '')
     await p.waitForFunction(() => window.makeTour)

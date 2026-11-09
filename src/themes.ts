@@ -79,7 +79,90 @@ export const rose: Theme = {
   radius: '16px',
 }
 
-export const themes = { light, dark, ocean, sunset, mint, rose, mono } as const
+// ---------------------------------------------------------------- your framework's colors
+// These read your framework's CSS variables, so the tour follows your brand and its dark mode automatically.
+// The fallbacks are the framework defaults, used when a variable isn't defined.
+const v = (name: string, fallback: string) => `var(${name}, ${fallback})`
+
+/** Bootstrap 5.3 (`--bs-*`), including `data-bs-theme="dark"`. */
+export const bootstrap: Theme = {
+  accent: v('--bs-primary', '#0d6efd'),
+  accentContrast: '#ffffff',
+  background: v('--bs-body-bg', '#ffffff'),
+  text: v('--bs-body-color', '#212529'),
+  muted: v('--bs-secondary-color', 'rgba(33,37,41,.75)'),
+  border: v('--bs-border-color-translucent', 'rgba(0,0,0,.175)'),
+  overlay: 'rgba(0,0,0,.5)',
+  radius: v('--bs-border-radius-lg', '.5rem'),
+  font: v('--bs-body-font-family', 'system-ui,sans-serif'),
+}
+
+/** Tailwind CSS v4 default palette (`--color-*`, `--font-sans`). Spread it and set `accent` to your brand color. */
+export const tailwind: Theme = {
+  accent: v('--color-indigo-600', '#4f46e5'),
+  accentContrast: '#ffffff',
+  background: v('--color-white', '#ffffff'),
+  text: v('--color-gray-900', '#111827'),
+  muted: v('--color-gray-600', '#4b5563'),
+  border: v('--color-gray-200', '#e5e7eb'),
+  overlay: 'rgba(17,24,39,.6)',
+  radius: v('--radius-lg', '.5rem'),
+  font: v('--font-sans', 'ui-sans-serif,system-ui,sans-serif'),
+}
+
+/** shadcn/ui (Tailwind v4 variables: `--primary`, `--background`…). For the older HSL variables use e.g. `accent: 'hsl(var(--primary))'`. */
+export const shadcn: Theme = {
+  accent: v('--primary', '#18181b'),
+  accentContrast: v('--primary-foreground', '#fafafa'),
+  background: v('--popover', v('--background', '#ffffff')),
+  text: v('--popover-foreground', v('--foreground', '#09090b')),
+  muted: v('--muted-foreground', '#71717a'),
+  border: v('--border', '#e4e4e7'),
+  overlay: 'rgba(0,0,0,.5)',
+  radius: v('--radius', '.625rem'),
+  font: 'inherit',
+}
+
+/** daisyUI 5 (`--color-primary`, `--color-base-100`…), following the active `data-theme`. */
+export const daisyui: Theme = {
+  accent: v('--color-primary', '#605dff'),
+  accentContrast: v('--color-primary-content', '#ffffff'),
+  background: v('--color-base-100', '#ffffff'),
+  text: v('--color-base-content', '#1f2937'),
+  muted: v('--color-neutral', '#4b5563'),
+  border: v('--color-base-300', '#e5e7eb'),
+  overlay: 'rgba(0,0,0,.4)',
+  radius: v('--radius-box', '1rem'),
+  font: 'inherit',
+}
+
+/** Vuetify 3 (`--v-theme-*`, light and dark). */
+export const vuetify: Theme = {
+  accent: 'rgb(var(--v-theme-primary, 24,103,192))',
+  accentContrast: 'rgb(var(--v-theme-on-primary, 255,255,255))',
+  background: 'rgb(var(--v-theme-surface, 255,255,255))',
+  text: 'rgb(var(--v-theme-on-surface, 33,33,33))',
+  muted: 'rgba(var(--v-theme-on-surface, 33,33,33), var(--v-medium-emphasis-opacity, .7))',
+  border: 'rgba(var(--v-border-color, 0,0,0), var(--v-border-opacity, .12))',
+  overlay: 'rgba(33,33,33,.46)',
+  radius: '4px',
+  font: 'inherit',
+}
+
+/** Material UI with CSS variables (`CssVarsProvider` / `cssVariables: true`: `--mui-palette-*`). */
+export const mui: Theme = {
+  accent: v('--mui-palette-primary-main', '#1976d2'),
+  accentContrast: v('--mui-palette-primary-contrastText', '#ffffff'),
+  background: v('--mui-palette-background-paper', '#ffffff'),
+  text: v('--mui-palette-text-primary', 'rgba(0,0,0,.87)'),
+  muted: v('--mui-palette-text-secondary', 'rgba(0,0,0,.6)'),
+  border: v('--mui-palette-divider', 'rgba(0,0,0,.12)'),
+  overlay: 'rgba(0,0,0,.5)',
+  radius: v('--mui-shape-borderRadius', '4px'),
+  font: 'inherit',
+}
+
+export const themes = { light, dark, ocean, sunset, mint, rose, mono, bootstrap, tailwind, shadcn, daisyui, vuetify, mui } as const
 
 /** `dark` or `light` depending on the user's system setting (evaluated when called). */
 export function autoTheme(): Theme {

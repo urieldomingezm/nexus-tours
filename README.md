@@ -34,6 +34,7 @@ La mayoría de las librerías de tours fallan cuando el elemento a explicar vive
    - [Analítica y eventos](#413-analítica-y-eventos)
    - [Contenido enriquecido](#414-contenido-enriquecido)
    - [Renderizado en servidor (Nuxt, Next)](#415-renderizado-en-servidor-nuxt-next)
+   - [Bootstrap, Tailwind y otros frameworks](#416-bootstrap-tailwind-y-otros-frameworks)
 5. [Referencia de la API](#5-referencia-de-la-api)
 6. [Accesibilidad](#6-accesibilidad)
 7. [Tamaños y compatibilidad](#7-tamaños-y-compatibilidad)
@@ -79,7 +80,7 @@ También como módulo ES:
 
 - En producción fija la versión exacta (`@0.1.0`) y, si quieres que el navegador verifique el archivo, agrega [`integrity` (SRI)](https://www.srihash.org/).
 - `unpkg.com/nexus-tours@0.1` también funciona.
-- Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (~12 KB), `builder.js` (~8 KB), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
+- Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (~12 KB), `builder.js` (~7 KB), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
 - **Importante:** las CDN sirven lo que está en npm (o en un repositorio público de GitHub). Mientras el paquete no se publique en npm no existen esas URLs; `npm publish` es lo que las activa.
 
 ---
@@ -158,7 +159,7 @@ Desde tu hoja de estilos:
 - **Variables:** `--gm-accent --gm-accent-fg --gm-bg --gm-fg --gm-muted --gm-border --gm-dim --gm-radius --gm-font --gm-z`.
 - **Partes (`::part()`):** `backdrop ring popover title description footer progress button button-primary button-secondary close dots icon image skip hint never banner`.
 
-**Temas listos** (`nexus-tours/themes`, ~0.5 KB): `light`, `dark`, `ocean`, `sunset`, `mint`, `rose`, `mono`.
+**Temas listos** (`nexus-tours/themes`, ~1 KB): `light`, `dark`, `ocean`, `sunset`, `mint`, `rose`, `mono`, y los que toman los colores de tu framework: `bootstrap`, `tailwind`, `shadcn`, `daisyui`, `vuetify`, `mui` (ver [4.16](#416-bootstrap-tailwind-y-otros-frameworks)).
 
 ```ts
 import { themes, autoTheme } from 'nexus-tours/themes'
@@ -503,6 +504,42 @@ Si `content` devuelve un string, se muestra como texto. El contenido forma parte
 
 Puedes importar la librería y crear tours en el servidor sin errores: `start()` y `startIfNeeded()` no hacen nada cuando no hay `document`. Arranca el tour en el cliente (`onMounted` en Vue, `useEffect` en React).
 
+### 4.16 Bootstrap, Tailwind y otros frameworks
+
+El tour vive en un shadow root, así que el CSS de tu framework (el reboot de Bootstrap, el preflight de Tailwind, Bulma, Foundation…) no lo desarma, y el suyo no toca tu página.
+
+**Usa los colores de tu framework.** Estos temas leen sus variables CSS, así que siguen tu marca y su modo oscuro sin configurar nada:
+
+```ts
+import { themes } from 'nexus-tours/themes'
+
+new Tour({ steps, theme: themes.bootstrap })                         // --bs-primary, data-bs-theme="dark"
+new Tour({ steps, theme: { ...themes.tailwind, accent: 'var(--color-emerald-600)' } })   // tu color de Tailwind
+```
+
+| Tema | Lee | Notas |
+|---|---|---|
+| `bootstrap` | `--bs-primary`, `--bs-body-bg`, `--bs-body-color`, `--bs-body-font-family`… | Bootstrap 5.3; sigue `data-bs-theme="dark"` y tu `--bs-primary` |
+| `tailwind` | `--color-indigo-600`, `--color-gray-*`, `--font-sans` | Tailwind v4; cambia `accent` por tu color |
+| `shadcn` | `--primary`, `--popover`, `--muted-foreground`, `--border`, `--radius` | shadcn/ui con Tailwind v4. Con las variables HSL antiguas: `accent: 'hsl(var(--primary))'` |
+| `daisyui` | `--color-primary`, `--color-base-100`, `--radius-box`… | daisyUI 5; sigue el `data-theme` activo |
+| `vuetify` | `--v-theme-primary`, `--v-theme-surface`… | Vuetify 3, claro y oscuro |
+| `mui` | `--mui-palette-primary-main`… | Material UI con variables CSS (`cssVariables: true`) |
+
+Si una variable no existe se usa el color por defecto de ese framework.
+
+**Modales, menús y paneles.** El tour se monta dentro del modal donde está el elemento, así que la trampa de foco del framework no lo bloquea. Si el framework mueve el foco a su contenedor al terminar la animación, el tour lo recupera; y al cerrar el tour con Esc, el foco vuelve dentro del modal, que sigue abierto. Se prueba con Bootstrap 5 real (modal con animación, offcanvas, dropdown, pestañas y acordeón) y funciona con cualquier librería que marque sus diálogos con `role="dialog"` o `aria-modal` (Headless UI, Radix, MUI, Element Plus, Ant Design, Quasar, PrimeVue…). Si la tuya no lo hace, indícale el contenedor:
+
+```ts
+new Tour({ steps, modalSelector: '.mi-libreria-modal' })
+```
+
+Con Bootstrap, abre y cierra sus componentes desde los pasos con `beforeClick` / `afterClick` sobre los mismos botones que usa el usuario (`data-bs-toggle`), y el tour espera a que terminen sus animaciones:
+
+```ts
+{ element: '#nombre', title: 'Nombre del cliente', beforeClick: '#btn-nuevo', afterClick: '#modal .btn-close' }
+```
+
 ---
 
 ## 5. Referencia de la API
@@ -527,6 +564,7 @@ new Tour({
   practice?: PracticeOptions,    // ver "Modo práctica"
   theme?, font?, fonts?, css?, className?, arrow?, dir?,
   container?: HTMLElement,       // dónde montar cuando no hay modal
+  modalSelector?: string,        // contenedores modales de tu librería sin role="dialog"
   nonce?: string,                // nonce CSP para el <style> inyectado
 })
 
@@ -576,16 +614,16 @@ Cada cambio pasa una auditoría automática con [axe-core](https://github.com/de
 
 ## 7. Tamaños y compatibilidad
 
-Tamaños aproximados (gzip); `npm run size` los verifica en cada PR:
+Tamaños aproximados (minificado + gzip, lo que descarga el usuario); `npm run size` los verifica en cada PR:
 
 | Pieza | Tamaño |
 |---|---|
-| Núcleo (`nexus-tours`) | ~13 KB |
-| Todo junto (`nexus-tours.all`, CDN) | ~21.7 KB |
-| Constructor visual | ~8.2 KB |
-| Adaptador Supabase | ~3.8 KB |
-| Checklist | ~4.3 KB |
-| Datos de ejemplo / Temas / Vue / React | ~2 / 0.6 / 1.1 / 0.9 KB |
+| Núcleo (`nexus-tours`) | ~12 KB |
+| Todo junto (`nexus-tours.all`, CDN) | ~20.5 KB |
+| Constructor visual | ~7.3 KB |
+| Checklist | ~3.9 KB |
+| Adaptador Supabase | ~3.4 KB |
+| Datos de ejemplo / Temas / Vue / React | ~1.5 / 1.3 / 1 / 0.8 KB |
 
 Cero dependencias en tiempo de ejecución; `vue` y `react` son dependencias par **opcionales**.
 

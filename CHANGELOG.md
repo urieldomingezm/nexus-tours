@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Compatibilidad con frameworks de UI
+- Temas que leen las variables CSS del framework y siguen su modo oscuro: `themes.bootstrap`, `tailwind`, `shadcn`, `daisyui`, `vuetify` y `mui`.
+- Se detectan como modales el modal y el offcanvas de Bootstrap y los overlays de Vuetify; opción `modalSelector` para otras librerías.
+- Si el framework mueve el foco a su contenedor al abrir un modal (Bootstrap lo hace al terminar la animación), el tour lo recupera.
+- Al cerrar el tour dentro de un modal que sigue abierto, el foco vuelve dentro del modal (antes caía en `<body>` y Esc ya no cerraba el modal).
+- Pruebas con Bootstrap 5 real: modal con animación, offcanvas, dropdown, pestañas, acordeón y modo oscuro.
+
 ### Agregado
 - `Step.id`, `goTo('id')` y `start('id')`.
 - Eventos `next` y `previous`; `stop` trae `ctx.reason` (`skip`, `close`, `esc`, `backdrop`, `dismiss`, `missing`, `api`); `ctx.total`.

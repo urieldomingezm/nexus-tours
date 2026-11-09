@@ -86,3 +86,40 @@ test('sin adoptedStyleSheets: checklist y constructor se ven bien', async ({ nue
     'constructor: estilos aplicados con <style>',
   )
 })
+
+// Temas que leen las variables CSS de cada framework: se simulan sus variables en :root.
+const FRAMEWORKS = {
+  tailwind: {
+    vars: { '--color-indigo-600': 'oklch(0.511 0.262 276.966)', '--color-white': '#fff' },
+    esperado: 'oklch(0.511 0.262 276.966)',
+  },
+  shadcn: { vars: { '--primary': 'oklch(0.205 0 0)', '--primary-foreground': 'oklch(0.985 0 0)' }, esperado: 'oklch(0.205 0 0)' },
+  daisyui: {
+    vars: { '--color-primary': 'oklch(45% 0.24 277.023)', '--color-primary-content': 'oklch(93% 0.034 272.788)' },
+    esperado: 'oklch(0.45 0.24 277.023)',
+  },
+  vuetify: { vars: { '--v-theme-primary': '98,0,238', '--v-theme-on-primary': '255,255,255' }, esperado: 'rgb(98, 0, 238)' },
+  mui: { vars: { '--mui-palette-primary-main': '#9c27b0', '--mui-palette-primary-contrastText': '#fff' }, esperado: 'rgb(156, 39, 176)' },
+}
+
+for (const [nombre, { vars, esperado }] of Object.entries(FRAMEWORKS)) {
+  test(`themes.${nombre} toma el color primario de las variables del framework`, async ({ nuevoContexto, vigilar }) => {
+    const p = vigilar(await (await nuevoContexto({ viewport: { width: 1000, height: 700 } })).newPage())
+    await p.goto(BASE)
+    await p.waitForFunction(() => window.makeTour)
+    await p.evaluate(
+      ({ nombre, vars }) => {
+        for (const [k, v] of Object.entries(vars)) document.documentElement.style.setProperty(k, v)
+        makeTour('full', { theme: Guiame.themes[nombre] })
+        t.start()
+      },
+      { nombre, vars },
+    )
+    await p.waitForFunction(() => document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector('.gm-primary'))
+    await p.waitForTimeout(400)
+    const color = await p.evaluate(
+      () => getComputedStyle(document.querySelector('[data-nexus-tours]').shadowRoot.querySelector('.gm-primary')).backgroundColor,
+    )
+    ok(color === esperado, `${nombre}: botón con el primario del framework (${color})`)
+  })
+}

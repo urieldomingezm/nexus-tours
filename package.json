@@ -190,6 +190,7 @@
     "@types/react": "^19.3.0",
     "@vitest/coverage-v8": "^5.1.0",
     "axios": "^1.21.0",
+    "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
