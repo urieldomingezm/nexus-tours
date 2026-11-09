@@ -31,7 +31,8 @@ function isModalDialog(d: Element): boolean {
  * Containers that act as modals: native <dialog>, ARIA dialogs (Headless UI, Radix, MUI, Element Plus, Ant Design,
  * Quasar, PrimeVue…) and the ones some frameworks leave without a role (Bootstrap modal/offcanvas, Vuetify overlays).
  */
-const MODALS = 'dialog[open],[aria-modal="true"],[role="dialog"],[role="alertdialog"],.modal.show,.offcanvas.show,.offcanvas.showing,.v-overlay__content'
+const MODALS =
+  'dialog[open],[aria-modal="true"],[role="dialog"],[role="alertdialog"],.modal.show,.offcanvas.show,.offcanvas.showing,.v-overlay__content'
 
 /** Closest ancestor that acts as a modal. `extra` adds your own selector (option `modalSelector`). */
 export function modalHost(el: Element | null, extra?: string): HTMLElement | null {
