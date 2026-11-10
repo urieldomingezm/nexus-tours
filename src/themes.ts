@@ -162,7 +162,35 @@ export const mui: Theme = {
   font: 'inherit',
 }
 
-export const themes = { light, dark, ocean, sunset, mint, rose, mono, bootstrap, tailwind, shadcn, daisyui, vuetify, mui } as const
+/** SweetAlert2 11 (`--swal2-*`): the tour looks like your alerts, including `theme: 'dark'`. */
+export const sweetalert2: Theme = {
+  accent: v('--swal2-confirm-button-background-color', '#7066e0'),
+  accentContrast: v('--swal2-confirm-button-color', '#ffffff'),
+  background: v('--swal2-background', '#ffffff'),
+  text: v('--swal2-color', '#545454'),
+  muted: v('--swal2-color', '#545454'),
+  border: v('--swal2-footer-border-color', '#eeeeee'),
+  overlay: v('--swal2-backdrop', 'rgba(0,0,0,.4)'),
+  radius: v('--swal2-border-radius', '.3125rem'),
+  font: 'inherit',
+}
+
+export const themes = {
+  light,
+  dark,
+  ocean,
+  sunset,
+  mint,
+  rose,
+  mono,
+  bootstrap,
+  tailwind,
+  shadcn,
+  daisyui,
+  vuetify,
+  mui,
+  sweetalert2,
+} as const
 
 /** `dark` or `light` depending on the user's system setting (evaluated when called). */
 export function autoTheme(): Theme {

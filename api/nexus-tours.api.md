@@ -474,6 +474,7 @@ const themes: {
     readonly daisyui: Theme;
     readonly vuetify: Theme;
     readonly mui: Theme;
+    readonly sweetalert2: Theme;
 };
 
 function themeVars(theme?: Theme): Record<string, string>;
@@ -643,6 +644,8 @@ const shadcn: Theme;
 
 const sunset: Theme;
 
+const sweetalert2: Theme;
+
 const tailwind: Theme;
 
 const themes: {
@@ -659,6 +662,7 @@ const themes: {
     readonly daisyui: Theme;
     readonly vuetify: Theme;
     readonly mui: Theme;
+    readonly sweetalert2: Theme;
 };
 
 const vuetify: Theme;

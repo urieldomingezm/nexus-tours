@@ -41,6 +41,7 @@ export class Tour implements TourApi {
   private untilFn: (() => void) | null = null
   private spacer: HTMLElement | null = null
   private onKey: (e: KeyboardEvent) => void
+  private guard: MutationObserver | null = null
   private startedAt = 0
   private stepAt = 0
 
@@ -478,6 +479,12 @@ export class Tour implements TourApi {
       } else void this.previous()
     })
     this.ui = ui
+    // Modal libraries hide everything outside their dialog from screen readers (SweetAlert2, react-aria, Radix:
+    // aria-hidden / inert on the page). The tour is not "the page": undo it whenever it happens.
+    if (typeof MutationObserver !== 'undefined') {
+      this.guard = new MutationObserver(() => unhide(ui.host))
+      this.guard.observe(ui.host, { attributes: true, attributeFilter: ['aria-hidden', 'inert'] })
+    }
   }
 
   private mount(target: Element | null) {
@@ -599,6 +606,8 @@ export class Tour implements TourApi {
     this.session = null
     // The modal the tour was living in (if it is still open): focus must stay inside it.
     let modal: HTMLElement | null = null
+    this.guard?.disconnect()
+    this.guard = null
     if (this.ui) {
       const parent = this.ui.host.parentElement
       if (parent && parent !== document.body && parent !== this.opts.container && parent.isConnected) modal = parent
@@ -624,6 +633,11 @@ export class Tour implements TourApi {
           ?.focus({ preventScroll: true })
     }
   }
+}
+
+function unhide(host: HTMLElement) {
+  if (host.getAttribute('aria-hidden') === 'true') host.removeAttribute('aria-hidden')
+  if (host.hasAttribute('inert')) host.removeAttribute('inert')
 }
 
 /** Shorthand: guide(steps).start() */
