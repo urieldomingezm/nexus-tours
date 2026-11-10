@@ -1,6 +1,18 @@
 // Tour: ciclo de vida, navegación entre pasos, espera de objetivos y seguimiento en cada frame.
 // El DOM, la posición, el teclado y el progreso guardado viven en ./core/*.
-import type { AdvanceOn, Labels, Router, Step, StepContext, StopReason, TourApi, TourEvent, TourOptions, TourStatus } from './types'
+import type {
+  AdvanceOn,
+  Labels,
+  TargetRef,
+  Router,
+  Step,
+  StepContext,
+  StopReason,
+  TourApi,
+  TourEvent,
+  TourOptions,
+  TourStatus,
+} from './types'
 import { PracticeSession } from './practice'
 import { isVisible, waitForElement } from './wait'
 import { confetti } from './confetti'
@@ -354,7 +366,9 @@ export class Tour implements TourApi {
         this.reveal(el) // after the first layout: on phones it needs the sheet's height
         this.reposition(true)
       }
-      ui.pop.focus({ preventScroll: true })
+      // `popover: false`: only the highlight. Focus stays on the page; Esc / backdrop close it.
+      ui.pop.toggleAttribute('data-hidden', step.popover === false)
+      if (step.popover !== false) ui.pop.focus({ preventScroll: true })
       this.stepAt = Date.now()
       this.emit('step')
       this.progress.write('in-progress', i)
@@ -503,7 +517,7 @@ export class Tour implements TourApi {
   private onFocusIn = (e: FocusEvent) => {
     const ui = this.ui
     const to = e.target
-    if (!ui || !this.shown || !(to instanceof Element) || to === ui.host || !to.contains(ui.host)) return
+    if (!ui || !this.shown || this.shown.popover === false || !(to instanceof Element) || to === ui.host || !to.contains(ui.host)) return
     ui.pop.focus({ preventScroll: true })
   }
 
@@ -581,7 +595,7 @@ export class Tour implements TourApi {
     if (wasSheet) ps.right = ps.bottom = ps.width = ps.maxWidth = ''
     const pw = pop.offsetWidth
     const ph = pop.offsetHeight
-    const at = placePopover(hole, step.side ?? 'auto', pw, ph, v)
+    const at = placePopover(hole, step.side ?? 'auto', pw, ph, v, step.align ?? this.opts.align, ui.rtl)
     if (hole && at.side !== 'center') {
       pop.dataset.side = this.arrow ? at.side : 'center'
       if (this.arrow) Object.assign(this.arrow.style, arrowStyle(at.side, hole, at.x, at.y, pw, ph))
@@ -638,6 +652,23 @@ export class Tour implements TourApi {
 function unhide(host: HTMLElement) {
   if (host.getAttribute('aria-hidden') === 'true') host.removeAttribute('aria-hidden')
   if (host.hasAttribute('inert')) host.removeAttribute('inert')
+}
+
+/**
+ * Highlights one element without building a tour: `highlight('#save', { title: 'Saved here' })`.
+ * Without a title, description or content it only dims the page around the element (`popover: false`).
+ * Returns the running Tour (call `.stop()` to remove it). Esc and the backdrop close it.
+ */
+export function highlight(element: TargetRef, step: Omit<Step, 'element'> = {}, options: Omit<TourOptions, 'steps'> = {}): Tour {
+  const text = step.title || step.description || step.content
+  const t = new Tour({
+    closeOnBackdrop: true,
+    closeButton: true,
+    ...options,
+    steps: [{ popover: !!text, ...step, element }],
+  })
+  void t.start()
+  return t
 }
 
 /** Shorthand: guide(steps).start() */

@@ -31,6 +31,7 @@ La mayoría de las librerías de tours fallan cuando el elemento a explicar vive
    - [Checklist de primeros pasos](#410-checklist-de-primeros-pasos)
    - [Constructor visual (sin código)](#411-constructor-visual-sin-código)
    - [Vue y React](#412-vue-y-react)
+   - [Resaltar un elemento suelto y alinear el popover](#412b-resaltar-un-elemento-suelto-y-alinear-el-popover)
    - [Analítica y eventos](#413-analítica-y-eventos)
    - [Contenido enriquecido](#414-contenido-enriquecido)
    - [Renderizado en servidor (Nuxt, Next)](#415-renderizado-en-servidor-nuxt-next)
@@ -456,6 +457,25 @@ const { start, stop, active, index } = useTour({ steps })
 
 Ambos pesan ~1 KB, importan el núcleo como dependencia par (`nexus-tours`) y limpian al desmontar. El de React es seguro con StrictMode. Eventos: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) o `@start @step @missing @end @stop` (Vue).
 
+### 4.12b Resaltar un elemento suelto y alinear el popover
+
+`highlight()` resalta un elemento sin armar un tour, por ejemplo para señalar algo nuevo o un error en un formulario:
+
+```ts
+import { highlight } from 'nexus-tours'
+
+highlight('#exportar', { title: 'Nuevo: exporta a Excel', side: 'left' })
+const h = highlight('#total')        // sin textos: solo oscurece alrededor, sin tarjeta
+h.stop()                             // devuelve el Tour; Esc o un clic en el fondo también lo cierran
+```
+
+`align` alinea el popover con el inicio, el centro (por defecto) o el final del elemento. Sirve para menús y columnas largas. En RTL, inicio y final se reflejan:
+
+```ts
+{ element: '#menu-usuario', title: 'Tu cuenta', side: 'bottom', align: 'end' }   // pegado al borde derecho del menú
+new Tour({ align: 'start', steps })                                               // para todos los pasos
+```
+
 ### 4.13 Analítica y eventos
 
 Dale un `id` a cada paso y al tour. `onEvent` recibe un objeto plano por cada evento, listo para mandarlo a tu herramienta de analítica (Google Analytics, PostHog, Mixpanel, tu API…):
@@ -600,6 +620,8 @@ interface Step {
   description?: string                 // texto plano
   content?(ctx): Node | string         // contenido enriquecido (nodos que tú creas)
   side?: 'auto' | 'top' | 'bottom' | 'left' | 'right'
+  align?: 'start' | 'center' | 'end'   // alineación con el elemento (también como opción del tour)
+  popover?: boolean                    // false: solo el resaltado, sin tarjeta
   before?(ctx): void | Promise<void>   // corre antes de buscar el elemento
   after?(ctx): void | Promise<void>    // corre al salir del paso
   waitTimeout?: number
@@ -615,6 +637,7 @@ interface Step {
   route?: string                       // requiere el router del tour
 }
 
+highlight(elemento, paso?, opciones?)   // resalta un elemento suelto; devuelve el Tour
 tour.start(índice | id?)  tour.startIfNeeded()  tour.status()  tour.reset()
 tour.next()  tour.previous()  tour.goTo(índice | id)  tour.stop()  tour.destroy()
 tour.on('start' | 'step' | 'next' | 'previous' | 'missing' | 'end' | 'stop', ctx => …)   // devuelve una función para cancelar

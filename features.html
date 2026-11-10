@@ -5,8 +5,9 @@
 <nav><a href="/features.html" id="home">inicio</a></nav>
 <main id="view"></main>
 <script type="module">
-  import { Tour } from 'nexus-tours'
+  import { Tour, highlight } from 'nexus-tours'
   window.Tour = Tour
+  window.highlight = highlight
   const view = document.getElementById('view')
   window.hits = { go: 0, save: 0 }
   function render() {
