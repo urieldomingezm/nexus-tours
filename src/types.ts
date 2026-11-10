@@ -1,4 +1,6 @@
 export type Side = 'top' | 'bottom' | 'left' | 'right' | 'auto'
+/** Line the popover up with the start, middle or end of the target (mirrored in RTL). */
+export type Align = 'start' | 'center' | 'end'
 export type TargetRef = string | Element | (() => Element | null | undefined)
 
 export interface StepContext {
@@ -36,6 +38,13 @@ export interface Step {
    */
   content?: (ctx: StepContext) => Node | string | null | undefined
   side?: Side
+  /** Line the popover up with the start, middle (default) or end of the target. Defaults to the tour's `align`. */
+  align?: Align
+  /**
+   * `false`: only highlight the target, without the card (close with Esc, or the backdrop when `closeOnBackdrop`).
+   * Handy for `highlight()`. Default true.
+   */
+  popover?: boolean
   /** Runs before the target is searched. Open the modal, switch tabs, etc. May be async. */
   before?: (ctx: StepContext) => void | Promise<void>
   /** Runs when leaving the step (next, previous, stop). */
@@ -201,6 +210,8 @@ export interface TourOptions {
   /** Show "2 / 5". Default true. */
   showProgress?: boolean
   padding?: number
+  /** Default `align` for every step: line the popover up with the start, middle or end of the target. Default 'center'. */
+  align?: Align
   /**
    * Extra CSS selector for modal containers of your UI library, when they trap focus but have no `role="dialog"`.
    * The tour mounts inside them so it stays clickable. Already detected: <dialog>, ARIA dialogs, Bootstrap modal/offcanvas, Vuetify overlays.
