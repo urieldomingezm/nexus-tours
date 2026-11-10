@@ -60,7 +60,7 @@ npm i nexus-tours
 Un solo archivo trae **todo** (tours, checklist, temas, datos de ejemplo, modo práctica) en ~21 KB gzip y expone un único global: `NexusTours`.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.1/dist/nexus-tours.all.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.2/dist/nexus-tours.all.iife.js"></script>
 <script>
   new NexusTours.Tour({
     theme: NexusTours.themes.mint,
@@ -76,12 +76,12 @@ También como módulo ES:
 
 ```html
 <script type="module">
-  import { Tour, Checklist, themes, createFixtures, fake } from 'https://cdn.jsdelivr.net/npm/nexus-tours@0.1/dist/nexus-tours.all.js'
+  import { Tour, Checklist, themes, createFixtures, fake } from 'https://cdn.jsdelivr.net/npm/nexus-tours@0.2/dist/nexus-tours.all.js'
 </script>
 ```
 
-- En producción fija la versión exacta (`@0.1.0`) y, si quieres que el navegador verifique el archivo, agrega [`integrity` (SRI)](https://www.srihash.org/).
-- `unpkg.com/nexus-tours@0.1` también funciona.
+- En producción fija la versión exacta (`@0.2.0`) y, si quieres que el navegador verifique el archivo, agrega [`integrity` (SRI)](https://www.srihash.org/).
+- `unpkg.com/nexus-tours@0.2` también funciona.
 - Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (~12 KB), `builder.js` (~7 KB), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
 - **Importante:** las CDN sirven lo que está en npm (o en un repositorio público de GitHub). Mientras el paquete no se publique en npm no existen esas URLs; `npm publish` es lo que las activa.
 
