@@ -74,3 +74,26 @@ describe('isSheet', () => {
     expect(isSheet('never', 300)).toBe(false)
   })
 })
+
+describe('placePopover con align', () => {
+  const h = { x: 300, y: 100, w: 200, h: 40 }
+  it('abajo/arriba: start alinea el borde izquierdo, end el derecho, center al medio', () => {
+    expect(placePopover(h, 'bottom', 120, 80, v, 'start').x).toBe(300)
+    expect(placePopover(h, 'bottom', 120, 80, v, 'end').x).toBe(300 + 200 - 120)
+    expect(placePopover(h, 'bottom', 120, 80, v, 'center').x).toBe(300 + 100 - 60)
+    expect(placePopover(h, 'top', 120, 80, { ...v, vh: 700 }, 'start').x).toBe(300)
+  })
+  it('en RTL start y end se reflejan en horizontal', () => {
+    expect(placePopover(h, 'bottom', 120, 80, v, 'start', true).x).toBe(300 + 200 - 120)
+    expect(placePopover(h, 'bottom', 120, 80, v, 'end', true).x).toBe(300)
+  })
+  it('izquierda/derecha: start alinea arriba, end abajo (sin reflejo en RTL)', () => {
+    const alto = { x: 400, y: 200, w: 60, h: 300 }
+    expect(placePopover(alto, 'right', 200, 100, v, 'start').y).toBe(200)
+    expect(placePopover(alto, 'right', 200, 100, v, 'end').y).toBe(200 + 300 - 100)
+    expect(placePopover(alto, 'left', 200, 100, v, 'end', true).y).toBe(200 + 300 - 100)
+  })
+  it('alineado sigue sin salirse de la pantalla', () => {
+    expect(placePopover({ x: 950, y: 100, w: 40, h: 20 }, 'bottom', 300, 80, v, 'start').x).toBe(1000 - 300 - EDGE)
+  })
+})

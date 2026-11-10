@@ -1,4 +1,4 @@
-export { Tour, guide } from './tour'
+export { Tour, guide, highlight } from './tour'
 export { themeVars } from './theme'
 export { routers } from './router'
 export type {
@@ -13,6 +13,7 @@ export type {
   TourOptions,
   Labels,
   Side,
+  Align,
   TargetRef,
   TourEvent,
   TourApi,

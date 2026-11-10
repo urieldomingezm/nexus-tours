@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Posicionamiento y resaltado
+- `align: 'start' | 'center' | 'end'` por paso o para todo el tour (reflejado en RTL).
+- `highlight(elemento, paso?, opciones?)`: resalta un elemento suelto sin armar un tour.
+- `Step.popover: false`: solo el resaltado, sin tarjeta (el foco se queda en la página).
+
 ### Compatibilidad con frameworks de UI
 - Temas que leen las variables CSS del framework y siguen su modo oscuro: `themes.bootstrap`, `tailwind`, `shadcn`, `daisyui`, `vuetify` y `mui`.
 - Se detectan como modales el modal y el offcanvas de Bootstrap y los overlays de Vuetify; opción `modalSelector` para otras librerías.

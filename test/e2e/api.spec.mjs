@@ -230,3 +230,59 @@ test('content: nodos propios y texto (nunca HTML), con nombre accesible', async 
     'y el error se reporta en consola',
   )
 })
+
+test('align: el popover se alinea al inicio, centro o final del elemento (y se refleja en RTL)', async ({ nueva }) => {
+  const p = await nueva()
+  const medir = (align, extra = {}) =>
+    p.evaluate(
+      async ({ align, extra }) => {
+        if (window.t) t.stop()
+        const go = document.getElementById('go')
+        go.style.cssText = 'width:320px;margin-left:200px'
+        window.t = new Tour({ ...extra, steps: [{ element: '#go', title: 'Alineado', side: 'bottom', align }] })
+        await t.start()
+        await new Promise((r) => setTimeout(r, 300))
+        const b = go.getBoundingClientRect()
+        const pop = document.querySelector('[data-nexus-tours]').shadowRoot.querySelector('.gm-pop').getBoundingClientRect()
+        return {
+          izq: Math.round(pop.left - (b.left - 6)),
+          der: Math.round(b.right + 6 - pop.right),
+          centro: Math.round(pop.left + pop.width / 2 - (b.left + b.width / 2)),
+        }
+      },
+      { align, extra },
+    )
+  ok((await medir('start')).izq === 0, 'start: mismo borde izquierdo')
+  ok((await medir('end')).der === 0, 'end: mismo borde derecho')
+  ok(Math.abs((await medir()).centro) <= 1, 'por defecto: centrado')
+  ok((await medir(undefined, { align: 'end' })).der === 0, 'align de todo el tour')
+  ok((await medir('start', { dir: 'rtl' })).der === 0, 'en RTL, start es el borde derecho')
+  await p.evaluate(() => t.stop())
+})
+
+test('highlight(): resalta un elemento suelto, con tarjeta o sin ella', async ({ nueva }) => {
+  const p = await nueva()
+  await p.evaluate(() => {
+    window.h = highlight('#go', { title: 'Aquí se crea', description: 'Un solo paso' })
+  })
+  await espera(p, 'Aquí se crea')
+  ok(!(await p.evaluate(`${S('.gm-dots')}`)) && !(await p.evaluate(`${S('.gm-skip')}`)), 'sin progreso ni "Omitir"')
+  ok(await p.evaluate(`!!${S('.gm-x')}`), 'con botón ×')
+  await p.evaluate(`${S('.gm-backdrop')}.click()`)
+  await p.waitForFunction(() => !h.active)
+  ok(true, 'el clic en el fondo lo cierra')
+
+  // Sin textos: solo el resaltado, sin tarjeta, y el foco se queda en la página.
+  await p.evaluate(() => document.getElementById('other').focus())
+  await p.evaluate(() => {
+    window.h = highlight('#go')
+  })
+  await p.waitForFunction(
+    () => document.querySelector('[data-nexus-tours]')?.shadowRoot.querySelector('.gm-ring')?.style.display === 'block',
+  )
+  ok(await p.evaluate(`getComputedStyle(${S('.gm-pop')}).display === 'none'`), 'sin tarjeta')
+  ok(await p.evaluate(() => document.activeElement?.id === 'other'), 'no le quita el foco a la página')
+  await p.keyboard.press('Escape')
+  await p.waitForFunction(() => !h.active)
+  ok(true, 'Esc lo cierra')
+})
