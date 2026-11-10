@@ -192,7 +192,7 @@
     "axios": "^1.21.0",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
-    "eslint": "^9.39.5",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^17.14.0",
