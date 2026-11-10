@@ -112,14 +112,18 @@ test('modo práctica con XMLHttpRequest y axios', async ({ nuevoContexto, vigila
       1,
       'axios con params → filtro por query',
     )
-    eq(await p.evaluate(async () => (await axios.get('/xhr.html')).status), 200, 'una GET que ninguna ruta atiende pasa al servidor real')
+    eq(
+      await p.evaluate(async () => (await axios.get('/test/paginas/xhr.html')).status),
+      200,
+      'una GET que ninguna ruta atiende pasa al servidor real',
+    )
   })
   await test.step('fin del tour', async () => {
     await p.evaluate(() => t.stop?.() ?? t.finish?.())
     await p.waitForTimeout(100)
     ok((await p.evaluate(() => XMLHttpRequest.prototype.send.toString())) === proto, 'al terminar el tour XMLHttpRequest se restaura')
     ok(
-      await p.evaluate(async () => !(await axios.get('/api/clients')).headers['x-practice-mode']),
+      await p.evaluate(async () => !(await axios.get('/api/clients', { validateStatus: () => true })).headers['x-practice-mode']),
       'sin tour: la petición vuelve a ir al servidor real (sin cabecera de práctica)',
     )
   })
