@@ -10,7 +10,7 @@ const CI = !!process.env.CI
 const chromiumPath = process.env.PW_CHROMIUM || undefined
 
 const servidores = [
-  { command: 'npx vite --port 5199 --strictPort', url: 'http://localhost:5199/', reuseExistingServer: !CI, timeout: 60_000 },
+  { command: 'npx vite --port 5199 --strictPort', url: 'http://localhost:5199/test/paginas/', reuseExistingServer: !CI, timeout: 60_000 },
 ]
 if (existsSync('demo-dist/index.html')) {
   servidores.push({

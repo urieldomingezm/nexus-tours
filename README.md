@@ -690,7 +690,7 @@ Las alternativas también se prueban (`test/e2e/compatibilidad.spec.mjs` quita e
 
 - **Sitio de documentación** (`site/`): demos en vivo (modal, modo práctica, temas, fuentes, flecha, RTL, checklist y constructor) en español e inglés.
   ```bash
-  npm run dev          # luego abre /site/index.html
+  npm run dev          # luego abre http://localhost:5173/site/index.html
   npm run build:site   # → site-dist/ (súbelo a Vercel / Netlify / GitHub Pages)
   ```
 - **Demo para portafolio** (`demo/`): una mini app "Nexus Personal" que muestra la librería en uso (bienvenida, pasos interactivos, modal que carga después, modo práctica, confeti, hoja inferior en móvil y constructor visual).
@@ -714,7 +714,7 @@ Las alternativas también se prueban (`test/e2e/compatibilidad.spec.mjs` quita e
 
 ```bash
 npm i
-npm run dev            # demo con un <dialog> animado en http://localhost:5173
+npm run dev            # abre las páginas de prueba (test/paginas/) con un <dialog> animado
 npm run build          # núcleo, todo, fixtures, temas, checklist, supabase, builder, vue, react + tipos
 npx playwright install chromium firefox webkit
 npm test               # unitarias + punta a punta (requiere npm run build y npm run build:demo)

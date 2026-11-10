@@ -1,5 +1,5 @@
 // Núcleo del tour: modales, accesibilidad, estilos, modo práctica, wrappers, checklist, sitio y CDN.
-import { test as base, ok, expect, BASE, sinAnimaciones } from './utilidades.mjs'
+import { test as base, ok, expect, BASE, RAIZ, sinAnimaciones } from './utilidades.mjs'
 
 const test = base.extend({
   nueva: async ({ nuevoContexto, vigilar }, use) => {
@@ -881,7 +881,7 @@ test('sitio de demo/docs', async ({ nueva }) => {
     const s = await nueva()
     const errs = []
     s.on('console', (m) => m.type() === 'error' && errs.push(m.text()))
-    await s.goto(BASE + 'site/index.html')
+    await s.goto(RAIZ + 'site/index.html')
     await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
     ok(true, 'sitio: carga y muestra los datos "reales" simulados (2 filas)')
     await s.evaluate(() => localStorage.setItem('nt-lang', 'en'))

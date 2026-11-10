@@ -4,7 +4,9 @@ import { test as base, expect } from '@playwright/test'
 export { expect }
 
 /** Servidor de desarrollo (vite) y demo compilada (vite preview); ver playwright.config.mjs. */
-export const BASE = 'http://localhost:5199/'
+export const RAIZ = 'http://localhost:5199/'
+/** Páginas de prueba (test/paginas/). */
+export const BASE = RAIZ + 'test/paginas/'
 export const DEMO = 'http://localhost:5195/'
 
 /** Verificación suave: si falla, la prueba sigue y reporta todas las fallas juntas. */

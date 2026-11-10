@@ -137,7 +137,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --open /test/paginas/",
     "build": "vite build --mode core && vite build --mode all && vite build --mode fixtures && vite build --mode themes && vite build --mode checklist && vite build --mode supabase && vite build --mode builder && vite build --mode vue && vite build --mode react && tsc -p tsconfig.build.json && node scripts/tipos.mjs",
     "build:site": "vite build --mode site",
     "docs:api": "typedoc",
