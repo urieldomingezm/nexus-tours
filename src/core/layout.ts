@@ -1,5 +1,5 @@
 // Cálculos de posición del tour. Funciones puras (sin DOM): se prueban con pruebas unitarias.
-import type { Side } from '../types'
+import type { Align, Side } from '../types'
 
 export const GAP = 12
 export const EDGE = 8
@@ -49,22 +49,35 @@ export function pickSide(side: Side, h: Rect, pw: number, ph: number, v: Viewpor
   return order.reduce((a, b) => (space[b] - need[b] > space[a] - need[a] ? b : a))
 }
 
-/** Floating popover position next to the hole (kept inside the screen), or centered when there is no target. */
+/** Where along the hole's edge the popover lines up: its start, middle or end. */
+function along(start: number, length: number, size: number, align: Align) {
+  if (align === 'start') return start
+  if (align === 'end') return start + length - size
+  return start + length / 2 - size / 2
+}
+
+/**
+ * Floating popover position next to the hole (kept inside the screen), or centered when there is no target.
+ * `align` lines it up with the start / middle / end of the target; in RTL, start and end are mirrored horizontally.
+ */
 export function placePopover(
   hole: Rect | null,
   side: Side,
   pw: number,
   ph: number,
   v: Viewport,
+  align: Align = 'center',
+  rtl = false,
 ): { x: number; y: number; side: Placement | 'center' } {
   if (!hole) return { x: (v.vw - pw) / 2 - v.ox, y: (v.vh - ph) / 2 - v.oy, side: 'center' }
   const s = pickSide(side, hole, pw, ph, v)
+  const h = rtl && align !== 'center' ? (align === 'start' ? 'end' : 'start') : align
   let x: number
   let y: number
-  if (s === 'bottom') [x, y] = [hole.x + hole.w / 2 - pw / 2, hole.y + hole.h + GAP]
-  else if (s === 'top') [x, y] = [hole.x + hole.w / 2 - pw / 2, hole.y - ph - GAP]
-  else if (s === 'right') [x, y] = [hole.x + hole.w + GAP, hole.y + hole.h / 2 - ph / 2]
-  else [x, y] = [hole.x - pw - GAP, hole.y + hole.h / 2 - ph / 2]
+  if (s === 'bottom') [x, y] = [along(hole.x, hole.w, pw, h), hole.y + hole.h + GAP]
+  else if (s === 'top') [x, y] = [along(hole.x, hole.w, pw, h), hole.y - ph - GAP]
+  else if (s === 'right') [x, y] = [hole.x + hole.w + GAP, along(hole.y, hole.h, ph, align)]
+  else [x, y] = [hole.x - pw - GAP, along(hole.y, hole.h, ph, align)]
   x = Math.min(Math.max(x, EDGE - v.ox), v.vw - pw - EDGE - v.ox)
   y = Math.min(Math.max(y, EDGE - v.oy), v.vh - ph - EDGE - v.oy)
   return { x, y, side: s }

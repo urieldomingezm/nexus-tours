@@ -51,6 +51,8 @@ export default tseslint.config(
         themes: 'readonly',
         host: 'readonly',
         Swal: 'readonly',
+        highlight: 'readonly',
+        h: 'writable',
         bestSelector: 'readonly',
         make: 'readonly',
         mk: 'readonly',

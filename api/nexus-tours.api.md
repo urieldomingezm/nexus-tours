@@ -16,6 +16,8 @@ interface AdvanceOn {
     delay?: number;
 }
 
+type Align = 'start' | 'center' | 'end';
+
 type Db = Record<string, Row[]>;
 
 interface FontFace {
@@ -26,6 +28,8 @@ interface FontFace {
 }
 
 function guide(steps: Step[], options?: Omit<TourOptions, 'steps'>): Tour;
+
+function highlight(element: TargetRef, step?: Omit<Step, 'element'>, options?: Omit<TourOptions, 'steps'>): Tour;
 
 interface Labels {
     next: string;
@@ -113,6 +117,8 @@ interface Step {
     description?: string;
     content?: (ctx: StepContext) => Node | string | null | undefined;
     side?: Side;
+    align?: Align;
+    popover?: boolean;
     before?: (ctx: StepContext) => void | Promise<void>;
     after?: (ctx: StepContext) => void | Promise<void>;
     waitTimeout?: number;
@@ -218,6 +224,7 @@ interface TourOptions {
     keyboard?: boolean;
     showProgress?: boolean;
     padding?: number;
+    align?: Align;
     modalSelector?: string;
     container?: HTMLElement;
     nonce?: string;
@@ -254,6 +261,8 @@ interface AdvanceOn {
     until?: (ctx: StepContext) => boolean;
     delay?: number;
 }
+
+type Align = 'start' | 'center' | 'end';
 
 function autoTheme(): Theme;
 
@@ -325,6 +334,8 @@ interface FontFace {
 }
 
 function guide(steps: Step[], options?: Omit<TourOptions, 'steps'>): Tour;
+
+function highlight(element: TargetRef, step?: Omit<Step, 'element'>, options?: Omit<TourOptions, 'steps'>): Tour;
 
 interface Labels {
     next: string;
@@ -414,6 +425,8 @@ interface Step {
     description?: string;
     content?: (ctx: StepContext) => Node | string | null | undefined;
     side?: Side;
+    align?: Align;
+    popover?: boolean;
     before?: (ctx: StepContext) => void | Promise<void>;
     after?: (ctx: StepContext) => void | Promise<void>;
     waitTimeout?: number;
@@ -538,6 +551,7 @@ interface TourOptions {
     keyboard?: boolean;
     showProgress?: boolean;
     padding?: number;
+    align?: Align;
     modalSelector?: string;
     container?: HTMLElement;
     nonce?: string;
@@ -690,7 +704,7 @@ const NexusTour: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     };
 }>, () => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
-}>[] | undefined, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, ("missing" | "stop" | "start" | "step" | "next" | "previous" | "end" | "update:modelValue")[], "missing" | "stop" | "start" | "step" | "next" | "previous" | "end" | "update:modelValue", import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+}>[] | undefined, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, ("start" | "end" | "missing" | "stop" | "step" | "next" | "previous" | "update:modelValue")[], "start" | "end" | "missing" | "stop" | "step" | "next" | "previous" | "update:modelValue", import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
     steps: {
         type: PropType<Step[]>;
         required: true;
