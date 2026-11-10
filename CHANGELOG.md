@@ -11,6 +11,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Al cerrar el tour dentro de un modal que sigue abierto, el foco vuelve dentro del modal (antes caía en `<body>` y Esc ya no cerraba el modal).
 - Pruebas con Bootstrap 5 real: modal con animación, offcanvas, dropdown, pestañas, acordeón y modo oscuro.
 
+### SweetAlert2
+- `themes.sweetalert2` (variables `--swal2-*`, también en oscuro).
+- Tab y las flechas ya no llegan a la ventana de SweetAlert2 cuando el foco está en el tour; antes SweetAlert2 se llevaba el foco a sus botones.
+- El tour se quita `aria-hidden` e `inert` cuando una librería se los pone (SweetAlert2, react-aria, Radix); antes podía quedar oculto para lectores de pantalla, incluso después de cerrar la alerta.
+- Pruebas con SweetAlert2 real: confirmación, alerta con campo, Esc, alerta abierta encima del tour, toast y tema claro/oscuro.
+
 ### Agregado
 - `Step.id`, `goTo('id')` y `start('id')`.
 - Eventos `next` y `previous`; `stop` trae `ctx.reason` (`skip`, `close`, `esc`, `backdrop`, `dismiss`, `missing`, `api`); `ctx.total`.

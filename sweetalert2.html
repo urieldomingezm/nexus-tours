@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SweetAlert2</title>
+<!-- Página de prueba: SweetAlert2 real con nexus-tours. -->
+<style>body{font-family:system-ui;margin:0;padding:24px}button{margin:4px}</style>
+</head>
+<body>
+<h1>Clientes</h1>
+<button id="eliminar">Eliminar cliente</button>
+<button id="renombrar">Renombrar</button>
+<button id="avisar">Avisar (toast)</button>
+<p id="resultado"></p>
+
+<script type="module">
+  import Swal from 'sweetalert2'
+  import 'sweetalert2/dist/sweetalert2.min.css'
+  import { Tour } from 'nexus-tours'
+  import { themes } from 'nexus-tours/themes'
+  window.Swal = Swal
+  window.Tour = Tour
+  window.themes = themes
+  const res = document.getElementById('resultado')
+  document.getElementById('eliminar').onclick = async () => {
+    const r = await Swal.fire({ title: '¿Eliminar a Ana?', text: 'No se puede deshacer', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar' })
+    res.textContent = r.isConfirmed ? 'eliminado' : 'cancelado:' + r.dismiss
+  }
+  document.getElementById('renombrar').onclick = async () => {
+    const r = await Swal.fire({ title: 'Nuevo nombre', input: 'text', inputPlaceholder: 'Nombre', showCancelButton: true })
+    res.textContent = r.isConfirmed ? 'nombre:' + r.value : 'cancelado:' + r.dismiss
+  }
+  document.getElementById('avisar').onclick = () => {
+    Swal.fire({ toast: true, position: 'top-end', title: 'Guardado', showConfirmButton: true, confirmButtonText: 'Deshacer', timer: 60000 })
+  }
+  window.ready = true
+</script>
+</body>
+</html>
