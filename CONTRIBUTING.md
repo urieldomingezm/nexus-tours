@@ -56,6 +56,6 @@ npm run api:check      # ¿cambió la API pública?
 1. Elige la versión según [SemVer](https://semver.org/lang/es/). Mientras sea 0.x: correcciones → parche (0.1.1); funciones nuevas o cambios incompatibles → menor (0.2.0).
 2. En un PR: sube `version` en `package.json`, mueve las notas al encabezado de la versión en `CHANGELOG.md` con la fecha y haz merge cuando el CI esté en verde.
 3. Crea la etiqueta `vX.Y.Z` sobre `main`. Se puede hacer desde GitHub: **Releases → Draft a new release → Choose a tag → crear `vX.Y.Z`**, usando las notas del CHANGELOG.
-4. El flujo **Publicar en npm** vuelve a correr todo y sube la versión **en espera**. Apruébala con 2FA en npmjs.com (pestaña *Staged Packages*); también funciona desde el celular.
+4. El flujo **Publicar en npm** revisa primero si esa versión ya está en npm (si está, termina sin hacer nada); si no, corre la calidad y las pruebas de los 3 navegadores en paralelo (unos 10 minutos) y sube la versión **en espera**. Apruébala con 2FA en npmjs.com (pestaña *Staged Packages*); también funciona desde el celular.
 
 El flujo necesita el secreto `NPM_TOKEN` en el repositorio: un token *Granular access* con permiso "Read and write (stage only)" y sin la opción de saltarse el 2FA.
