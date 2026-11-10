@@ -2,7 +2,7 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
-## [Sin publicar]
+## [0.2.0] — 2026-11-09
 
 ### Posicionamiento y resaltado
 - `align: 'start' | 'center' | 'end'` por paso o para todo el tour (reflejado en RTL).
@@ -39,6 +39,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Reporte de la API pública (`api/nexus-tours.api.md`) verificado en el CI; referencia con TypeDoc.
 - El CI prueba el paquete empaquetado con Node, TypeScript, Vite y webpack, y compara el tamaño contra `main`.
 - CONTRIBUTING, SECURITY, plantillas de issues y PRs, Dependabot.
+
+## [0.1.1] — 2026-11-10
+
+Versión de mantenimiento sin cambios de código respecto a 0.1.0 (se compiló desde una copia anterior del repositorio).
 
 ## [0.1.0] — 2026-11-08
 
