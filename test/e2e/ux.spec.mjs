@@ -401,9 +401,9 @@ test('cambio de página: SPA', async ({ nueva }) => {
       window.t = new Tour({
         router: 'history',
         steps: [
-          { element: '#go', title: 'En inicio', route: '/features.html' },
+          { element: '#go', title: 'En inicio', route: '/test/paginas/features.html' },
           { element: '#name', title: 'En clientes', route: '/clients' },
-          { element: '#go', title: 'De regreso', route: '/features.html' },
+          { element: '#go', title: 'De regreso', route: '/test/paginas/features.html' },
         ],
       })
       return t.start()
@@ -415,14 +415,14 @@ test('cambio de página: SPA', async ({ nueva }) => {
     ok((await p.evaluate(`${S('.gm-ring')}.style.display`)) === 'block', 'resalta el elemento de la nueva página')
     await p.evaluate(`${S('.gm-primary')}.click()`)
     await espera(p, 'De regreso')
-    ok((await p.evaluate(() => location.pathname)) === '/features.html', 'router history: también regresa')
+    ok((await p.evaluate(() => location.pathname)) === '/test/paginas/features.html', 'router history: también regresa')
     await p.evaluate(() => t.destroy())
     // router propio (como Vue Router / React Router)
     const q = await nueva()
     await abre(q)
     await q.evaluate(() => {
       window.log = []
-      const mem = { path: '/features.html' }
+      const mem = { path: '/test/paginas/features.html' }
       window.t = new Tour({
         router: {
           current: () => mem.path,
