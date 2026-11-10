@@ -9,7 +9,7 @@ Necesitas Node 22 o superior.
 ```bash
 npm ci
 npx playwright install chromium firefox webkit
-npm run dev            # página de prueba con un <dialog> animado en http://localhost:5173
+npm run dev            # abre test/paginas/ (un <dialog> animado y una página por escenario)
 ```
 
 ## Antes de abrir un PR
@@ -46,6 +46,7 @@ npm run api:check      # ¿cambió la API pública?
 | `src/practice.ts`, `src/supabase.ts`, `src/fixtures.ts` | Modo práctica |
 | `src/checklist.ts`, `src/builder.ts`, `src/vue.ts`, `src/react.ts` | Extras (cada uno es un punto de entrada) |
 | `test/unit/`, `test/e2e/` | Pruebas |
+| `test/paginas/` | Páginas que usan las pruebas de punta a punta (una por escenario: Bootstrap, SweetAlert2, Supabase, CDN…) |
 | `scripts/` | Tamaño, reporte de API, ajuste de tipos y prueba del paquete |
 | `api/` | Reporte de la API pública (generado) |
 | `site/`, `demo/` | Sitio de documentación y demo del portafolio |

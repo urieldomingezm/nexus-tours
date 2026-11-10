@@ -84,7 +84,10 @@ test('elegir elementos', async ({ nueva }) => {
     await clic(p, '.btn-export')
     ok(await p.evaluate(() => hits.exportar === 0), 'en modo elegir el clic NO llega a la página')
     let s = await pasos(p)
-    ok(s.length === 1 && s[0].element === '.btn-export' && s[0].route === '/builder.html', 'el clic agrega un paso con selector y página')
+    ok(
+      s.length === 1 && s[0].element === '.btn-export' && s[0].route === '/test/paginas/builder.html',
+      'el clic agrega un paso con selector y página',
+    )
     ok(
       await p.evaluate(`${B('.card .title')} === document.querySelector('[data-nexus-builder]').shadowRoot.activeElement`),
       'el título del paso queda enfocado',
