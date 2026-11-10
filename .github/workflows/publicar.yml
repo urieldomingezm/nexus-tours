@@ -50,7 +50,19 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
 
+      - name: ¿Esta versión ya está en npm?
+        id: npm
+        run: |
+          v=$(node -p "require('./package.json').version")
+          if npm view "nexus-tours@$v" version >/dev/null 2>&1; then
+            echo "publicada=si" >> "$GITHUB_OUTPUT"
+            echo "::notice::nexus-tours@$v ya está en npm: no se vuelve a publicar (la release de GitHub queda igual)."
+          else
+            echo "publicada=no" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Subir a npm en espera de aprobación
+        if: steps.npm.outputs.publicada == 'no'
         run: npm stage publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
