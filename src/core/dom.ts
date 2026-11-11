@@ -34,18 +34,36 @@ function isModalDialog(d: Element): boolean {
 const MODALS =
   'dialog[open],[aria-modal="true"],[role="dialog"],[role="alertdialog"],.modal.show,.offcanvas.show,.offcanvas.showing,.v-overlay__content'
 
-/** Closest ancestor that acts as a modal. `extra` adds your own selector (option `modalSelector`). */
+/**
+ * Closest ancestor that acts as a modal, also through open shadow roots (a field inside a nexus-dialogs window
+ * lives in a shadow root: its `closest()` stops at the root, so we continue from the host). `extra` adds your own
+ * selector (option `modalSelector`).
+ */
 export function modalHost(el: Element | null, extra?: string): HTMLElement | null {
-  let own: Element | null | undefined = null
-  try {
-    own = el?.closest(extra ? `${MODALS},${extra}` : MODALS)
-  } catch {
-    own = el?.closest(MODALS) // invalid custom selector: ignore it
+  const sel = extra ? `${MODALS},${extra}` : MODALS
+  let node: Element | null = el
+  while (node) {
+    let own: Element | null = null
+    try {
+      own = node.closest(sel)
+    } catch {
+      own = node.closest(MODALS) // invalid custom selector: ignore it
+    }
+    if (own instanceof HTMLElement) return own
+    const root = node.getRootNode()
+    node = root instanceof ShadowRoot ? root.host : null
   }
-  if (own instanceof HTMLElement) return own
   // A modal <dialog> makes everything outside it inert: stay inside the open one.
   const open = Array.from(document.querySelectorAll('dialog[open]')).filter(isModalDialog)
   return (open[open.length - 1] as HTMLElement | undefined) ?? null
+}
+
+const FIELDS =
+  'input:not([type=hidden]),select,textarea,[contenteditable=""],[contenteditable=true],[role=combobox],[role=textbox],[role=searchbox]'
+
+/** The element is, or contains, something the user types in: the tour must not block clicks on it. */
+export function hasField(el: Element): boolean {
+  return el.matches(FIELDS) || !!el.querySelector(FIELDS)
 }
 
 /** Puts the host in the top layer (Popover API) or re-shows it so it is above anything opened after it. */

@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Ventanas con shadow DOM (nexus-dialogs) y campos
+- Un paso que resalta un campo (`input`, `select`, `textarea`, `[role=combobox]`…) o un bloque que lo contiene ya deja usarlo sin `allowTargetClick`: antes el anillo bloqueaba el clic y no se podía escribir. `allowTargetClick: false` lo sigue bloqueando.
+- El tour encuentra la ventana modal también cuando el elemento resaltado vive en un shadow root abierto (nexus-dialogs, otros componentes web) y se monta dentro de ella.
+- Las flechas y Enter no mueven el tour cuando el foco está en un combobox, lista, menú o control deslizante.
+- Prueba de punta a punta con un `<dialog>` modal cuyo contenido vive en un shadow root.
+
 ### Modo práctica: aislamiento más estricto
 - `strict: true`: bloquea también las lecturas (`fetch`/XHR) que ninguna ruta atienda; solo pasa lo que autorice `allow`. `allow` ahora aplica a cualquier método.
 - Una sola sesión de modo práctica activa: un segundo `start()` rechaza con un error claro (antes se apilaban dos interceptores).
