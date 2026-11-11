@@ -688,10 +688,12 @@ Las alternativas también se prueban (`test/e2e/compatibilidad.spec.mjs` quita e
 
 ## 8. Demos
 
-- **Sitio de documentación** (`site/`): demos en vivo (modal, modo práctica, temas, fuentes, flecha, RTL, checklist y constructor) en español e inglés.
+- **Sitio de documentación** (`site/`): portada con un tour real sobre la propia página, esta guía, la **Demo** (modal, modo práctica, temas, fuentes, flecha, RTL, checklist y constructor, en español e inglés) y la referencia de la API generada con TypeDoc. Se publica en GitHub Pages con `.github/workflows/docs.yml`: <https://urieldomingezm.github.io/nexus-tours/>.
   ```bash
-  npm run dev          # luego abre http://localhost:5173/site/index.html
-  npm run build:site   # → site-dist/ (súbelo a Vercel / Netlify / GitHub Pages)
+  npm run dev          # luego abre http://localhost:5173/site/demo.html (la portada y la guía necesitan build:site)
+  npm run build        # los tamaños del sitio se miden sobre dist/
+  npm run build:site   # → site-dist/
+  npm run docs:api     # agrega la referencia de la API en site-dist/api
   ```
 - **Demo para portafolio** (`demo/`): una mini app "Nexus Personal" que muestra la librería en uso (bienvenida, pasos interactivos, modal que carga después, modo práctica, confeti, hoja inferior en móvil y constructor visual).
   ```bash

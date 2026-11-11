@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { fileURLToPath } from 'node:url'
+import { docsPlugin } from './site/plugin-docs.mjs'
 
 const src = (f) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 const ALIAS = {
@@ -57,8 +58,16 @@ export default defineConfig(({ mode, command }) => {
     return {
       root: 'site',
       base: './',
+      plugins: [docsPlugin()],
       resolve: { alias: ALIAS },
-      build: { outDir: '../site-dist', emptyOutDir: true, target: 'es2020' },
+      build: {
+        outDir: '../site-dist',
+        emptyOutDir: true,
+        target: 'es2020',
+        rollupOptions: {
+          input: Object.fromEntries(['index', 'guia', 'demo'].map((p) => [p, fileURLToPath(new URL(`./site/${p}.html`, import.meta.url))])),
+        },
+      },
     }
   }
   // Demo para portafolio: `vite build --mode demo` (root: demo/) → demo-dist/

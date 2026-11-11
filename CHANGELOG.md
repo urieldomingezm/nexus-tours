@@ -2,6 +2,11 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
 
+## [Sin publicar]
+
+### Agregado
+- Sitio de documentación rediseñado: portada con un tour real sobre la propia página, guía (el README), demo y referencia de la API. Menú de celular, tema claro/oscuro y publicación en GitHub Pages (`docs.yml`).
+
 ## [0.2.0] — 2026-11-09
 
 ### Posicionamiento y resaltado

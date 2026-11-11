@@ -881,15 +881,15 @@ test('sitio de demo/docs', async ({ nueva }) => {
     const s = await nueva()
     const errs = []
     s.on('console', (m) => m.type() === 'error' && errs.push(m.text()))
-    await s.goto(RAIZ + 'site/index.html')
+    await s.goto(RAIZ + 'site/demo.html')
     await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
     ok(true, 'sitio: carga y muestra los datos "reales" simulados (2 filas)')
     await s.evaluate(() => localStorage.setItem('nt-lang', 'en'))
     await s.reload()
     await s.waitForFunction(() => document.querySelectorAll('#rows tr').length === 2)
-    ok((await s.locator('h1').textContent()).includes("don't break"), 'sitio: selector de idioma (EN)')
+    ok((await s.locator('h1').textContent()).includes('Try it here'), 'sitio: selector de idioma (EN)')
     await s.click('#lang')
-    ok((await s.locator('h1').textContent()).includes('Tours que no se rompen'), 'sitio: cambia a ES')
+    ok((await s.locator('h1').textContent()).includes('Pruébalo aquí'), 'sitio: cambia a ES')
     await s.check('#checklist')
     await s.waitForFunction(() => document.querySelector('[data-nexus-checklist]'))
     ok(

@@ -16,7 +16,7 @@ const T: Record<string, [string, string]> = {
   f4t: ['Accesible', 'Accessible'], f4d: ['Foco atrapado y restaurado, anuncios para lector de pantalla, teclado, RTL y movimiento reducido.', 'Focus trapped and restored, screen-reader announcements, keyboard, RTL and reduced motion.'],
   f5t: ['Vue y React', 'Vue & React'], f5d: ['Wrappers de ~1 KB: componente y hook/composable, seguros con StrictMode.', '~1 KB wrappers: component and hook/composable, StrictMode-safe.'],
   f6t: ['Ligero', 'Tiny'], f6d: ['Núcleo ~8 KB gzip, datos de ejemplo 2 KB, temas 0.5 KB, sin dependencias.', 'Core ~8 KB gzip, example data 2 KB, themes 0.5 KB, no dependencies.'],
-  demo_h: ['Pruébalo aquí', 'Try it here'], demo_s: ['El mini CRM de la derecha tiene un modal animado con contenido que carga después: el caso que rompe a otras librerías.', 'The mini CRM on the right has an animated modal whose content loads later: the case that breaks other libraries.'],
+  demo_h: ['Pruébalo aquí', 'Try it here'], demo_s: ['El mini CRM tiene un modal animado con contenido que carga después: el caso que rompe a otras librerías.', 'The mini CRM has an animated modal whose content loads later: the case that breaks other libraries.'],
   start: ['▶ Iniciar tour', '▶ Start tour'], c_practice: ['Modo práctica', 'Practice mode'], c_theme: ['Tema', 'Theme'], c_font: ['Fuente', 'Font'], font_sys: ['Sistema', 'System'], font_inh: ['Heredar', 'Inherit'],
   c_arrow: ['Flecha', 'Arrow'], c_rtl: ['Derecha a izquierda', 'Right-to-left'],
   c_note: ['Con modo práctica activo, guardar un cliente no toca los datos reales; al terminar el tour todo vuelve.', 'With practice mode on, saving a client never touches the real data; when the tour ends everything is back.'],
@@ -151,10 +151,6 @@ $('builder').addEventListener('click', () => {
 $('checklist').addEventListener('change', mountChecklist)
 for (const id of ['theme', 'font', 'arrow', 'rtl', 'practice']) $(id).addEventListener('change', () => checklist && mountChecklist())
 $('start').addEventListener('click', startTour)
-$('hero-start').addEventListener('click', () => {
-  $('demo').scrollIntoView({ behavior: 'smooth' })
-  setTimeout(startTour, 450)
-})
 
 // ---- code samples
 const CODE: Record<string, string> = {

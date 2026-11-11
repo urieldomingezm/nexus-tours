@@ -8,6 +8,8 @@ export const RAIZ = 'http://localhost:5199/'
 /** Páginas de prueba (test/paginas/). */
 export const BASE = RAIZ + 'test/paginas/'
 export const DEMO = 'http://localhost:5195/'
+/** Sitio de documentación compilado (site-dist, vite preview --mode site). */
+export const SITIO = 'http://localhost:5196/'
 
 /** Verificación suave: si falla, la prueba sigue y reporta todas las fallas juntas. */
 export const ok = (condicion, mensaje) => expect.soft(condicion, mensaje).toBeTruthy()
