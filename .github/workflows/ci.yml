@@ -122,7 +122,7 @@ jobs:
       - run: npm ci
 
       - name: Build (CDN y demo los necesitan)
-        run: npm run build && npm run build:demo
+        run: npm run build && npm run build:site && npm run build:demo
 
       - name: Instalar ${{ matrix.navegador }}
         run: npx playwright install --with-deps ${{ matrix.navegador }}

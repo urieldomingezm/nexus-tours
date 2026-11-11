@@ -1,0 +1,47 @@
+name: Documentación
+
+# Publica el sitio (site/) y la referencia de la API (TypeDoc) en GitHub Pages al publicarse una release o a mano desde Actions.
+# Requiere activar Pages una sola vez: Settings → Pages → Source: GitHub Actions.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build de la librería (el sitio mide los tamaños reales)
+        run: npm run build
+      - name: Build del sitio y referencia de API
+        run: npm run build:site && npm run docs:api
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4
