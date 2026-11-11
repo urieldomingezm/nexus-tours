@@ -1,9 +1,10 @@
 // Límites de tamaño de cada archivo publicado, medidos minificado + gzip: lo que descarga el usuario final
 // (el build ESM de Vite conserva los espacios; el bundler de cada app lo minifica). Requiere `npm run build`.
-// Uso: npm run size                          (falla si algún archivo pasa su límite)
+// Uso: npm run size                          (falla si algún archivo pasa su límite o si las cifras del README no coinciden)
+//      node scripts/tamano.mjs --readme      (reescribe las cifras del README con la medición actual)
 //      node scripts/tamano.mjs --base <dir>  (además compara contra otra compilación, p. ej. la de main)
 import { gzipSync } from 'node:zlib'
-import { readFileSync, existsSync, appendFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs'
 import { transformSync } from 'esbuild'
 
 const LIMITES = {
@@ -33,8 +34,10 @@ const gz = (ruta) => {
 
 let fallos = 0
 const filas = []
+const medidas = {}
 for (const [archivo, max] of Object.entries(LIMITES)) {
   const kb = gz(`dist/${archivo}.js`)
+  medidas[archivo] = kb
   const ok = kb < max
   if (!ok) fallos++
   let cambio = ''
@@ -45,6 +48,22 @@ for (const [archivo, max] of Object.entries(LIMITES)) {
   }
   filas.push(`| ${archivo}.js | ${kb.toFixed(2)} KB | ${base ? `${cambio} | ` : ''}${max} KB | ${ok ? '✅' : '❌'} |`)
   console.log(`${ok ? '✓' : '✗'} ${archivo}.js  ${kb.toFixed(2)} KB min+gzip${base ? ` (${cambio} vs base)` : ''} (límite ${max} KB)`)
+}
+
+// Una sola medición para todo el texto: el README marca cada cifra con <!--tam:archivo-->~1.2 KB<!--/tam-->
+// (invisible en GitHub y npm). Se escribe con `--readme`; sin la bandera, una cifra distinta falla.
+const cifra = (kb) => `~${(Math.round(kb * 10) / 10).toFixed(1)} KB`
+const readme = readFileSync('README.md', 'utf8')
+const actualizado = readme.replace(
+  /<!--tam:([\w.+-]+)-->(.*?)<!--\/tam-->/g,
+  (_, id, viejo) => `<!--tam:${id}-->${medidas[id] === undefined ? viejo : cifra(medidas[id])}<!--/tam-->`,
+)
+if (process.argv.includes('--readme')) {
+  if (actualizado !== readme) writeFileSync('README.md', actualizado)
+  console.log(actualizado !== readme ? '✓ README actualizado con las cifras medidas' : '✓ README ya está al día')
+} else if (actualizado !== readme) {
+  console.error('✗ Las cifras de tamaño del README no coinciden con la medición. Corre `node scripts/tamano.mjs --readme` y súbelo.')
+  fallos++
 }
 
 // En GitHub Actions deja la tabla en el resumen del job.

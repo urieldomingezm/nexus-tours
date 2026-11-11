@@ -12,6 +12,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Pruebas de peticiones simultáneas (antes, durante y después del tour) y de restauración.
 
 ### Documentación
+- Una sola medición de tamaños: las cifras del README se escriben con `node scripts/tamano.mjs --readme` (marcadas con comentarios HTML invisibles) y `npm run size` falla si no coinciden con el sitio ni con el build.
 - Tabla «Garantías y límites del modo práctica», límites del Shadow DOM y aclaración de que la auditoría con axe no es una certificación WCAG.
 
 ### Agregado
