@@ -285,9 +285,12 @@ new Tour({
 }).start()
 ```
 
-- **Seguro por defecto:** los POST/PUT/PATCH/DELETE que ninguna ruta atiende reciben `403 { error: "practice-mode" }` y no tocan la red (`blockWrites: false` para desactivarlo). Los GET sin ruta pasan al servidor real. Con `allow(req)` dejas pasar escrituras concretas (login, refresco de token).
+- **Seguro por defecto:** los POST/PUT/PATCH/DELETE que ninguna ruta atiende reciben `403 { error: "practice-mode" }` y no tocan la red (`blockWrites: false` para desactivarlo). Los GET sin ruta pasan al servidor real. Con `allow(req)` dejas pasar peticiones concretas (login, refresco de token).
+- **Aislamiento estricto (`strict: true`):** además de las escrituras, bloquea **cualquier** `fetch`/XHR que ninguna ruta atienda, lecturas incluidas (`403`, cabecera `x-practice-mode: 1`, y avisa con `onBlocked`). Solo llega al servidor lo que `allow` autorice. Úsalo cuando el tour no deba leer datos reales de nadie.
 - **Tus datos no se mutan:** el tour trabaja con una copia y la descarta al terminar; `fetch` y `XMLHttpRequest` se restauran.
-- **Visible:** una píldora "Modo práctica" (`::part(banner)`, texto en `labels.practice`, se oculta con `banner: false`).
+- **Visible:** una píldora "Modo práctica" (`::part(banner)`, texto en `labels.practice`, se oculta con `banner: false`). Mientras dura, `<html>` lleva el atributo `data-nexus-practice` (`="strict"` en modo estricto) para que lo estiles: por ejemplo, un borde o una franja de «entorno de demostración» en tu propia app.
+- **Una sola sesión a la vez:** si otro tour ya tiene el modo práctica activo, `start()` rechaza con un error claro en lugar de apilar dos interceptores que se contestarían entre sí.
+- **Siempre se restaura:** si `onStart` lanza una excepción, o si otra librería envolvió `fetch` encima del nuestro, `fetch` y `XMLHttpRequest` vuelven a su estado original (el interceptor que quede apilado se vuelve transparente). Las peticiones lanzadas antes de empezar siguen su camino real; las posteriores a `stop()` también.
 - `latency` simula retraso de red (por defecto 120 ms). `tour.practiceData` expone las tablas vivas en memoria.
 - `routes` se evalúan antes que `rest`; una ruta puede devolver `PASS` (`import { PASS } from 'nexus-tours'`; en CDN, `NexusTours.PASS`) para decir "no es mía" y que la petición siga a la siguiente ruta o al servidor real.
 
@@ -654,11 +657,24 @@ La referencia completa, generada de los tipos, se construye con `npm run docs:ap
 
 ---
 
+#### Garantías y límites del modo práctica
+
+| Garantiza | No garantiza |
+|---|---|
+| Ninguna escritura sin ruta sale del navegador (salvo lo que tú permitas con `allow`). | Que las lecturas sean ficticias **si no usas `strict`**: un GET sin ruta llega al servidor real. |
+| Con `strict`, nada sale sin ruta ni `allow`. | Interceptar WebSocket, `EventSource`, `navigator.sendBeacon`, formularios HTML nativos ni imágenes/scripts (no son `fetch`/XHR). |
+| `fetch` y XHR se restauran al terminar, aunque algo falle al empezar. | Aislar peticiones de **otras pestañas**, de un Service Worker o de un `fetch` guardado antes de iniciar (`const f = window.fetch`). |
+| Una sola sesión activa. | Que una petición de tu app **durante** el tour (por ejemplo, una actualización automática en segundo plano) no reciba datos de ejemplo: durante el tour, todo `fetch`/XHR de la página se trata igual. |
+
+---
+
 ## 6. Accesibilidad
 
 `role="dialog"` con etiqueta, foco que entra y se restaura al salir, Tab atrapado dentro del tour, anuncios con `aria-live`, navegación completa con teclado (←/→/Enter/Esc), soporte RTL y `prefers-reduced-motion` (sin animaciones ni confeti).
 
-Cada cambio pasa una auditoría automática con [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.2 A/AA) del popover en escritorio y celular, la tarjeta de bienvenida, el aviso de modo práctica, los 7 temas (contraste), el checklist y el constructor visual (`test/e2e/accesibilidad.spec.mjs`). La auditoría automática no sustituye una prueba con lector de pantalla (NVDA, VoiceOver).
+Cada cambio pasa una auditoría automática con [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.2 A/AA) del popover en escritorio y celular, la tarjeta de bienvenida, el aviso de modo práctica, los 7 temas (contraste), el checklist y el constructor visual (`test/e2e/accesibilidad.spec.mjs`). La auditoría automática no sustituye una prueba con lector de pantalla (NVDA, VoiceOver), así que **no es una certificación de cumplimiento de WCAG 2.2 AA**: pasar axe detecta solo una parte de los problemas posibles. Falta la validación manual con lectores de pantalla y teclado en distintos navegadores; hasta entonces, trátalo como un buen punto de partida, no como una garantía.
+
+**Límites del Shadow DOM.** El tour vive en un shadow root para aislar su diseño de tus estilos. Eso no garantiza compatibilidad con cualquier sistema de estilos o modal: tus CSS globales no lo alcanzan (usa `::part()` y las variables `--gm-*`), y un modal que atrape el foco (`inert`, trampas de foco de otras librerías) puede competir con el del tour. Los casos probados están en `test/e2e`; fuera de ellos, valida en tu aplicación.
 
 ## 7. Tamaños y compatibilidad
 

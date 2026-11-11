@@ -38,7 +38,12 @@ export interface PracticeOptions {
   latency?: number
   /** Block POST/PUT/PATCH/DELETE that no route handles. Default true. */
   blockWrites?: boolean
-  /** Let matching writes through to the real backend instead of blocking them (e.g. sign-in/token refresh). */
+  /**
+   * Strict isolation: block *every* `fetch`/XHR that no route handles, reads included (403, `x-practice-mode: 1`).
+   * Only what `allow` lets through reaches the real backend. Default false: unhandled reads go to the server.
+   */
+  strict?: boolean
+  /** Let matching requests through to the real backend instead of blocking them (e.g. sign-in/token refresh). */
   allow?: (req: { method: string; url: URL }) => boolean
   /** Also intercept `XMLHttpRequest` (axios, jQuery, …). Default true. Synchronous XHR is never intercepted. */
   xhr?: boolean
@@ -48,7 +53,7 @@ export interface PracticeOptions {
   onStart?: () => void
   /** Called after interception stops (refresh your UI so it shows the real data again). */
   onEnd?: () => void
-  /** Called when a write was blocked. */
+  /** Called when a request was blocked (a write, or any request in `strict` mode). */
   onBlocked?: (info: { method: string; url: string }) => void
 }
 
@@ -68,8 +73,12 @@ function pathRegex(pattern: string) {
   return new RegExp(`^${src}/?$`)
 }
 
+/** Only one session can own `fetch`/XHR at a time: two nested ones would answer each other's requests. */
+let current: PracticeSession | null = null
+
 export class PracticeSession {
   db: Db
+  private on = false
   private original: typeof fetch | null = null
   private patched: typeof fetch | null = null
   private unpatchXhr: (() => void) | null = null
@@ -80,26 +89,46 @@ export class PracticeSession {
 
   start() {
     if (this.original || typeof window === 'undefined') return
+    if (current && current !== this) {
+      throw new Error('[nexus-tours] practice mode is already active in another tour; stop it before starting this one')
+    }
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- registro de la única sesión activa
+    current = this
+    this.on = true
     this.original = window.fetch
     const original = this.original
     this.patched = (input: RequestInfo | URL, init?: RequestInit) => this.handle(original, input, init)
     window.fetch = this.patched
-    this.patchXhr()
-    this.o.onStart?.()
+    try {
+      this.patchXhr()
+      document.documentElement.setAttribute('data-nexus-practice', this.o.strict ? 'strict' : '')
+      this.o.onStart?.()
+    } catch (e) {
+      // A failure while starting must never leave `fetch`/XHR patched.
+      this.stop()
+      throw e
+    }
   }
 
   stop() {
     if (!this.original) return
-    // Only restore if nobody wrapped fetch on top of ours in the meantime.
+    // Only restore if nobody wrapped fetch on top of ours; if they did, `on = false` turns ours into a pass-through.
+    this.on = false
     if (window.fetch === this.patched) window.fetch = this.original
     this.original = this.patched = null
-    this.unpatchXhr?.()
-    this.unpatchXhr = null
-    this.db = {}
+    if (current === this) current = null
+    document.documentElement.removeAttribute('data-nexus-practice')
+    try {
+      this.unpatchXhr?.()
+    } finally {
+      this.unpatchXhr = null
+      this.db = {}
+    }
     this.o.onEnd?.()
   }
 
   private async handle(original: typeof fetch, input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    if (!this.on) return original(input as RequestInfo, init)
     const isReq = typeof Request !== 'undefined' && input instanceof Request
     const method = (init?.method ?? (isReq ? (input as Request).method : 'GET')).toUpperCase()
     const url = new URL(isReq ? (input as Request).url : String(input instanceof URL ? input.href : input), location.href)
@@ -127,6 +156,7 @@ export class PracticeSession {
       headers = new Headers()
     }
     const res = await this.decide(method, url, body, headers)
+    // The tour may have ended while the request was being decided: late answers are discarded, not faked.
     return res ?? original(input as RequestInfo, init)
   }
 
@@ -137,7 +167,12 @@ export class PracticeSession {
       await sleep(this.o.latency ?? 120)
       return res
     }
-    if (WRITE.test(method) && this.o.blockWrites !== false && !this.o.allow?.({ method, url })) {
+    if (this.o.allow?.({ method, url })) return null
+    if (this.o.strict) {
+      this.o.onBlocked?.({ method, url: url.href })
+      return json({ error: 'practice-mode', message: 'Requests without a practice route are blocked in strict practice mode.' }, 403)
+    }
+    if (WRITE.test(method) && this.o.blockWrites !== false) {
       this.o.onBlocked?.({ method, url: url.href })
       return json({ error: 'practice-mode', message: 'Writes are disabled while the tour runs in practice mode.' }, 403)
     }

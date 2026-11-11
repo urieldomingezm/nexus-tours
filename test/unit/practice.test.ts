@@ -246,6 +246,7 @@ describe('PracticeSession (XMLHttpRequest)', () => {
     const b = await xhr('DELETE', '/api/otra/1')
     expect(b.x.status).toBe(403)
     expect(onBlocked).toHaveBeenCalled()
+    sesion!.stop()
     iniciar({ data: { c: [] }, rest: { c: '/api/c' }, latency: 50 })
     const ev = await new Promise<string[]>((res) => {
       const x = new XMLHttpRequest()
@@ -326,5 +327,94 @@ describe('supabasePractice: más operadores', () => {
     expect((await (await rest('t?select=n&id=eq.1')).json())[0].n).toBe('Ana')
     const f = await fetch('https://p.supabase.co/functions/v1/hola', { method: 'POST', body: JSON.stringify({ n: 'Uri' }) })
     expect(await f.json()).toEqual({ hola: 'Uri' })
+  })
+})
+
+describe('PracticeSession: aislamiento y restauración', () => {
+  it('strict bloquea también las lecturas sin ruta y avisa con onBlocked', async () => {
+    const onBlocked = vi.fn()
+    iniciar({ strict: true, rest: { clients: '/api/clients' }, data: { clients: [] }, onBlocked })
+    const r = await fetch('/api/otra-cosa')
+    expect(r.status).toBe(403)
+    expect(r.headers.get('x-practice-mode')).toBe('1')
+    expect(onBlocked).toHaveBeenCalledWith({ method: 'GET', url: expect.stringContaining('/api/otra-cosa') })
+    expect(real).not.toHaveBeenCalled()
+    expect((await fetch('/api/clients')).status).toBe(200)
+  })
+
+  it('strict deja pasar solo lo que allow permite', async () => {
+    iniciar({ strict: true, allow: ({ url }) => url.pathname === '/auth/refresh' })
+    await fetch('/auth/refresh')
+    expect(real).toHaveBeenCalledTimes(1)
+    expect((await fetch('/api/x')).status).toBe(403)
+    expect(real).toHaveBeenCalledTimes(1)
+  })
+
+  it('sin strict, las lecturas sin ruta siguen llegando al servidor', async () => {
+    iniciar({})
+    await fetch('/api/x')
+    expect(real).toHaveBeenCalledTimes(1)
+  })
+
+  it('una segunda sesión no puede arrancar mientras hay otra activa, y no deja fetch parchado', () => {
+    iniciar({})
+    const parchado = window.fetch
+    const otra = new PracticeSession({ banner: false })
+    expect(() => otra.start()).toThrow(/already active/)
+    expect(window.fetch).toBe(parchado)
+    otra.stop()
+    expect(window.fetch).toBe(parchado)
+  })
+
+  it('tras stop() otra sesión puede arrancar', () => {
+    iniciar({}).stop()
+    expect(() => iniciar({})).not.toThrow()
+  })
+
+  it('si onStart lanza, fetch y XHR quedan restaurados', () => {
+    const fetchAntes = window.fetch
+    const sendAntes = XMLHttpRequest.prototype.send
+    const s = new PracticeSession({
+      banner: false,
+      onStart: () => {
+        throw new Error('boom')
+      },
+    })
+    expect(() => s.start()).toThrow('boom')
+    expect(window.fetch).toBe(fetchAntes)
+    expect(XMLHttpRequest.prototype.send).toBe(sendAntes)
+    expect(document.documentElement.hasAttribute('data-nexus-practice')).toBe(false)
+  })
+
+  it('marca <html data-nexus-practice> mientras dura y lo retira al terminar', () => {
+    const s = iniciar({ strict: true })
+    expect(document.documentElement.getAttribute('data-nexus-practice')).toBe('strict')
+    s.stop()
+    expect(document.documentElement.hasAttribute('data-nexus-practice')).toBe(false)
+  })
+
+  it('si alguien envolvió fetch encima del nuestro, tras stop() el nuestro deja de responder', async () => {
+    iniciar({ data: { clients: [{ id: 1 }] }, rest: { clients: '/api/clients' } })
+    const nuestro = window.fetch
+    const envuelto = ((i: RequestInfo | URL, init?: RequestInit) => nuestro(i, init)) as typeof fetch
+    window.fetch = envuelto
+    sesion!.stop()
+    sesion = null
+    await fetch('/api/clients')
+    expect(real).toHaveBeenCalledTimes(1)
+  })
+
+  it('peticiones simultáneas: las de antes de empezar llegan al servidor, las de durante usan los datos y las de después vuelven a la red', async () => {
+    const antes = fetch('/api/clients')
+    const s = iniciar({ data: { clients: [{ id: 1 }] }, rest: { clients: '/api/clients' }, latency: 5 })
+    const [a, durante1, durante2] = await Promise.all([antes, fetch('/api/clients'), fetch('/api/clients/1')])
+    expect(await a.json()).toBe('real')
+    expect(durante1.headers.get('x-practice-mode')).toBe('1')
+    expect(durante2.headers.get('x-practice-mode')).toBe('1')
+    expect(real).toHaveBeenCalledTimes(1)
+    s.stop()
+    sesion = null
+    expect(await (await fetch('/api/clients')).json()).toBe('real')
+    expect(real).toHaveBeenCalledTimes(2)
   })
 })

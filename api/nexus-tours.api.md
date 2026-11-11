@@ -66,6 +66,7 @@ interface PracticeOptions {
     routes?: PracticeRoute[];
     latency?: number;
     blockWrites?: boolean;
+    strict?: boolean;
     allow?: (req: {
         method: string;
         url: URL;
@@ -374,6 +375,7 @@ interface PracticeOptions {
     routes?: PracticeRoute[];
     latency?: number;
     blockWrites?: boolean;
+    strict?: boolean;
     allow?: (req: {
         method: string;
         url: URL;
