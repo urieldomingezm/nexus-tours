@@ -3,7 +3,7 @@
 # nexus-tours
 
 **Tours guiados que no se rompen con modales.**
-Sin dependencias · ~12 KB gzip · TypeScript · accesible · wrappers para Vue y React
+Sin dependencias · <!--tam:nexus-tours-->~12.6 KB<!--/tam--> gzip · TypeScript · accesible · wrappers para Vue y React
 
 Hecho por [**DevMedina**](https://devmedina.is-a.dev/) (Angel Uriel Domínguez Medina) · rama de librerías de **Nexus** · Licencia MIT
 
@@ -57,7 +57,7 @@ npm i nexus-tours
 
 ### Con un `<script>` (WordPress, HTML estático, PHP…)
 
-Un solo archivo trae **todo** (tours, checklist, temas, datos de ejemplo, modo práctica) en ~21 KB gzip y expone un único global: `NexusTours`.
+Un solo archivo trae **todo** (tours, checklist, temas, datos de ejemplo, modo práctica) en <!--tam:nexus-tours.all-->~21.2 KB<!--/tam--> gzip y expone un único global: `NexusTours`.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.2/dist/nexus-tours.all.iife.js"></script>
@@ -82,7 +82,7 @@ También como módulo ES:
 
 - En producción fija la versión exacta (`@0.2.0`) y, si quieres que el navegador verifique el archivo, agrega [`integrity` (SRI)](https://www.srihash.org/).
 - `unpkg.com/nexus-tours@0.2` también funciona.
-- Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (~12 KB), `builder.js` (~7 KB), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
+- Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (<!--tam:nexus-tours-->~12.6 KB<!--/tam-->), `builder.js` (<!--tam:builder-->~7.3 KB<!--/tam-->), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
 - **Importante:** las CDN sirven lo que está en npm (o en un repositorio público de GitHub). Mientras el paquete no se publique en npm no existen esas URLs; `npm publish` es lo que las activa.
 
 ---
@@ -161,7 +161,7 @@ Desde tu hoja de estilos:
 - **Variables:** `--gm-accent --gm-accent-fg --gm-bg --gm-fg --gm-muted --gm-border --gm-dim --gm-radius --gm-font --gm-z`.
 - **Partes (`::part()`):** `backdrop ring popover title description footer progress button button-primary button-secondary close dots icon image skip hint never banner`.
 
-**Temas listos** (`nexus-tours/themes`, ~1 KB): `light`, `dark`, `ocean`, `sunset`, `mint`, `rose`, `mono`, y los que toman los colores de tu framework: `bootstrap`, `tailwind`, `shadcn`, `daisyui`, `vuetify`, `mui` (ver [4.16](#416-bootstrap-tailwind-y-otros-frameworks)).
+**Temas listos** (`nexus-tours/themes`, <!--tam:themes-->~1.4 KB<!--/tam-->): `light`, `dark`, `ocean`, `sunset`, `mint`, `rose`, `mono`, y los que toman los colores de tu framework: `bootstrap`, `tailwind`, `shadcn`, `daisyui`, `vuetify`, `mui` (ver [4.16](#416-bootstrap-tailwind-y-otros-frameworks)).
 
 ```ts
 import { themes, autoTheme } from 'nexus-tours/themes'
@@ -300,12 +300,12 @@ El modo práctica intercepta `fetch` **y** `XMLHttpRequest`, así que axios, jQu
 
 #### Con Supabase
 
-Si tu app usa Supabase (`supabase-js` o cualquier cliente PostgREST), `supabasePractice()` responde `from()`, `rpc()` y `functions.invoke()` con datos de ejemplo mientras corre el tour. Tu base real no se toca.
+Si tu app usa Supabase (`supabase-js` o cualquier cliente PostgREST), `supabasePractice()` responde `from()`, `rpc()` y `functions.invoke()` con datos de ejemplo mientras corre el tour (<!--tam:supabase-->~3.4 KB<!--/tam-->, entrada aparte). Tu base real no se toca.
 
 ```ts
 import { Tour } from 'nexus-tours'
 import { createFixtures, fake } from 'nexus-tours/fixtures'
-import { supabasePractice } from 'nexus-tours/supabase'     // ~3.7 KB
+import { supabasePractice } from 'nexus-tours/supabase'
 
 new Tour({
   steps,
@@ -343,7 +343,7 @@ new Tour({
 
 ### 4.9 Datos de ejemplo (fixtures)
 
-`nexus-tours/fixtures` (~2 KB, entrada aparte, sin dependencias): datos falsos reproducibles, en español o inglés.
+`nexus-tours/fixtures` (<!--tam:fixtures-->~1.5 KB<!--/tam-->, entrada aparte, sin dependencias): datos falsos reproducibles, en español o inglés.
 
 ```ts
 import { createFixtures, fake } from 'nexus-tours/fixtures'
@@ -372,10 +372,10 @@ Generadores: `id uuid firstName lastName name company email phone int float bool
 
 ### 4.10 Checklist de primeros pasos
 
-Un widget flotante "Primeros pasos" que recuerda **qué ha visto ya cada usuario**. Terminar el tour de un elemento lo marca como hecho.
+Un widget flotante "Primeros pasos" que recuerda **qué ha visto ya cada usuario** (<!--tam:checklist-->~3.9 KB<!--/tam-->, entrada aparte). Terminar el tour de un elemento lo marca como hecho.
 
 ```ts
-import { Checklist } from 'nexus-tours/checklist'     // ~4 KB
+import { Checklist } from 'nexus-tours/checklist'
 
 const checklist = new Checklist({
   id: 'onboarding',                                    // un id nuevo = mostrarlo otra vez a todos
@@ -402,7 +402,7 @@ checklist.on('change', render); checklist.on('complete', celebrar)
 
 ### 4.11 Constructor visual (sin código)
 
-Deja que cualquiera arme un tour **haciendo clic en tu página**. Impórtalo solo donde se necesite (~8 KB gzip).
+Deja que cualquiera arme un tour **haciendo clic en tu página**. Impórtalo solo donde se necesite (<!--tam:builder-->~7.3 KB<!--/tam--> gzip).
 
 ```ts
 import { TourBuilder } from 'nexus-tours/builder'
@@ -458,7 +458,7 @@ const [abierto, setAbierto] = useState(false)
 const { start, stop, active, index } = useTour({ steps })
 ```
 
-Ambos pesan ~1 KB, importan el núcleo como dependencia par (`nexus-tours`) y limpian al desmontar. El de React es seguro con StrictMode. Eventos: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) o `@start @step @missing @end @stop` (Vue).
+Ambos pesan menos de 1 KB, importan el núcleo como dependencia par (`nexus-tours`) y limpian al desmontar. El de React es seguro con StrictMode. Eventos: `onStart / onStep / onTargetMissing / onEnd / onStop` (React) o `@start @step @missing @end @stop` (Vue).
 
 ### 4.12b Resaltar un elemento suelto y alinear el popover
 
@@ -682,12 +682,12 @@ Tamaños aproximados (minificado + gzip, lo que descarga el usuario); `npm run s
 
 | Pieza | Tamaño |
 |---|---|
-| Núcleo (`nexus-tours`) | ~12 KB |
-| Todo junto (`nexus-tours.all`, CDN) | ~20.5 KB |
-| Constructor visual | ~7.3 KB |
-| Checklist | ~3.9 KB |
-| Adaptador Supabase | ~3.4 KB |
-| Datos de ejemplo / Temas / Vue / React | ~1.5 / 1.3 / 1 / 0.8 KB |
+| Núcleo (`nexus-tours`) | <!--tam:nexus-tours-->~12.6 KB<!--/tam--> |
+| Todo junto (`nexus-tours.all`, CDN) | <!--tam:nexus-tours.all-->~21.2 KB<!--/tam--> |
+| Constructor visual | <!--tam:builder-->~7.3 KB<!--/tam--> |
+| Checklist | <!--tam:checklist-->~3.9 KB<!--/tam--> |
+| Adaptador Supabase | <!--tam:supabase-->~3.4 KB<!--/tam--> |
+| Datos de ejemplo / Temas / Vue / React | <!--tam:fixtures-->~1.5 KB<!--/tam--> / <!--tam:themes-->~1.4 KB<!--/tam--> / <!--tam:vue-->~1.0 KB<!--/tam--> / <!--tam:react-->~0.8 KB<!--/tam--> |
 
 Cero dependencias en tiempo de ejecución; `vue` y `react` son dependencias par **opcionales**.
 
