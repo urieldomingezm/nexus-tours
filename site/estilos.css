@@ -1025,3 +1025,97 @@ input[type='checkbox'] {
     padding-bottom: 0;
   }
 }
+
+/* ── Firma de DevMedina y movimiento ────────────────────────────────────── */
+.logo {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  background: none;
+  border-radius: 0;
+}
+.logo svg,
+.firma svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pie .firma {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  vertical-align: middle;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+.pie .firma svg {
+  width: var(--space-lg);
+  height: var(--space-lg);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+.pie .firma:hover svg {
+  transform: rotate(8deg);
+}
+.btn:active,
+.chip:active,
+.tema:active,
+.menu-btn:active {
+  transform: translateY(1px);
+}
+.btn,
+.chip,
+.tema,
+.menu-btn {
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Entrada de la portada: una vez, escalonada, solo opacidad y 12px de desplazamiento. */
+  .hero-texto > *,
+  .hero .ventana,
+  .hero.chico > * {
+    animation: entra var(--dur-long) var(--ease-out) both;
+  }
+  .hero-texto > :nth-child(2),
+  .hero.chico > :nth-child(2) {
+    animation-delay: 70ms;
+  }
+  .hero-texto > :nth-child(3),
+  .hero.chico > :nth-child(3) {
+    animation-delay: 140ms;
+  }
+  .hero-texto > :nth-child(4),
+  .hero .ventana {
+    animation-delay: 210ms;
+  }
+  @keyframes entra {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+}
+
+/* Una sola coreografía de scroll: un hilo de 2px mide la lectura. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) and (min-width: 40rem) {
+    .cabecera::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 -1px 0;
+      height: 2px;
+      background: var(--color-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: hilo linear both;
+      animation-timeline: scroll(root);
+    }
+    @keyframes hilo {
+      to {
+        transform: scaleX(1);
+      }
+    }
+  }
+}

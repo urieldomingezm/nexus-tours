@@ -54,6 +54,8 @@ test('celular: el menú se abre y se cierra con Esc', async ({ nuevoContexto, vi
 
 test('accesibilidad: las páginas no tienen violaciones de axe (WCAG 2.2 AA)', async ({ nuevoContexto, vigilar }) => {
   const p = vigilar(await (await nuevoContexto({ viewport: { width: 1200, height: 800 } })).newPage())
+  // La entrada de la portada anima la opacidad: sin movimiento el contraste se mide en el estado final.
+  await p.emulateMedia({ reducedMotion: 'reduce' })
   for (const pagina of ['index.html', 'guia.html', 'demo.html']) {
     for (const tema of ['claro', 'oscuro']) {
       await p.goto(SITIO + pagina)

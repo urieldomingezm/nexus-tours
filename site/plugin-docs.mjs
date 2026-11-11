@@ -92,7 +92,7 @@ function cabecera(activa) {
     ([id, href, texto]) => `<a href="${href}"${id === activa ? ' aria-current="page"' : ''}>${texto}</a>`,
   ).join('')
   return `<header class="cabecera">
-  <a class="marca" href="index.html"><span class="logo" aria-hidden="true"></span>nexus-tours</a>
+  <a class="marca" href="index.html"><span class="logo"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g transform="rotate(-6 32 32)"><rect x="5" y="5" width="54" height="54" rx="12" fill="#FFE14D" stroke="#1A1033" stroke-width="5"/><text x="32" y="41" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-weight="900" font-size="22" fill="#1A1033">&lt;/&gt;</text></g></svg></span>nexus-tours</a>
   <button type="button" class="menu-btn" aria-expanded="false" aria-controls="menu-principal" aria-label="Menú"><span aria-hidden="true"></span></button>
   <nav id="menu-principal" aria-label="Principal">${enlaces}<a class="solo-movil" href="${REPO}" rel="noopener">GitHub</a><a class="solo-movil" href="${NPM}" rel="noopener">npm</a></nav>
   <div class="herr">
@@ -104,10 +104,10 @@ function cabecera(activa) {
 }
 
 const ICONO =
-  '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%236d28d9%27/%3E%3C/svg%3E" />'
+  '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Cg transform=%27rotate%28-6 32 32%29%27%3E%3Crect x=%275%27 y=%275%27 width=%2754%27 height=%2754%27 rx=%2712%27 fill=%27%23FFE14D%27 stroke=%27%231A1033%27 stroke-width=%275%27/%3E%3Ctext x=%2732%27 y=%2741%27 text-anchor=%27middle%27 font-family=%27ui-monospace,Menlo,Consolas,monospace%27 font-weight=%27900%27 font-size=%2722%27 fill=%27%231A1033%27%3E%26lt%3B/%26gt%3B%3C/text%3E%3C/g%3E%3C/svg%3E" />'
 
 const pie = () => `<footer class="pie">
-  <p><strong>nexus-tours</strong> v${pkg.version}. Licencia MIT. Hecho por <a href="https://devmedina.is-a.dev/" rel="noopener">DevMedina</a>, rama de librerías de Nexus.</p>
+  <p><strong>nexus-tours</strong> v${pkg.version}. Licencia MIT. Hecho por <a class="firma" href="https://devmedina.is-a.dev/" rel="noopener"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g transform="rotate(-6 32 32)"><rect x="5" y="5" width="54" height="54" rx="12" fill="#FFE14D" stroke="#1A1033" stroke-width="5"/><text x="32" y="41" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-weight="900" font-size="22" fill="#1A1033">&lt;/&gt;</text></g></svg>DevMedina</a>, rama de librerías de Nexus.</p>
   <nav aria-label="Pie de página">
     <a href="${REPO}" rel="noopener">Código</a>
     <a href="${NPM}" rel="noopener">npm</a>
