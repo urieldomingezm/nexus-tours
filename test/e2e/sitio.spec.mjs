@@ -60,6 +60,8 @@ test('accesibilidad: las páginas no tienen violaciones de axe (WCAG 2.2 AA)', a
     for (const tema of ['claro', 'oscuro']) {
       await p.goto(SITIO + pagina)
       await p.evaluate((t) => (document.documentElement.dataset.tema = t), tema)
+      // Sin transiciones ni animaciones de ningún tipo: axe mide el contraste en el estado final (WebKit lo medía a medias).
+      await p.addStyleTag({ content: '*, *::before, *::after { animation: none !important; transition: none !important }' })
       const { violations } = await new AxeBuilder({ page: p }).withTags(REGLAS).analyze()
       expect(
         violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
