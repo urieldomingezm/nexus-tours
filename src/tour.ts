@@ -205,11 +205,17 @@ export class Tour implements TourApi {
       this.progress.saved = await this.progress.load()
       if (!this._active) return
     }
-    this.build()
     if (this.opts.practice) {
-      this.session = new PracticeSession(this.opts.practice)
-      this.session.start()
+      const session = new PracticeSession(this.opts.practice)
+      try {
+        session.start()
+      } catch (e) {
+        this._active = false
+        throw e
+      }
+      this.session = session
     }
+    this.build()
     document.addEventListener('keydown', this.onKey, true)
     document.addEventListener('focusin', this.onFocusIn, true)
     this.emit('start')

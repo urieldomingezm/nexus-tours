@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Modo práctica: aislamiento más estricto
+- `strict: true`: bloquea también las lecturas (`fetch`/XHR) que ninguna ruta atienda; solo pasa lo que autorice `allow`. `allow` ahora aplica a cualquier método.
+- Una sola sesión de modo práctica activa: un segundo `start()` rechaza con un error claro (antes se apilaban dos interceptores).
+- Si `onStart` lanza, `fetch` y XHR quedan restaurados. Si otra librería envolvió `fetch` encima, el interceptor deja de responder tras `stop()`.
+- `<html data-nexus-practice>` (`="strict"` en modo estricto) mientras dura, para estilar un indicador de entorno de demostración.
+- Pruebas de peticiones simultáneas (antes, durante y después del tour) y de restauración.
+
+### Documentación
+- Tabla «Garantías y límites del modo práctica», límites del Shadow DOM y aclaración de que la auditoría con axe no es una certificación WCAG.
+
 ### Agregado
 - Sitio de documentación rediseñado: portada con un tour real sobre la propia página, guía (el README), demo y referencia de la API. Menú de celular, tema claro/oscuro y publicación en GitHub Pages (`docs.yml`).
 
