@@ -104,11 +104,16 @@ function cabecera(activa) {
 }
 
 const ICONO =
-  '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%234263eb%27/%3E%3Cstop offset=%271%27 stop-color=%27%238b5cf6%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27url(%23g)%27/%3E%3C/svg%3E" />'
+  '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%236d28d9%27/%3E%3C/svg%3E" />'
 
 const pie = () => `<footer class="pie">
-  <p>nexus-tours <strong>v${pkg.version}</strong> · Licencia MIT · Hecho por <a href="https://devmedina.is-a.dev/" rel="noopener">DevMedina</a> · rama de librerías de Nexus</p>
-  <p><a href="${REPO}" rel="noopener">Código</a> · <a href="${NPM}" rel="noopener">npm</a> · <a href="${REPO}/blob/main/CHANGELOG.md" rel="noopener">Cambios</a> · <a href="${REPO}/issues" rel="noopener">Reportar un problema</a></p>
+  <p><strong>nexus-tours</strong> v${pkg.version}. Licencia MIT. Hecho por <a href="https://devmedina.is-a.dev/" rel="noopener">DevMedina</a>, rama de librerías de Nexus.</p>
+  <nav aria-label="Pie de página">
+    <a href="${REPO}" rel="noopener">Código</a>
+    <a href="${NPM}" rel="noopener">npm</a>
+    <a href="${REPO}/blob/main/CHANGELOG.md" rel="noopener">Cambios</a>
+    <a href="${REPO}/issues" rel="noopener">Reportar un problema</a>
+  </nav>
 </footer>`
 
 export function docsPlugin() {
