@@ -140,10 +140,17 @@ main {
   gap: var(--space-2xs);
   align-items: center;
 }
+.herr .ico-enlace {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding-block: 0;
+}
 .tema {
   min-width: 96px;
+  min-height: 38px;
   white-space: nowrap;
-  padding: var(--space-xs) var(--space-md);
+  padding: 0 var(--space-md);
   border: 0;
   border-radius: var(--radius-pill);
   background: transparent;
@@ -169,7 +176,7 @@ main {
   .marca {
     flex: 1;
   }
-  .ico-enlace {
+  .herr .ico-enlace {
     display: none;
   }
   .menu-btn {
@@ -1418,4 +1425,610 @@ input[type='checkbox'] {
 }
 .modal-prueba .mesa-acciones {
   justify-content: flex-end;
+}
+
+/* ── Buscador y volver arriba ───────────────────────────────────────────── */
+.buscar-btn {
+  display: inline-flex;
+  gap: var(--space-xs);
+  align-items: center;
+  min-height: 38px;
+  padding: 0 var(--space-md);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-rule-2);
+  color: var(--color-ink);
+  font: 500 var(--text-sm) / 1 var(--font-display);
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+.buscar-btn:hover {
+  background: var(--color-paper-2);
+}
+kbd {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  font: 500 0.75rem / 1.2 var(--font-mono, ui-monospace, monospace);
+}
+@media (max-width: 960px) {
+  .buscar-btn kbd {
+    display: none;
+  }
+  .buscar-btn,
+  .tema {
+    min-height: 44px;
+  }
+}
+dialog.buscador {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(70vh, 560px);
+  margin: 12vh auto 0;
+  padding: 0;
+  border: 1.5px solid var(--color-rule-2);
+  border-radius: 16px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: 0 24px 60px -20px oklch(0% 0 0 / 0.5);
+  overflow: hidden;
+}
+dialog.buscador::backdrop {
+  background: oklch(10% 0.03 290 / 0.55);
+}
+.busca-caja {
+  display: grid;
+  max-height: inherit;
+}
+.busca-entrada {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--space-lg);
+  border: 0;
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+  background: transparent;
+  color: var(--color-ink);
+  font: 500 var(--text-md) / 1.2 var(--font-display);
+}
+.busca-entrada:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+.busca-lista {
+  margin: 0;
+  padding: var(--space-xs);
+  list-style: none;
+  overflow: auto;
+}
+.busca-lista li {
+  border-radius: 10px;
+}
+.busca-lista li[aria-selected='true'] {
+  background: var(--color-accent-soft);
+}
+.busca-lista li > div {
+  display: flex;
+  gap: var(--space-md);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+.busca-t {
+  font-weight: 600;
+}
+.busca-p {
+  flex: none;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.busca-ayuda {
+  margin: 0;
+  padding: var(--space-xs) var(--space-lg);
+  border-top: var(--rule-hair) solid var(--color-rule);
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.busca-aviso {
+  margin: 0;
+  padding: 0 var(--space-lg) var(--space-xs);
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.busca-aviso:empty {
+  display: none;
+}
+.arriba {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 8px 24px -8px oklch(0% 0 0 / 0.5);
+  color: var(--color-accent-ink);
+  cursor: pointer;
+}
+.arriba:hover {
+  background: var(--color-accent-deep);
+}
+.arriba[hidden] {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .arriba {
+    animation: entra var(--dur-short) var(--ease-out) both;
+  }
+}
+
+
+/* ── Animaciones decorativas (ver animaciones.ts) ───────────────────────── */
+.hero:not(.chico) {
+  position: relative;
+  isolation: isolate;
+}
+.particulas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  /* Se desvanece hacia los bordes: no se ve el corte de la portada. */
+  mask-image: radial-gradient(ellipse at center, #000 35%, transparent 75%);
+}
+.chispas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .revela {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity var(--dur-long) var(--ease-out) var(--retraso, 0ms),
+      transform var(--dur-long) var(--ease-out) var(--retraso, 0ms);
+  }
+  .revela.visto {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Texto que se escribe solo (portada). */
+.escribe {
+  font-size: var(--text-lead);
+  color: var(--color-ink-2);
+  min-height: 1.5em;
+}
+.escribe-txt {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+.cursor {
+  display: none;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    margin-inline-start: 2px;
+    vertical-align: text-bottom;
+    background: var(--color-accent-text);
+    animation: parpadea 1s steps(1) infinite;
+  }
+  @keyframes parpadea {
+    50% {
+      opacity: 0;
+    }
+  }
+  .hero-texto > :nth-child(5) {
+    animation-delay: 280ms;
+  }
+}
+
+@media print {
+  .particulas,
+  .chispas {
+    display: none;
+  }
+  .revela {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
+/* ── Esqueleto de la cifra, brillo en botones, insignias en vivo, transición entre páginas ── */
+.esqueleto {
+  display: inline-block;
+  min-width: 4ch;
+  border-radius: 8px;
+  background: var(--color-rule);
+  color: transparent;
+}
+.insignias.en-vivo .insignia {
+  text-transform: none;
+  text-decoration: none;
+}
+.insignias.en-vivo b {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+a.insignia:hover {
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .esqueleto {
+    background: linear-gradient(100deg, var(--color-rule) 30%, var(--color-paper-3) 50%, var(--color-rule) 70%) 0 0 / 200% 100%;
+    animation: brilla 1.3s linear infinite;
+  }
+  @keyframes brilla {
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .btn.primario:hover {
+    background-image: radial-gradient(110px circle at var(--mx, 50%) var(--my, 50%), oklch(100% 0 0 / 0.3), transparent 70%);
+  }
+}
+
+/* Celular angosto: «buscar» queda como lupa (el texto sigue para lectores de pantalla) y la marca no se parte en dos líneas. */
+@media (max-width: 520px) {
+  .marca {
+    white-space: nowrap;
+  }
+  .buscar-btn {
+    justify-content: center;
+    min-width: 44px;
+    padding: 0;
+  }
+  .buscar-btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .tema {
+    min-width: 0;
+  }
+}
+
+/* ── Míralo en acción: un tour de muestra (ver mirala.ts) ───────────────── */
+.chips {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+.chip[aria-pressed='true'] {
+  background: var(--color-accent);
+  box-shadow: none;
+  color: var(--color-accent-ink);
+}
+.mira-pantalla {
+  position: relative;
+  min-height: 400px;
+  margin-top: var(--space-lg);
+  border-radius: 20px;
+  background: var(--color-paper-2);
+  box-shadow: inset 0 0 0 1.5px var(--color-rule-2);
+  overflow: hidden;
+}
+.mira-app {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+  font-size: 0.85rem;
+  color: var(--color-ink-2);
+  user-select: none;
+}
+.mira-lista {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.mira-barra,
+.mira-fila {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.mira-barra {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-rule);
+}
+.mira-barra b {
+  margin-right: auto;
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+.mira-nuevo,
+.mira-guardar {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mira-d {
+  margin-left: auto;
+  color: var(--color-muted);
+}
+.f-av {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-rule);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.mira-lateral {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--color-paper);
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+}
+.mira-lateral b {
+  color: var(--color-ink);
+}
+.mira-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+}
+.mira-item i {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--color-rule-2);
+}
+.mira-item.hecho i {
+  background: var(--color-accent);
+  box-shadow: none;
+}
+.mira-item.hecho {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+.mira-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 6px;
+  width: min(300px, calc(100% - 32px));
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--color-paper);
+  box-shadow:
+    0 20px 50px -16px oklch(0% 0 0 / 0.5),
+    inset 0 0 0 1px var(--color-rule);
+  translate: -50% -50%;
+  opacity: 0;
+  visibility: hidden;
+}
+.mira-modal.abierto {
+  opacity: 1;
+  visibility: visible;
+}
+.mira-modal b {
+  color: var(--color-ink);
+  font-size: 1rem;
+}
+.mira-etq {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+.mira-campo {
+  display: block;
+  height: 34px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1.5px var(--color-rule-2);
+}
+.mira-guardar {
+  justify-self: end;
+  margin-top: 8px;
+}
+.mira-foco {
+  position: absolute;
+  z-index: 4;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    0 0 0 9999px oklch(0% 0 0 / 0.5);
+  pointer-events: none;
+}
+.mira-paso {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--color-paper);
+  box-shadow:
+    0 16px 40px -12px oklch(0% 0 0 / 0.5),
+    inset 0 0 0 1px var(--color-rule-2);
+  color: var(--color-ink);
+}
+.mira-paso p {
+  margin: 0;
+}
+.mira-n {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+.mira-t {
+  font-weight: 700;
+}
+.mira-x {
+  color: var(--color-ink-2);
+  font-size: 0.85rem;
+}
+.mira-botones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.mira-btn,
+.mira-repetir {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-rule-2);
+  color: var(--color-ink);
+  font: 600 0.8rem / 1 var(--font-display);
+  cursor: pointer;
+}
+.mira-btn.primario,
+.mira-repetir {
+  background: var(--color-accent);
+  box-shadow: none;
+  color: var(--color-accent-ink);
+}
+.mira-btn:last-child {
+  margin-left: auto;
+}
+.mira-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.mira-btn.pulsa {
+  transform: scale(0.94);
+  filter: brightness(0.9);
+}
+.mira-repetir {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  left: 50%;
+  min-height: 44px;
+  translate: -50% -50%;
+}
+.mira-toast {
+  position: absolute;
+  z-index: 6;
+  right: 16px;
+  bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-size: 0.85rem;
+  opacity: 0;
+}
+.mira-toast.visible {
+  opacity: 1;
+}
+.mira-toast:not(.visible) {
+  visibility: hidden;
+}
+.mira-cursor {
+  position: absolute;
+  z-index: 7;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  background: var(--color-ink);
+  clip-path: polygon(0 0, 0 100%, 30% 76%, 52% 100%, 66% 92%, 44% 68%, 80% 62%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(85%, 120%);
+}
+.mira-cursor.visible {
+  opacity: 1;
+}
+.mira-escenas {
+  margin-top: var(--space-md);
+}
+.mira-codigo {
+  margin-top: var(--space-md);
+}
+.mira-codigo summary {
+  width: fit-content;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mira-codigo pre {
+  margin-top: var(--space-sm);
+  overflow-x: auto;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mira-foco {
+    transition:
+      left var(--dur-long) var(--ease-out),
+      top var(--dur-long) var(--ease-out),
+      width var(--dur-long) var(--ease-out),
+      height var(--dur-long) var(--ease-out);
+  }
+  .mira-paso {
+    transition:
+      left var(--dur-long) var(--ease-out),
+      top var(--dur-long) var(--ease-out);
+  }
+  .mira-modal {
+    transition:
+      opacity var(--dur-short) var(--ease-out),
+      visibility var(--dur-short);
+  }
+  .mira-toast {
+    transition: opacity var(--dur-short) var(--ease-out);
+  }
+  .mira-cursor {
+    transition:
+      transform 0.8s var(--ease-in-out),
+      opacity var(--dur-short);
+  }
+  .mira-btn {
+    transition: transform var(--dur-micro) var(--ease-out);
+  }
+}
+@media (max-width: 640px) {
+  .mira-app {
+    grid-template-columns: 1fr;
+  }
+  .mira-pantalla {
+    min-height: 460px;
+  }
+  .mira-d {
+    display: none;
+  }
 }

@@ -14,6 +14,10 @@
         <div class="hero-texto">
           <h1 id="t-titulo">Tours que no se rompen con modales</h1>
           <p class="lema">Guías sin dependencias que esperan al modal y dejan practicar.</p>
+          <p class="escribe">
+            Para <span class="escribe-txt" aria-hidden="true" data-escribe="altas de clientes en un modal|primeros pasos con checklist|prácticas con datos de ejemplo|formularios dentro de un &lt;dialog&gt;|pasos que esperan al elemento">altas de clientes en un modal</span><span class="cursor" aria-hidden="true"></span>
+            <span class="sr-only">: altas de clientes en un modal, primeros pasos con checklist, prácticas con datos de ejemplo, formularios dentro de un dialog y pasos que esperan al elemento.</span>
+          </p>
           <div class="acciones izq">
             <button type="button" class="btn primario grande" id="b-tour">Probar el tour</button>
             <a class="btn grande" href="primeros-pasos.html">Empezar</a>
@@ -53,6 +57,69 @@ new Tour({
         <span class="insignia">React</span>
       </div>
 
+      <div class="insignias en-vivo" aria-label="Estado del proyecto">
+        <a class="insignia" href="https://www.npmjs.com/package/nexus-tours" rel="noopener">npm <b id="i-version">v<!--@version--></b></a>
+        <span class="insignia">núcleo <b><!--@tam:nexus-tours--></b> gzip</span>
+        <span class="insignia">licencia <b>MIT</b></span>
+        <a class="insignia" href="https://github.com/urieldomingezm/nexus-tours/actions/workflows/ci.yml" rel="noopener">CI <b>pruebas en cada cambio</b></a>
+      </div>
+
+      <section class="bloque mira" aria-labelledby="mira-t">
+        <h2 id="mira-t">Míralo en acción</h2>
+        <p class="sub">Un tour de muestra sobre una pantalla de mentira: espera al modal, resalta el campo y deja practicar. Toca la maqueta cuando quieras y llévalo tú.</p>
+        <div class="mira-pantalla" role="group" aria-label="Tour de muestra">
+          <div class="mira-app" aria-hidden="true">
+            <div class="mira-lista">
+              <div class="mira-barra"><b>Clientes</b><span class="mira-nuevo" id="mira-nuevo">+ Nuevo cliente</span></div>
+              <div class="mira-fila"><span class="f-av">LM</span><span>Laura Méndez</span><span class="mira-d">Activa</span></div>
+              <div class="mira-fila"><span class="f-av">MR</span><span>Mario Ruiz</span><span class="mira-d">Pendiente</span></div>
+              <div class="mira-fila"><span class="f-av">AS</span><span>Ana Soto</span><span class="mira-d">Activa</span></div>
+              <div class="mira-fila"><span class="f-av">PV</span><span>Pedro Vega</span><span class="mira-d">Activo</span></div>
+            </div>
+            <div class="mira-lateral" id="mira-lateral">
+              <b>Primeros pasos</b>
+              <p class="mira-item" data-item="1"><i></i>Crea tu primer cliente</p>
+              <p class="mira-item" data-item="2"><i></i>Envía una factura</p>
+              <p class="mira-item" data-item="3"><i></i>Lee la documentación</p>
+            </div>
+            <div class="mira-modal" id="mira-modal">
+              <b>Nuevo cliente</b>
+              <span class="mira-etq">Nombre</span><span class="mira-campo" id="mira-nombre"></span>
+              <span class="mira-etq">Correo</span><span class="mira-campo" id="mira-correo"></span>
+              <span class="mira-guardar" id="mira-guardar">Guardar</span>
+            </div>
+          </div>
+          <div class="mira-foco" hidden></div>
+          <div class="mira-paso" role="group" aria-label="Paso del tour" hidden>
+            <p class="mira-n"></p>
+            <p class="mira-t"></p>
+            <p class="mira-x"></p>
+            <div class="mira-botones"><button type="button" class="mira-btn" data-accion="atras">Anterior</button><button type="button" class="mira-btn primario" data-accion="siguiente">Siguiente</button><button type="button" class="mira-btn" data-accion="salir">Salir</button></div>
+          </div>
+          <button type="button" class="mira-repetir" data-accion="repetir" hidden>Repetir el tour</button>
+          <div class="mira-toast" role="status" inert><span></span></div>
+          <span class="mira-cursor" aria-hidden="true"></span>
+        </div>
+        <div class="mira-escenas chips" role="group" aria-label="Escena">
+          <button type="button" class="chip" data-escena="modal" aria-pressed="true">Modal</button>
+          <button type="button" class="chip" data-escena="practica" aria-pressed="false">Práctica</button>
+          <button type="button" class="chip" data-escena="checklist" aria-pressed="false">Checklist</button>
+        </div>
+        <details class="mira-codigo">
+          <summary>Ver código</summary>
+          <pre data-lang="ts"><code>import { Tour } from 'nexus-tours'
+
+new Tour({
+  steps: [
+    { element: '#nuevo', title: 'Crea un cliente', before: abrirModal },
+    { element: '#nombre', title: 'Ponle nombre' },
+    { element: '#guardar', title: 'Guarda', after: cerrarModal },
+  ],
+}).start()</code></pre>
+        </details>
+        <p id="mira-estado" class="sr-only" role="status"></p>
+      </section>
+
       <section class="bloque" id="t-porque" aria-labelledby="porque">
         <h2 id="porque">Por qué</h2>
         <p class="sub">Guías sin dependencias que esperan a que el modal exista, viven dentro del <code>&lt;dialog&gt;</code>, no chocan con tu CSS y dejan practicar con datos de ejemplo.</p>
@@ -64,6 +131,26 @@ new Tour({
           <div class="tarjeta"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></svg></span><h3>Checklist y constructor</h3><p>Lista de primeros pasos que recuerda el avance y un constructor visual para armar tours sin escribir código.</p></div>
           <div class="tarjeta"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></svg></span><h3>Vue, React y CDN</h3><p>Wrappers de poco más de 1 KB, seguros con StrictMode, y un solo <code>&lt;script&gt;</code> si no usas bundler.</p></div>
         </div>
+      </section>
+
+      <section class="bloque" aria-labelledby="piezas">
+        <h2 id="piezas">Una pieza en lugar de varias</h2>
+        <p class="sub">Lo que en un producto suele armarse juntando paquetes y código a mano, aquí viene en uno solo y sin dependencias.</p>
+        <div class="tabla">
+          <table>
+            <caption class="sr-only">Lo que sueles juntar de varias partes y dónde está en nexus-tours</caption>
+            <thead><tr><th scope="col">Lo que necesitas</th><th scope="col">Suele armarse con</th><th scope="col">En nexus-tours</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Resaltar y explicar elementos</th><td>Una librería de tours</td><td><code>Tour</code>, con pasos de un elemento, un título y un texto</td></tr>
+              <tr><th scope="row">Modales y elementos que tardan</th><td>Esperas y reintentos escritos a mano</td><td><code>before</code> y espera automática, dentro del <code>&lt;dialog&gt;</code></td></tr>
+              <tr><th scope="row">Estilos que no choquen</th><td>Sobrescribir CSS y ganar especificidad</td><td>Shadow DOM, variables, <code>::part()</code> y temas</td></tr>
+              <tr><th scope="row">Practicar sin tocar datos reales</th><td>Un servidor de pruebas o mocks propios</td><td>Modo práctica con <code>fixtures</code> y escrituras bloqueadas</td></tr>
+              <tr><th scope="row">Lista de primeros pasos</th><td>Un widget aparte con su propio almacenamiento</td><td><code>Checklist</code>, que recuerda el avance</td></tr>
+              <tr><th scope="row">Accesibilidad</th><td>Revisar cada pieza por separado</td><td>Foco atrapado, teclado, derecha a izquierda y movimiento reducido</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="sub">Cada pieza que sumas es otra versión que actualizar y otro estilo que igualar. Aquí es una, con un solo tema.</p>
       </section>
 
       <section class="bloque" id="modulos" aria-labelledby="mods">

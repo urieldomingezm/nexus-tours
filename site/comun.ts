@@ -1,5 +1,7 @@
 // Lo que comparten todas las páginas: tema, resaltado de código, botón «Copiar» y menú lateral.
 import './estilos.css'
+import './animaciones'
+import './buscador'
 
 // ── Tema (automático, claro u oscuro) ───────────────────────────────────────
 type Tema = 'auto' | 'claro' | 'oscuro'

@@ -46,6 +46,9 @@ jobs:
       - name: Build del sitio, referencia de API (TypeDoc) y demo
         run: npm run build:site && npm run docs:api && npm run build:demo
 
+      - name: El sitio construido incluye su código (buscador, maqueta, animaciones)
+        run: node scripts/revisar-sitio.mjs
+
       - name: Subir cobertura
         if: always()
         uses: actions/upload-artifact@v4

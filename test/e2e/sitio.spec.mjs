@@ -133,6 +133,7 @@ test('portada: muestra las descargas semanales de npm', async ({ nuevoContexto, 
   await sinRed(ctx)
   const p = vigilar(await ctx.newPage())
   await p.goto(SITIO)
+  await p.locator('#n-descargas').scrollIntoViewIfNeeded() // la cifra cuenta hasta su valor al aparecer en pantalla
   await expect(p.locator('#n-descargas')).toHaveText(/1[.,\s]?234/)
 })
 
@@ -166,4 +167,181 @@ test('enlaces limpios: el sitio publicado no usa «.html» en sus propias págin
   expect(conHtml).toEqual([])
   await p.goto(SITIO + 'guia') // la dirección limpia abre la página
   await expect(p).toHaveTitle(/Guía/)
+})
+
+// ── Portada viva: maqueta del tour, buscador, insignias y animaciones ───────────────────────────────────────────────────────────
+
+const conNpm = (ctx, version = '9.9.9', demora = 0) =>
+  Promise.all([
+    ctx.route('https://registry.npmjs.org/**', (r) => r.fulfill({ json: { version }, headers: { 'access-control-allow-origin': '*' } })),
+    ctx.route('https://api.npmjs.org/**', async (r) => {
+      if (demora) await new Promise((ok) => setTimeout(ok, demora))
+      await r.fulfill({ json: { downloads: 1234 }, headers: { 'access-control-allow-origin': '*' } })
+    }),
+  ])
+
+test('maqueta: con movimiento reducido el tour espera y se lleva paso a paso, con «Anterior» y «Salir»', async ({
+  nuevoContexto,
+  vigilar,
+}) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 900 }, reducedMotion: 'reduce' })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  const pantalla = p.locator('.mira-pantalla')
+  await pantalla.scrollIntoViewIfNeeded()
+  await expect(pantalla.locator('.mira-n')).toHaveText('Paso 1 de 3')
+  await expect(pantalla.getByRole('button', { name: 'Anterior' })).toBeDisabled()
+  await expect(pantalla.locator('#mira-modal')).not.toHaveClass(/abierto/)
+  await pantalla.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(pantalla.locator('.mira-t')).toHaveText('Ponle nombre')
+  await expect(pantalla.locator('#mira-modal')).toHaveClass(/abierto/)
+  await pantalla.getByRole('button', { name: 'Anterior' }).click()
+  await expect(pantalla.locator('#mira-modal')).not.toHaveClass(/abierto/)
+  await pantalla.getByRole('button', { name: 'Siguiente' }).click()
+  await pantalla.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(pantalla.getByRole('button', { name: 'Terminar' })).toBeVisible()
+  await pantalla.getByRole('button', { name: 'Terminar' }).click()
+  await expect(pantalla.locator('.mira-toast')).toContainText('el modal se cerró solo')
+  await expect(pantalla.locator('.mira-paso')).toBeHidden()
+  await pantalla.getByRole('button', { name: 'Repetir el tour' }).click()
+  await expect(pantalla.locator('.mira-n')).toHaveText('Paso 1 de 3')
+  await pantalla.getByRole('button', { name: 'Salir' }).click()
+  await expect(pantalla.locator('.mira-paso')).toBeHidden()
+  await expect(pantalla.locator('.mira-foco')).toBeHidden()
+})
+
+test('maqueta: la lista de primeros pasos se va marcando, y «Ver código» sigue a la escena', async ({ nuevoContexto, vigilar }) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 900 }, reducedMotion: 'reduce' })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  const pantalla = p.locator('.mira-pantalla')
+  const codigo = p.locator('.mira-codigo')
+  await pantalla.scrollIntoViewIfNeeded()
+  await expect(codigo.locator('code')).toContainText('abrirModal')
+  await codigo.locator('summary').click()
+  await p.locator('button[data-escena=checklist]').click()
+  await expect(codigo.locator('code')).toContainText('Checklist')
+  await expect(codigo.locator('button.copiar')).toHaveCount(1)
+  await expect(p.locator('button[data-escena=checklist]')).toHaveAttribute('aria-pressed', 'true')
+  await pantalla.getByRole('button', { name: 'Siguiente' }).click()
+  await expect(pantalla.locator('.mira-item.hecho')).toHaveCount(1)
+  await pantalla.getByRole('button', { name: 'Siguiente' }).click()
+  await pantalla.getByRole('button', { name: 'Terminar' }).click()
+  await expect(pantalla.locator('.mira-item.hecho')).toHaveCount(3)
+  await expect(pantalla.locator('.mira-toast')).toContainText('Primeros pasos completos')
+  await p.locator('button[data-escena=practica]').click()
+  await expect(codigo.locator('code')).toContainText('practice')
+  await expect(pantalla.locator('.mira-t')).toHaveText('Modo práctica')
+})
+
+test('maqueta: se recorre sola al cargar y en cuanto se toca queda quieta en manos de quien la usa', async ({ nuevoContexto, vigilar }) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 900 } })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  const pantalla = p.locator('.mira-pantalla')
+  await pantalla.scrollIntoViewIfNeeded()
+  await expect(pantalla.locator('.mira-n')).toHaveText('Paso 2 de 3', { timeout: 15000 })
+  await pantalla.click({ position: { x: 12, y: 12 }, force: true }) // una zona quieta: el globo se mueve de paso en paso
+  const antes = await pantalla.locator('.mira-n').textContent()
+  await p.waitForTimeout(3500)
+  expect(await pantalla.locator('.mira-n').textContent()).toBe(antes)
+  await pantalla.getByRole('button', { name: /Siguiente|Terminar/ }).click()
+  await expect(pantalla.locator('.mira-n')).not.toHaveText(antes ?? '')
+})
+
+test('maqueta y sección de piezas: sin violaciones de axe, en claro y en oscuro', async ({ nuevoContexto, vigilar }) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 900 }, reducedMotion: 'reduce' })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  for (const tema of ['claro', 'oscuro']) {
+    await p.evaluate((t) => (document.documentElement.dataset.tema = t), tema)
+    for (const escena of ['modal', 'practica', 'checklist']) {
+      await p.locator(`button[data-escena=${escena}]`).click()
+      await p.locator('.mira-pantalla').getByRole('button', { name: 'Siguiente' }).click()
+      const r = await new AxeBuilder({ page: p })
+        .include('.mira')
+        .include('section[aria-labelledby=piezas]')
+        .include('.insignias.en-vivo')
+        .withTags(REGLAS)
+        .analyze()
+      expect(r.violations.map((v) => `${tema}/${escena}: ${v.id}`)).toEqual([])
+    }
+  }
+})
+
+test('portada: la insignia de versión se confirma con npm y la cifra muestra un esqueleto mientras carga', async ({
+  nuevoContexto,
+  vigilar,
+}) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 800 } })
+  await conNpm(ctx, '9.9.9', 800)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  await expect(p.locator('#n-descargas')).toHaveClass(/esqueleto/)
+  await expect(p.locator('#n-descargas')).not.toHaveClass(/esqueleto/)
+  await expect(p.locator('#i-version')).toHaveText('v9.9.9')
+  await expect(p.locator('.insignias.en-vivo')).toContainText('MIT')
+  await expect(p.locator('section[aria-labelledby=piezas] tbody tr')).toHaveCount(6)
+})
+
+test('portada: sin respuesta de npm la insignia conserva la versión de la construcción y el esqueleto se quita', async ({
+  nuevoContexto,
+  vigilar,
+}) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 800 } })
+  await ctx.route('https://registry.npmjs.org/**', (r) => r.abort())
+  await ctx.route('https://api.npmjs.org/**', (r) => r.abort())
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  await expect(p.locator('#n-descargas')).not.toHaveClass(/esqueleto/)
+  await expect(p.locator('#i-version')).toHaveText(/^v\d+\.\d+\.\d+/)
+  await expect(p.locator('#i-version')).not.toHaveText('v9.9.9')
+})
+
+test('buscador: «/» lo abre, encuentra una sección y Esc lo cierra; no se abre mientras se escribe', async ({ nuevoContexto, vigilar }) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 800 } })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO + 'guia.html')
+  await p.keyboard.press('/')
+  const buscador = p.locator('dialog.buscador')
+  await expect(buscador).toBeVisible()
+  await p.keyboard.type('checklist')
+  await expect(buscador.getByRole('option').first()).toBeVisible()
+  await expect(buscador.getByRole('option').first()).toContainText(/checklist/i)
+  await p.keyboard.press('Escape')
+  await expect(buscador).toBeHidden()
+  await p.locator('[data-buscar]').click()
+  await expect(buscador).toBeVisible()
+})
+
+test('cabecera: «buscar», «github», «npm» y «tema» miden lo mismo; en celular angosto no parten la marca', async ({
+  nuevoContexto,
+  vigilar,
+}) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1280, height: 700 } })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  const altos = await p.evaluate(() => [...document.querySelectorAll('.herr > *')].map((e) => Math.round(e.getBoundingClientRect().height)))
+  expect(altos.length).toBe(4)
+  expect(new Set(altos).size).toBe(1)
+  await p.setViewportSize({ width: 360, height: 700 })
+  const marca = await p.locator('.marca').boundingBox()
+  expect(marca.height).toBeLessThan(50)
+})
+
+test('volver arriba aparece al bajar y regresa al inicio', async ({ nuevoContexto, vigilar }) => {
+  const ctx = await nuevoContexto({ viewport: { width: 1200, height: 800 } })
+  await sinRed(ctx)
+  const p = vigilar(await ctx.newPage())
+  await p.goto(SITIO)
+  await expect(p.getByRole('button', { name: 'Volver arriba' })).toBeHidden()
+  await p.evaluate(() => scrollTo(0, 1600))
+  await p.getByRole('button', { name: 'Volver arriba' }).click()
+  await expect.poll(() => p.evaluate(() => scrollY)).toBeLessThan(5)
 })
