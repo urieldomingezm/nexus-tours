@@ -4,6 +4,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Sitio de documentación y publicación automatizada
+- Flujo **Nueva versión** (Actions → Nueva versión): tú eliges `patch`, `minor`, `major` o un número exacto; sube `package.json`, `package-lock.json` y el CHANGELOG, etiqueta, crea la release con las notas y lanza «Publicar en npm» (en espera de tu aprobación con 2FA) y «Documentación». `node scripts/nueva-version.mjs` hace lo mismo a mano.
+- El sitio se publica solo al hacer merge a `main` de algo que lo afecte (`site/`, `README.md`, `CHANGELOG.md`, `src/`…), sin esperar a una release.
+- Sitio: enlaces sin `.html` (`/guia`), barra de carga al cambiar de página, menú con submenús (Empezar, Probar), pie de página en columnas, `sitemap.xml`, etiquetas para compartir y columna lateral con versión y tamaño del núcleo.
+- Páginas nuevas: **Primeros pasos** (cinco minutos, de instalar a un tour que espera a un modal), **Novedades** (este historial) y **Pruebas**, una mesa para revisar: tema, dirección y hoja de celular, tours reales (con un modal que carga tarde, un paso que no existe y modo práctica), lista de revisión que se guarda en el navegador y resumen listo para reportar.
+- Portada: las descargas semanales de npm reemplazan la cifra «0 dependencias» (sigue en el lema y las insignias); la accesibilidad se presenta como objetivo WCAG 2.2 AA con pruebas axe, no como certificación.
+- Plantilla de issue «Lo probé en mi proyecto» para contar cómo te fue, aunque todo haya salido bien.
+
 ### Modo práctica: aislamiento más estricto
 - `strict: true`: bloquea también las lecturas (`fetch`/XHR) que ninguna ruta atienda; solo pasa lo que autorice `allow`. `allow` ahora aplica a cualquier método.
 - Una sola sesión de modo práctica activa: un segundo `start()` rechaza con un error claro (antes se apilaban dos interceptores).

@@ -1,8 +1,22 @@
 name: Documentación
 
-# Publica el sitio (site/) y la referencia de la API (TypeDoc) en GitHub Pages al publicarse una release o a mano desde Actions.
+# Publica el sitio (site/) y la referencia de la API (TypeDoc) en GitHub Pages: al hacer merge a main de algo que cambia el sitio o su
+# contenido, al publicarse una release o a mano desde Actions. Los cambios que no afectan al sitio (flujos de otros procesos, pruebas)
+# no lo republican.
 # Requiere activar Pages una sola vez: Settings → Pages → Source: GitHub Actions.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - 'api/**'
+      - 'src/**' # el sitio mide los tamaños reales y corre el tour de la portada con el código de la librería
+      - 'package.json'
+      - 'vite.config.js'
+      - 'typedoc.json'
+      - '.github/workflows/docs.yml'
   release:
     types: [published]
   workflow_dispatch:
