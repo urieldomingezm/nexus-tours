@@ -53,9 +53,15 @@ npm run api:check      # ¿cambió la API pública?
 
 ## Publicar una versión
 
-1. Elige la versión según [SemVer](https://semver.org/lang/es/). Mientras sea 0.x: correcciones → parche (0.1.1); funciones nuevas o cambios incompatibles → menor (0.2.0).
-2. En un PR: sube `version` en `package.json`, mueve las notas al encabezado de la versión en `CHANGELOG.md` con la fecha y haz merge cuando el CI esté en verde.
-3. Crea la etiqueta `vX.Y.Z` sobre `main`. Se puede hacer desde GitHub: **Releases → Draft a new release → Choose a tag → crear `vX.Y.Z`**, usando las notas del CHANGELOG.
-4. El flujo **Publicar en npm** revisa primero si esa versión ya está en npm (si está, termina sin hacer nada); si no, corre la calidad y las pruebas de los 3 navegadores en paralelo (unos 10 minutos) y sube la versión **en espera**. Apruébala con 2FA en npmjs.com (pestaña *Staged Packages*); también funciona desde el celular.
+Tú eliges el número; lo demás es automático.
+
+1. Anota los cambios en la sección **«Sin publicar»** de `CHANGELOG.md` (si está vacía, el flujo se detiene sin tocar nada).
+2. En GitHub: **Actions → Nueva versión → Run workflow**. Elige `patch` (correcciones: 0.2.0 → 0.2.1), `minor` (funciones nuevas: 0.2.0 → 0.3.0) o `major`, o escribe un número exacto en «numero» (manda sobre el tipo). Mientras sea 0.x, las funciones nuevas o los cambios incompatibles suben el segundo número.
+3. El flujo sube `package.json`, `package-lock.json` y el CHANGELOG (lo de «Sin publicar» pasa a la versión nueva, con la fecha de hoy), guarda un commit en `main` con la etiqueta `vX.Y.Z`, crea la release en GitHub con esas notas y lanza **Publicar en npm** y **Documentación**.
+4. **Publicar en npm** revisa primero si esa versión ya está en npm (si está, termina sin hacer nada); si no, corre la calidad y las pruebas de los 3 navegadores en paralelo (unos 10 minutos) y sube la versión **en espera**. Apruébala con 2FA en npmjs.com (pestaña *Staged Packages*); también funciona desde el celular.
+
+El sitio de documentación se publica solo al hacer merge a `main` de cualquier cambio que lo afecte (`site/`, `README.md`, `CHANGELOG.md`, `src/`…), sin esperar a una versión.
+
+Si prefieres hacerlo a mano: sube `version` en un PR, mueve las notas al encabezado de la versión (`node scripts/nueva-version.mjs patch|minor|major|X.Y.Z` lo hace por ti) y crea la etiqueta `vX.Y.Z` sobre `main`.
 
 El flujo necesita el secreto `NPM_TOKEN` en el repositorio: un token *Granular access* con permiso "Read and write (stage only)" y sin la opción de saltarse el 2FA.

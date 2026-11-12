@@ -151,13 +151,32 @@ function menuMovil(): void {
   const cab = document.querySelector<HTMLElement>('.cabecera')
   const btn = cab?.querySelector<HTMLButtonElement>('.menu-btn')
   if (!cab || !btn) return
+  const grupos = [...cab.querySelectorAll<HTMLButtonElement>('.grupo-btn')]
+  const cerrarGrupos = (menos?: HTMLButtonElement) => grupos.forEach((g) => g !== menos && g.setAttribute('aria-expanded', 'false'))
   const poner = (abierto: boolean) => {
     cab.classList.toggle('abierto', abierto)
     btn.setAttribute('aria-expanded', String(abierto))
+    if (!abierto) cerrarGrupos()
   }
   btn.addEventListener('click', () => poner(btn.getAttribute('aria-expanded') !== 'true'))
+  // Submenús: se abren con clic o Enter, uno a la vez; Esc o un clic fuera los cierra.
+  for (const g of grupos) {
+    g.addEventListener('click', () => {
+      const abrir = g.getAttribute('aria-expanded') !== 'true'
+      cerrarGrupos(g)
+      g.setAttribute('aria-expanded', String(abrir))
+    })
+  }
+  document.addEventListener('click', (e) => {
+    if (!(e.target as Element).closest('.grupo')) cerrarGrupos()
+  })
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && cab.classList.contains('abierto')) {
+    if (e.key !== 'Escape') return
+    const abierto = grupos.find((g) => g.getAttribute('aria-expanded') === 'true')
+    if (abierto) {
+      cerrarGrupos()
+      abierto.focus()
+    } else if (cab.classList.contains('abierto')) {
       poner(false)
       btn.focus()
     }
@@ -168,3 +187,23 @@ function menuMovil(): void {
 decorarCodigo()
 menuLateral()
 menuMovil()
+
+// ── Barra de carga al cambiar de página ─────────────────────────────────────
+// Una barra fina arriba que avanza mientras llega la página siguiente. No bloquea nada ni cambia el contenido:
+// el clic sigue su curso normal. Con movimiento reducido se muestra fija (sin animar). Se quita al volver con «Atrás» (bfcache).
+const barra = document.createElement('div')
+barra.className = 'carga-pagina'
+barra.setAttribute('aria-hidden', 'true')
+document.body.append(barra)
+
+const quitarBarra = (): void => barra.classList.remove('activa')
+window.addEventListener('pageshow', quitarBarra)
+document.addEventListener('click', (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+  const a = (e.target as Element).closest<HTMLAnchorElement>('a[href]')
+  if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return
+  const u = new URL(a.href, location.href)
+  const mismaPagina = u.origin === location.origin && u.pathname === location.pathname
+  if (u.origin !== location.origin || mismaPagina || !/^https?:$/.test(u.protocol)) return
+  barra.classList.add('activa')
+})

@@ -1,0 +1,39 @@
+name: Lo probé en mi proyecto
+description: Cuéntanos cómo te fue al instalarla e integrarla, aunque todo haya salido bien.
+labels: [adopción]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Esta librería todavía tiene pocos casos de uso fuera de Nexus. Tu experiencia, buena o mala, es lo que más ayuda a estabilizarla.
+        Si algo falló, usa mejor «Reportar un error».
+  - type: input
+    id: version
+    attributes:
+      label: Versión de nexus-tours
+      placeholder: '0.2.0'
+    validations:
+      required: true
+  - type: dropdown
+    id: entorno
+    attributes:
+      label: ¿Con qué la usaste?
+      options: [JavaScript / TypeScript, Vue, React, CDN (script), Bootstrap / Tailwind / otro framework, Otro]
+    validations:
+      required: true
+  - type: textarea
+    id: que
+    attributes:
+      label: ¿Qué tour armaste?
+      description: Qué querías enseñar y en qué tipo de aplicación (sin datos sensibles). Cuenta si había modales o contenido que carga tarde.
+    validations:
+      required: true
+  - type: textarea
+    id: tiempo
+    attributes:
+      label: ¿Cuánto tardaste en tener el primer tour funcionando y qué te frenó?
+      description: Sirve para saber si «Primeros pasos» alcanza o falta algo.
+  - type: textarea
+    id: falta
+    attributes:
+      label: ¿Qué te faltó o qué cambiarías?

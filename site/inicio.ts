@@ -2,6 +2,17 @@ import './comun'
 import { Tour } from 'nexus-tours'
 import { autoTheme } from 'nexus-tours/themes'
 
+// Cuánta gente la usa: descargas de la última semana según npm. Si no responde, la cifra queda en «—» y el enlace lleva a npm.
+void (async () => {
+  try {
+    const r = await fetch('https://api.npmjs.org/downloads/point/last-week/nexus-tours')
+    const { downloads } = (await r.json()) as { downloads?: number }
+    if (typeof downloads === 'number') document.getElementById('n-descargas')!.textContent = new Intl.NumberFormat('es-MX').format(downloads)
+  } catch {
+    /* sin red o npm no responde: se queda el guion */
+  }
+})()
+
 // Un tour real sobre esta misma página.
 let tour: Tour | null = null
 document.getElementById('b-tour')!.addEventListener('click', () => {

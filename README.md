@@ -13,6 +13,8 @@ Hecho por [**DevMedina**](https://devmedina.is-a.dev/) (Angel Uriel Domínguez M
 
 La mayoría de las librerías de tours fallan cuando el elemento a explicar vive dentro de un modal: todavía no existe (animación, contenido asíncrono), el resaltado queda *debajo* del `<dialog>`, los botones del tour quedan `inert` o `Esc` cierra lo que no debe. **nexus-tours** está construida alrededor de esos casos, y además trae lo necesario para enseñar un producto de verdad: pasos que avanzan cuando el usuario hace la acción, **modo práctica** con datos de ejemplo, progreso guardado, checklist de primeros pasos y un **constructor visual** sin código.
 
+> **¿Primera vez?** Empieza por [Primeros pasos](docs/primeros-pasos.md): cinco minutos, de instalar a un tour que espera a un modal. ¿La usas fuera de Nexus? [Cuéntanos cómo te fue](https://github.com/urieldomingezm/nexus-tours/issues/new?template=adopcion.yml): hoy es lo que más falta para estabilizarla.
+
 ## Índice
 
 1. [Instalación](#1-instalación)

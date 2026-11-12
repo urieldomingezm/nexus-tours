@@ -28,7 +28,7 @@ export default tseslint.config(
   },
   {
     // Pruebas y scripts: corren en Node y en el navegador (page.evaluate usa globales de la página).
-    files: ['test/**/*.{ts,mjs}', 'scripts/**/*.mjs', '*.config.{js,mjs}'],
+    files: ['test/**/*.{ts,mjs}', 'scripts/**/*.mjs', 'site/**/*.mjs', '*.config.{js,mjs}'],
     languageOptions: {
       globals: {
         ...globals.node,
