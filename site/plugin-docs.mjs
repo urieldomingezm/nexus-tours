@@ -236,7 +236,7 @@ export function construirIndice() {
 }
 
 const VIRTUAL = 'virtual:indice-busqueda'
-function indicePlugin() {
+export function indicePlugin() {
   return {
     name: 'nexus-tours-indice',
     resolveId: (id) => (id === VIRTUAL ? `\0${VIRTUAL}` : null),

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import { fileURLToPath } from 'node:url'
-import { docsPlugin } from './site/plugin-docs.mjs'
+import { docsPlugin, indicePlugin } from './site/plugin-docs.mjs'
 
 const src = (f) => fileURLToPath(new URL(`./src/${f}`, import.meta.url))
 const ALIAS = {
@@ -116,5 +116,6 @@ export default defineConfig(({ mode, command }) => {
     }
   }
   // Dev server / tests: let wrappers import "nexus-tours" straight from source
-  return { resolve: { alias: ALIAS } }
+  // (el buscador del sitio importa el índice virtual, también aquí: la prueba de «sitio de demo/docs» abre site/demo.html en este servidor)
+  return { plugins: [indicePlugin()], resolve: { alias: ALIAS } }
 })
