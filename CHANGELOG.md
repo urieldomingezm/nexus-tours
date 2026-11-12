@@ -6,7 +6,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ### Sitio de documentación
 - La portada suma «Míralo en acción»: un tour de muestra sobre una pantalla de mentira (escenas Modal, Práctica y Checklist) que se recorre solo y, al tocarlo, se lleva paso a paso; con «Ver código» de cada escena.
-- Sección «Una pieza en lugar de varias», insignias de la portada (versión confirmada con npm, tamaño del núcleo, licencia y CI), texto que se escribe solo, partículas, aparición al hacer scroll, cifras que cuentan, esqueleto brillante en las descargas, brillo que sigue al puntero en los botones principales, volver arriba y transición suave entre páginas. Todo se apaga con «reducir movimiento».
+- Sección «Una pieza en lugar de varias», insignias de la portada (versión confirmada con npm, tamaño del núcleo, licencia y CI), texto que se escribe solo, partículas, aparición al hacer scroll, cifras que cuentan, esqueleto brillante en las descargas, brillo que sigue al puntero en los botones principales, y volver arriba. Todo se apaga con «reducir movimiento».
 - Buscador de la documentación (`/` o Ctrl/Cmd+K) con el índice construido al compilar el sitio.
 - Cabecera con «buscar», «github», «npm» y «tema» alineados, y en celular angosto la marca ya no se parte.
 - El sitio compilado se revisa en CI (`scripts/revisar-sitio.mjs`): los archivos que solo se importan por su efecto se marcan para que el build no los descarte.

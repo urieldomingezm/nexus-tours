@@ -244,7 +244,7 @@ test('maqueta: se recorre sola al cargar y en cuanto se toca queda quieta en man
   const pantalla = p.locator('.mira-pantalla')
   await pantalla.scrollIntoViewIfNeeded()
   await expect(pantalla.locator('.mira-n')).toHaveText('Paso 2 de 3', { timeout: 15000 })
-  await pantalla.locator('.mira-paso').click({ position: { x: 4, y: 4 } })
+  await pantalla.click({ position: { x: 12, y: 12 }, force: true }) // una zona quieta: el globo se mueve de paso en paso
   const antes = await pantalla.locator('.mira-n').textContent()
   await p.waitForTimeout(3500)
   expect(await pantalla.locator('.mira-n').textContent()).toBe(antes)
