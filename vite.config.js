@@ -58,6 +58,7 @@ export default defineConfig(({ mode, command }) => {
     return {
       root: 'site',
       base: './',
+      appType: 'mpa', // en `vite preview`, /guia abre guia.html (igual que GitHub Pages)
       plugins: [docsPlugin()],
       resolve: { alias: ALIAS },
       build: {
@@ -65,7 +66,12 @@ export default defineConfig(({ mode, command }) => {
         emptyOutDir: true,
         target: 'es2020',
         rollupOptions: {
-          input: Object.fromEntries(['index', 'guia', 'demo'].map((p) => [p, fileURLToPath(new URL(`./site/${p}.html`, import.meta.url))])),
+          input: Object.fromEntries(
+            ['index', 'primeros-pasos', 'guia', 'novedades', 'demo', 'pruebas'].map((p) => [
+              p,
+              fileURLToPath(new URL(`./site/${p}.html`, import.meta.url)),
+            ]),
+          ),
         },
       },
     }

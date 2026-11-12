@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pruebas · nexus-tours</title>
+    <meta name="description" content="Mesa de pruebas de nexus-tours: elige el tema, la dirección y la pantalla de celular, lanza tours con modales, pasos que faltan y modo práctica, y revisa con tu navegador, teclado y lector de pantalla." />
+  </head>
+  <body>
+    <a class="saltar" href="#contenido">Saltar al contenido</a>
+    <!--@cabecera:pruebas-->
+    <main class="doc" id="pruebas" data-version="<!--@version-->">
+      <aside class="lateral" data-toc aria-label="En esta página"></aside>
+      <article class="contenido" id="contenido">
+        <h1>Pruebas</h1>
+        <p class="nota">Una mesa para <strong>revisar la librería con tus propios ojos</strong>: elige cómo se ve, lanza los tours, recorre la lista de revisión y, si algo falla o si todo sale bien, cuéntalo con un clic. No hace falta instalar nada.</p>
+
+        <h2 id="apariencia">1. Elige la apariencia</h2>
+        <p>Cada cambio vale para el siguiente tour que lances. El modo claro u oscuro de la página se cambia con el botón <em>Tema</em> de arriba; con «Sigue la página» el tour lo acompaña.</p>
+        <div class="mesa-grupo" role="group" aria-labelledby="t-tema">
+          <p class="mesa-et" id="t-tema">Tema del tour</p>
+          <div class="chips">
+            <button type="button" class="chip" data-tema-prueba="auto" aria-pressed="true">Sigue la página</button>
+            <button type="button" class="chip" data-tema-prueba="light" aria-pressed="false">Claro</button>
+            <button type="button" class="chip" data-tema-prueba="dark" aria-pressed="false">Oscuro</button>
+            <button type="button" class="chip" data-tema-prueba="ocean" aria-pressed="false">Océano</button>
+            <button type="button" class="chip" data-tema-prueba="bootstrap" aria-pressed="false">Bootstrap</button>
+            <button type="button" class="chip" data-tema-prueba="tailwind" aria-pressed="false">Tailwind</button>
+          </div>
+        </div>
+        <div class="mesa-grupo" role="group" aria-labelledby="t-dir">
+          <p class="mesa-et" id="t-dir">Dirección del texto</p>
+          <div class="chips">
+            <button type="button" class="chip" data-dir-prueba="ltr" aria-pressed="true">De izquierda a derecha</button>
+            <button type="button" class="chip" data-dir-prueba="rtl" aria-pressed="false">De derecha a izquierda</button>
+          </div>
+        </div>
+        <div class="mesa-grupo" role="group" aria-labelledby="t-mov">
+          <p class="mesa-et" id="t-mov">Pantalla de celular</p>
+          <div class="chips">
+            <button type="button" class="chip" data-movil-prueba="auto" aria-pressed="true">Según el ancho</button>
+            <button type="button" class="chip" data-movil-prueba="always" aria-pressed="false">Hoja inferior siempre</button>
+          </div>
+        </div>
+        <p class="mesa-estado" id="estado-apariencia" role="status"></p>
+
+        <h2 id="lanzar">2. Lanza los tours</h2>
+        <p>Cada botón arranca un caso real. Pruébalos con el mouse y con el teclado (flechas, <kbd>Enter</kbd>, <kbd>Esc</kbd>), y repite con otro tema o con la hoja de celular.</p>
+        <div class="mesa-botones" id="botones" role="group" aria-label="Tours de prueba">
+          <button type="button" class="btn" id="caso-pagina">Tour sobre la página</button>
+          <button type="button" class="btn" id="caso-modal">Tour con un modal</button>
+          <button type="button" class="btn" id="caso-falta">Paso que no existe</button>
+          <button type="button" class="btn" id="caso-practica">Modo práctica</button>
+        </div>
+        <p class="mesa-estado" id="resultado" role="status">Todavía no lanzaste ningún tour.</p>
+
+        <h2 id="revisar">3. Qué revisar</h2>
+        <p>Marca lo que probaste: se guarda en este navegador. Lo que no puedas probar (por ejemplo un lector de pantalla), déjalo sin marcar.</p>
+        <ul class="mesa-lista" id="lista-revision"></ul>
+        <label class="mesa-et" for="notas">Notas (opcional)</label>
+        <textarea id="notas" class="mesa-notas" rows="3" placeholder="Qué viste, en qué navegador, qué te confundió…"></textarea>
+
+        <h2 id="reportar">4. Cuéntalo</h2>
+        <p>Este resumen incluye la versión, tu navegador, la apariencia elegida y tu lista. Cópialo o ábrelo directo en un reporte.</p>
+        <textarea id="resumen" class="mesa-notas mesa-resumen" rows="10" readonly aria-label="Resumen de la revisión"></textarea>
+        <div class="mesa-acciones">
+          <button type="button" class="btn primario" id="copiar">Copiar resumen</button>
+          <a class="btn" id="reportar-error" href="https://github.com/urieldomingezm/nexus-tours/issues/new?template=error.yml" rel="noopener">Reportar un problema</a>
+          <a class="btn" id="reportar-ok" href="https://github.com/urieldomingezm/nexus-tours/issues/new?template=adopcion.yml" rel="noopener">Contar cómo me fue</a>
+        </div>
+      </article>
+    </main>
+
+    <dialog id="modal-prueba" aria-labelledby="modal-titulo" class="modal-prueba">
+      <h2 id="modal-titulo">Nuevo cliente</h2>
+      <div id="modal-cuerpo"></div>
+      <div class="mesa-acciones">
+        <button type="button" class="btn" id="modal-cerrar">Cancelar</button>
+        <button type="button" class="btn primario" id="prueba-guardar">Guardar</button>
+      </div>
+    </dialog>
+    <!--@pie-->
+    <script type="module" src="./pruebas.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,89 @@
+name: Nueva versión
+
+# Sube la versión desde la pestaña Actions → «Nueva versión» → Run workflow. TÚ eliges el número:
+#   patch  0.2.0 → 0.2.1   arreglos
+#   minor  0.2.0 → 0.3.0   novedades
+#   major  0.2.0 → 1.0.0   cambios que rompen
+#   o escribe un número exacto en «numero» (p. ej. 0.3.0), que manda sobre el tipo.
+#
+# Antes de correrlo, anota los cambios en «Sin publicar» de CHANGELOG.md: si está vacío, el flujo se detiene sin tocar nada.
+# Qué hace: sube package.json y package-lock.json, pasa «Sin publicar» a la versión nueva con la fecha de hoy, guarda un commit en
+# main con la etiqueta vX.Y.Z, crea la release en GitHub con esas notas y lanza «Publicar en npm» (calidad, E2E en 3 navegadores y
+# subida a npm EN ESPERA) y «Documentación». La versión no es pública hasta que la apruebas con 2FA en npmjs.com («Staged Packages»).
+on:
+  workflow_dispatch:
+    inputs:
+      tipo:
+        description: 'Tipo de subida'
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      numero:
+        description: 'Número exacto (opcional, manda sobre el tipo), p. ej. 0.3.0'
+        type: string
+        required: false
+
+permissions:
+  contents: write # commit y etiqueta en main, y la release
+  actions: write # lanzar «Publicar en npm» y «Documentación»
+
+concurrency:
+  group: nueva-version
+  cancel-in-progress: false
+
+jobs:
+  subir:
+    name: Subir versión
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PEDIDO: ${{ inputs.numero || inputs.tipo }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Subir package.json, package-lock.json y CHANGELOG.md
+        id: v
+        run: echo "version=$(node scripts/nueva-version.mjs "$PEDIDO")" >> "$GITHUB_OUTPUT"
+
+      - name: La versión no existe ni como etiqueta ni en npm
+        env:
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then echo "::error::La etiqueta v$V ya existe"; exit 1; fi
+          if npm view "nexus-tours@$V" version >/dev/null 2>&1; then echo "::error::nexus-tours@$V ya está en npm"; exit 1; fi
+
+      - name: Formato del CHANGELOG
+        run: npx prettier --write CHANGELOG.md
+
+      - name: Commit y etiqueta en main
+        env:
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          git config user.name "DevMedina"
+          git config user.email "urielmedina7u7@outlook.com"
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "Versión $V"
+          git tag "v$V"
+          git push origin main "v$V"
+
+      - name: Release en GitHub con las notas del CHANGELOG
+        env:
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          node scripts/nueva-version.mjs --notas "$V" > notas.md
+          gh release create "v$V" --title "v$V" --notes-file notas.md --verify-tag
+
+      # Lo creado con el token del flujo no dispara otros flujos, salvo workflow_dispatch: por eso se lanzan a mano.
+      - name: Lanzar «Publicar en npm» y «Documentación»
+        run: |
+          gh workflow run publicar.yml --ref main
+          gh workflow run docs.yml --ref main
