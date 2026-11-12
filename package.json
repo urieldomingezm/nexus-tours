@@ -1,6 +1,6 @@
 {
   "name": "nexus-tours",
-  "version": "0.2.0",
+  "version": "0.5.2",
   "description": "Product tours that don't break with modals, <dialog>, portals and animated UI. Zero dependencies.",
   "type": "module",
   "main": "./dist/nexus-tours.umd.cjs",

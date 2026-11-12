@@ -4,6 +4,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.5.2] - 2026-11-12
+
 ### Ventanas con shadow DOM (nexus-dialogs) y campos
 - Un paso que resalta un campo (`input`, `select`, `textarea`, `[role=combobox]`…) o un bloque que lo contiene ya deja usarlo sin `allowTargetClick`: antes el anillo bloqueaba el clic y no se podía escribir. `allowTargetClick: false` lo sigue bloqueando.
 - El tour encuentra la ventana modal también cuando el elemento resaltado vive en un shadow root abierto (nexus-dialogs, otros componentes web) y se monta dentro de ella.
