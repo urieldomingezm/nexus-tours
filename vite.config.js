@@ -52,6 +52,22 @@ const LIBS = {
   },
 }
 
+/**
+ * El sitio se construye con la librería marcada `"sideEffects": false`. Los archivos de `site/` que solo se importan por su efecto
+ * (`import './buscador'`) se descartarían en el build y la web no tendría buscador ni animaciones: se marcan con efectos.
+ * Lo revisa scripts/revisar-sitio.mjs.
+ */
+function conEfectosDelSitio() {
+  return {
+    name: 'nexus-tours-sitio-con-efectos',
+    enforce: 'post',
+    transform(code, id) {
+      if (/[\\/]site[\\/][^?]+\.ts$/.test(id)) return { code, map: null, moduleSideEffects: true }
+      return null
+    },
+  }
+}
+
 export default defineConfig(({ mode, command }) => {
   // Docs / demo site: `vite build --mode site` (root: site/)
   if (mode === 'site') {
@@ -59,7 +75,7 @@ export default defineConfig(({ mode, command }) => {
       root: 'site',
       base: './',
       appType: 'mpa', // en `vite preview`, /guia abre guia.html (igual que GitHub Pages)
-      plugins: [docsPlugin()],
+      plugins: [docsPlugin(), conEfectosDelSitio()],
       resolve: { alias: ALIAS },
       build: {
         outDir: '../site-dist',

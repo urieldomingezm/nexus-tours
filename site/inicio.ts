@@ -1,15 +1,33 @@
 import './comun'
+import './mirala'
+import { animarNumero } from './animaciones'
 import { Tour } from 'nexus-tours'
 import { autoTheme } from 'nexus-tours/themes'
 
-// Cuánta gente la usa: descargas de la última semana según npm. Si no responde, la cifra queda en «—» y el enlace lleva a npm.
+// Cuánta gente la usa: descargas de la última semana según npm. Mientras llega la cifra se ve un esqueleto brillante;
+// si npm no responde, la cifra queda en «—» y el enlace lleva a npm.
 void (async () => {
+  const cifra = document.getElementById('n-descargas')!
+  cifra.classList.add('esqueleto')
   try {
     const r = await fetch('https://api.npmjs.org/downloads/point/last-week/nexus-tours')
     const { downloads } = (await r.json()) as { downloads?: number }
-    if (typeof downloads === 'number') document.getElementById('n-descargas')!.textContent = new Intl.NumberFormat('es-MX').format(downloads)
+    cifra.classList.remove('esqueleto')
+    if (typeof downloads === 'number') animarNumero(cifra, new Intl.NumberFormat('es-MX').format(downloads))
   } catch {
     /* sin red o npm no responde: se queda el guion */
+    cifra.classList.remove('esqueleto')
+  }
+})()
+
+// La insignia de versión se confirma con npm; sin respuesta, queda la versión con la que se construyó esta página.
+void (async () => {
+  try {
+    const r = await fetch('https://registry.npmjs.org/nexus-tours/latest')
+    const { version } = (await r.json()) as { version?: string }
+    if (version && /^\d+\.\d+\.\d+/.test(version)) document.getElementById('i-version')!.textContent = `v${version}`
+  } catch {
+    /* se queda la versión de la construcción */
   }
 })()
 
