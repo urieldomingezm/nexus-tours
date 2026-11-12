@@ -17,7 +17,7 @@ import { PracticeSession } from './practice'
 import { isVisible, waitForElement } from './wait'
 import { confetti } from './confetti'
 import { resolveRouter, sameRoute } from './router'
-import { clickAll, lower, modalHost, raise, reduceMotion, resolveRef } from './core/dom'
+import { clickAll, hasField, lower, modalHost, raise, reduceMotion, resolveRef } from './core/dom'
 import { arrowStyle, backdropPath, holeFor, isSheet, placePopover } from './core/layout'
 import type { Rect } from './core/layout'
 import { createKeyHandler } from './core/keyboard'
@@ -578,7 +578,8 @@ export class Tour implements TourApi {
       rs.top = `${hole.y}px`
       rs.width = `${hole.w}px`
       rs.height = `${hole.h}px`
-      rs.pointerEvents = step.allowTargetClick || step.advanceOn ? 'none' : 'auto'
+      // A highlighted field (or a block containing one) stays usable unless `allowTargetClick: false` says otherwise.
+      rs.pointerEvents = step.advanceOn || (step.allowTargetClick ?? (this.target && hasField(this.target))) ? 'none' : 'auto'
       // The hole follows the ring's border radius so rounded themes don't show square corners.
       backdrop.style.clipPath = backdropPath(hole, parseFloat(getComputedStyle(ring).borderTopLeftRadius), vw, vh)
     } else {

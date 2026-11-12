@@ -48,7 +48,14 @@ export function createKeyHandler(t: KeyTarget) {
     }
 
     if (!t.keyboard) return
-    const typing = !!origin && (origin.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(origin.tagName))
+    // Fields and widgets that use these keys themselves (comboboxes, lists, menus, sliders): not the tour's.
+    const typing =
+      !!origin &&
+      (origin.isContentEditable ||
+        /^(INPUT|TEXTAREA|SELECT)$/.test(origin.tagName) ||
+        !!origin.closest?.(
+          '[role=combobox],[role=listbox],[role=option],[role=menu],[role=menuitem],[role=slider],[role=textbox],[role=searchbox]',
+        ))
     if (typing) return
     const fwd = t.rtl ? 'ArrowLeft' : 'ArrowRight'
     const back = t.rtl ? 'ArrowRight' : 'ArrowLeft'

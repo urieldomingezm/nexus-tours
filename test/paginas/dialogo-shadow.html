@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diálogo con shadow DOM</title>
+<!-- Página de prueba: <dialog> modal con el contenido en un shadow root abierto (como nexus-dialogs) y un combobox. -->
+<style>body{font-family:system-ui;margin:0;padding:24px}</style>
+</head>
+<body>
+<button id="abrir">Agregar</button>
+<script type="module">
+  import { Tour } from 'nexus-tours'
+  window.Tour = Tour
+  document.getElementById('abrir').onclick = () => {
+    const d = document.createElement('dialog')
+    const host = document.createElement('div')
+    host.setAttribute('data-nexus-host', '')
+    const root = host.attachShadow({ mode: 'open' })
+    root.innerHTML = `<div class="sheet" style="padding:16px;width:320px">
+      <h2 class="title">Agregar integrantes</h2>
+      <div class="field"><input id="q" role="combobox" aria-label="Personas" aria-expanded="false"><ul role="listbox"><li role="option" tabindex="-1">Carlos Ruiz</li></ul></div>
+      <button class="btn">Guardar</button></div>`
+    d.appendChild(host)
+    document.body.appendChild(d)
+    d.showModal()
+  }
+  const dlg = () => document.querySelector('[data-nexus-host]')?.shadowRoot
+  window.campo = () => dlg()?.querySelector('.field') ?? null
+  window.ready = true
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 # nexus-tours
 
 **Tours guiados que no se rompen con modales.**
-Sin dependencias · <!--tam:nexus-tours-->~12.6 KB<!--/tam--> gzip · TypeScript · accesible · wrappers para Vue y React
+Sin dependencias · <!--tam:nexus-tours-->~12.8 KB<!--/tam--> gzip · TypeScript · accesible · wrappers para Vue y React
 
 Hecho por [**DevMedina**](https://devmedina.is-a.dev/) (Angel Uriel Domínguez Medina) · rama de librerías de **Nexus** · Licencia MIT
 
@@ -59,7 +59,7 @@ npm i nexus-tours
 
 ### Con un `<script>` (WordPress, HTML estático, PHP…)
 
-Un solo archivo trae **todo** (tours, checklist, temas, datos de ejemplo, modo práctica) en <!--tam:nexus-tours.all-->~21.2 KB<!--/tam--> gzip y expone un único global: `NexusTours`.
+Un solo archivo trae **todo** (tours, checklist, temas, datos de ejemplo, modo práctica) en <!--tam:nexus-tours.all-->~21.3 KB<!--/tam--> gzip y expone un único global: `NexusTours`.
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/nexus-tours@0.2/dist/nexus-tours.all.iife.js"></script>
@@ -84,7 +84,7 @@ También como módulo ES:
 
 - En producción fija la versión exacta (`@0.2.0`) y, si quieres que el navegador verifique el archivo, agrega [`integrity` (SRI)](https://www.srihash.org/).
 - `unpkg.com/nexus-tours@0.2` también funciona.
-- Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (<!--tam:nexus-tours-->~12.6 KB<!--/tam-->), `builder.js` (<!--tam:builder-->~7.3 KB<!--/tam-->), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
+- Los archivos por función siguen disponibles si solo quieres una parte: `nexus-tours.js` (<!--tam:nexus-tours-->~12.8 KB<!--/tam-->), `builder.js` (<!--tam:builder-->~7.3 KB<!--/tam-->), `checklist.js`, `themes.js`, `fixtures.js`, `supabase.js`.
 - **Importante:** las CDN sirven lo que está en npm (o en un repositorio público de GitHub). Mientras el paquete no se publique en npm no existen esas URLs; `npm publish` es lo que las activa.
 
 ---
@@ -631,7 +631,7 @@ interface Step {
   after?(ctx): void | Promise<void>    // corre al salir del paso
   waitTimeout?: number
   onMissing?: 'skip' | 'stop'
-  allowTargetClick?: boolean           // deja que el usuario haga clic en el elemento resaltado
+  allowTargetClick?: boolean           // deja que el usuario haga clic en el elemento resaltado (automático si es o contiene un campo; `false` lo bloquea)
   beforeClick?: string | string[]      // hace clic primero si el elemento no es visible (abrir el modal)
   afterClick?: string | string[]       // hace clic al salir del paso (cerrar el modal)
   padding?: number
@@ -684,8 +684,8 @@ Tamaños aproximados (minificado + gzip, lo que descarga el usuario); `npm run s
 
 | Pieza | Tamaño |
 |---|---|
-| Núcleo (`nexus-tours`) | <!--tam:nexus-tours-->~12.6 KB<!--/tam--> |
-| Todo junto (`nexus-tours.all`, CDN) | <!--tam:nexus-tours.all-->~21.2 KB<!--/tam--> |
+| Núcleo (`nexus-tours`) | <!--tam:nexus-tours-->~12.8 KB<!--/tam--> |
+| Todo junto (`nexus-tours.all`, CDN) | <!--tam:nexus-tours.all-->~21.3 KB<!--/tam--> |
 | Constructor visual | <!--tam:builder-->~7.3 KB<!--/tam--> |
 | Checklist | <!--tam:checklist-->~3.9 KB<!--/tam--> |
 | Adaptador Supabase | <!--tam:supabase-->~3.4 KB<!--/tam--> |

@@ -53,7 +53,10 @@ export interface Step {
   waitTimeout?: number
   /** What to do when the target never shows up. Defaults to the tour's `onMissing`. */
   onMissing?: 'skip' | 'stop'
-  /** Let the user click the highlighted element (e.g. "click here to continue"). */
+  /**
+   * Let the user click the highlighted element (e.g. "click here to continue"). Automatic when the element is or
+   * contains a field (input, select, combobox…): set `false` to block it.
+   */
   allowTargetClick?: boolean
   /** Extra space around the highlighted element, in px. */
   padding?: number

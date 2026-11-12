@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Ventanas con shadow DOM (nexus-dialogs) y campos
+- Un paso que resalta un campo (`input`, `select`, `textarea`, `[role=combobox]`…) o un bloque que lo contiene ya deja usarlo sin `allowTargetClick`: antes el anillo bloqueaba el clic y no se podía escribir. `allowTargetClick: false` lo sigue bloqueando.
+- El tour encuentra la ventana modal también cuando el elemento resaltado vive en un shadow root abierto (nexus-dialogs, otros componentes web) y se monta dentro de ella.
+- Las flechas y Enter no mueven el tour cuando el foco está en un combobox, lista, menú o control deslizante.
+- Prueba de punta a punta con un `<dialog>` modal cuyo contenido vive en un shadow root.
+
 ### Sitio de documentación y publicación automatizada
 - Flujo **Nueva versión** (Actions → Nueva versión): tú eliges `patch`, `minor`, `major` o un número exacto; sube `package.json`, `package-lock.json` y el CHANGELOG, etiqueta, crea la release con las notas y lanza «Publicar en npm» (en espera de tu aprobación con 2FA) y «Documentación». `node scripts/nueva-version.mjs` hace lo mismo a mano.
 - El sitio se publica solo al hacer merge a `main` de algo que lo afecte (`site/`, `README.md`, `CHANGELOG.md`, `src/`…), sin esperar a una release.
